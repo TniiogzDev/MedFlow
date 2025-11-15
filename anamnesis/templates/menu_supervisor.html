@@ -8,6 +8,10 @@
     
     <script src="https://cdn.tailwindcss.com"></script>
     
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="icon" href="{% static 'images/logo.png' %}" type="image/png">
     
@@ -35,22 +39,150 @@
         }
         .btn:disabled { opacity: 0.5; cursor: not-allowed; }
         
-        /* --- Clases de botones añadidas --- */
         .btn-sm {
-            padding: 0.25rem 0.75rem; /* Más pequeño */
+            padding: 0.25rem 0.75rem;
             font-size: 0.875rem;
             font-weight: 500;
-            width: auto; /* Ancho automático */
+            width: auto;
         }
-        .btn-danger { background-color: #EF4444; color: white; }
+        
+        /* --- ESTILOS SWEETALERT (AÑADIDOS) --- */
+        .btn-danger { 
+            background-color: #EF4444; color: white; margin-left: 0.5rem;
+            font-weight: 600; padding: 0.75rem 1.5rem; border-radius: 0.5rem;
+        }
         .btn-danger:hover { background-color: #DC2626; }
+        .btn-success { 
+            background-color: #10B981; color: white;
+            font-weight: 600; padding: 0.75rem 1.5rem; border-radius: 0.5rem;
+        }
+        .btn-success:hover { background-color: #059669; }
+        /* --- FIN ESTILOS SWEETALERT --- */
+        
         .btn-info { background-color: #3B82F6; color: white; }
         .btn-info:hover { background-color: #2563EB; }
         .btn-secondary { background-color: #6B7280; color: white; }
         .btn-secondary:hover { background-color: #4B5563; }
-        /* --- --- */
+        
+        /* Estilos de Pestañas (Tabs) */
+        .tab-button {
+            padding-bottom: 0.5rem; border-bottom-width: 2px;
+            border-color: transparent; font-size: 0.875rem;
+            font-weight: 600; color: #6B7280; cursor: pointer;
+        }
+        .tab-button:hover { color: #374151; border-color: #D1D5DB; }
+        .tab-button.active-tab { color: #4F46E5; border-color: #4F46E5; }
+        .tab-content { display: none; }
+        .tab-content.active-tab-content { display: block; }
+        
+        /* Badges de estado */
+        .status-badge {
+            padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.75rem;
+            font-weight: 600; text-transform: capitalize;
+        }
+        .status-pendiente { background-color: #FEF3C7; color: #92400E; }
+        .status-requiere_modificacion { background-color: #FEF2F2; color: #B91C1C; }
+        .status-modificado { background-color: #CCFBF1; color: #0F766E; }
+        .status-aprobado { background-color: #D1FAE5; color: #065F46; }
+        
+        /* Línea de Tiempo (Para Modales y Auditoría) */
+        .timeline { border-left: 2px solid #D1D5DB; padding-left: 1.5rem; }
+        .timeline-item { position: relative; padding-bottom: 1.5rem; }
+        .timeline-item:last-child { padding-bottom: 0; }
+        .timeline-dot {
+            position: absolute; left: -2.375rem;
+            top: 0; width: 1.25rem; height: 1.25rem;
+            border-radius: 9999px; background-color: white;
+            border: 2px solid #D1D5DB;
+        }
+        .timeline-dot.active { border-color: #3B82F6; background-color: #3B82F6; }
+        .timeline-content { margin-top: 0.125rem; }
+        .timeline-title { font-weight: 600; color: #1F2937; }
+        .timeline-time { font-size: 0.875rem; color: #6B7280; }
+        
+        .timeline-icon {
+            position: absolute; left: -2.375rem;
+            top: 0; width: 1.25rem; height: 1.25rem;
+            display: flex; align-items: center; justify-content: center;
+            border-radius: 9999px; background-color: #6B7280;
+            color: white;
+        }
+        .timeline-chat-item .timeline-title { color: #1E3A8A; }
+        .timeline-chat-item .timeline-detail {
+            font-style: italic; color: #4B5563; background-color: #F9FAFB;
+            padding: 0.5rem 0.75rem; border-radius: 0.5rem; margin-top: 0.25rem;
+        }
+        
+        /* Datos Generales (Para Modales) */
+        .data-item {
+            padding: 0.75rem; border-radius: 0.5rem; background-color: #F9FAFB;
+            border: 1px solid #E5E7EB;
+        }
+        .data-item-label {
+             font-weight: 600; color: #4B5563; font-size: 0.875rem; 
+        }
+        .data-item-value {
+             color: #1F2937; font-size: 1rem;
+        }
+        
+        /* Pestañas Principales */
+        .main-tab-button {
+            font-size: 1.125rem; font-weight: 600;
+            padding: 0.75rem 1.25rem; color: #6B7280;
+            border-bottom: 4px solid transparent;
+            transition: all 0.2s; cursor: pointer;
+        }
+        .main-tab-button:hover { color: #374151; }
+        .main-tab-button.active-tab {
+            color: #4F46E5;
+            border-color: #4F46E5;
+        }
+        .main-tab-content { display: none; }
+        .main-tab-content.active-tab-content { display: block; }
+        
+        /* Estilos Modal */
+        .modal {
+            background-color: rgba(0, 0, 0, 0.6);
+            transition: opacity 0.3s ease;
+            position: fixed;
+            inset: 0;
+            z-index: 50;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+        .modal.hidden { display: none; }
+        .modal-card {
+            background-color: white;
+            border-radius: 1rem;
+            padding: 2rem;
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.07), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+            width: 100%;
+            position: relative;
+        }
+        .form-label { font-weight: 600; color: #374151; margin-bottom: 0.5rem; display: block; }
+        .form-input { 
+            width: 100%; padding: 0.75rem 1rem; border: 1px solid #D1D5DB;
+            border-radius: 0.5rem; background-color: #f9fafb;
+        }
+        .form-input:focus { outline: none; border-color: #4F46E5; box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.3); }
+        .message-box {
+            display: none; padding: 0.75rem 1rem; border-radius: 0.5rem;
+            margin-bottom: 1rem; text-align: center; font-weight: 500;
+        }
+        .message-success { background-color: #D1FAE5; color: #065F46; }
+        .message-error { background-color: #FEE2E2; color: #991B1B; }
 
-        /* Estilos de Lista */
+        /* Estilos de Chat (Para Auditoría) */
+        .chat-message { max-width: 80%; padding: 0.65rem 1rem; border-radius: 1rem; margin-bottom: 0.5rem; line-height: 1.4; word-wrap: break-word; }
+        .chat-receptor { background-color: #EEF2FF; margin-left: auto; color: #1E3A8A; border-bottom-right-radius: 0.25rem; }
+        .chat-personal { background-color: #E5E7EB; margin-right: auto; border-bottom-left-radius: 0.25rem; color: #1F2937; }
+        .chat-message .meta { font-size: 0.75rem; color: #6B7280; }
+        .chat-message .meta-sender { font-weight: 600; margin-bottom: 0.1rem;}
+        .chat-message .meta-time { text-align: right; margin-top: 0.2rem;}
+        
+        /* Estilos de Lista (para Auditoría) */
         .notification-item {
             padding: 1rem; border-radius: 0.5rem; transition: transform 0.2s, box-shadow 0.2s;
             cursor: pointer; background-color: white; border: 1px solid #E5E7EB;
@@ -67,125 +199,22 @@
         .notification-item.active p, .notification-item.active p span { color: white !important; }
         .notification-item.active .text-gray-400 { color: #E5E7EB !important; }
 
-        /* Estilos de Chat */
-        .chat-message { max-width: 80%; padding: 0.65rem 1rem; border-radius: 1rem; margin-bottom: 0.5rem; line-height: 1.4; word-wrap: break-word; }
-        .chat-receptor { background-color: #EEF2FF; margin-left: auto; color: #1E3A8A; border-bottom-right-radius: 0.25rem; }
-        .chat-personal { background-color: #E5E7EB; margin-right: auto; border-bottom-left-radius: 0.25rem; color: #1F2937; }
-        .chat-message .meta { font-size: 0.75rem; color: #6B7280; }
-        .chat-message .meta-sender { font-weight: 600; margin-bottom: 0.1rem;}
-        .chat-message .meta-time { text-align: right; margin-top: 0.2rem;}
-        
-        /* Estilos de Pestañas (Tabs) */
-        .tab-button {
-            padding-bottom: 0.5rem; /* pb-2 */
-            border-bottom-width: 2px;
-            border-color: transparent;
-            font-size: 0.875rem; /* text-sm */
-            font-weight: 600; /* font-semibold */
-            color: #6B7280; /* text-gray-500 */
+        /* --- Iconos de Acción (Añadido) --- */
+        .action-icon {
+            display: inline-block;
+            padding: 0.5rem;
+            border-radius: 0.375rem;
+            transition: background-color 0.2s;
             cursor: pointer;
+            font-size: 1rem; /* 16px */
+            line-height: 1;
         }
-        .tab-button:hover {
-            color: #374151; /* hover:text-gray-700 */
-            border-color: #D1D5DB; /* hover:border-gray-300 */
-        }
-        .tab-button.active-tab {
-            color: #4F46E5; /* text-indigo-600 */
-            border-color: #4F46E5; /* border-indigo-500 */
-        }
-        .tab-content {
-            display: none;
-        }
-        .tab-content.active-tab-content {
-            display: block;
-        }
-        
-        /* --- Estilos para los badges de estado del formulario --- */
-        .status-badge {
-            padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.75rem;
-            font-weight: 600; text-transform: capitalize;
-        }
-        .status-pendiente { background-color: #FEF3C7; color: #92400E; }
-        .status-requiere_modificacion { background-color: #FEF2F2; color: #B91C1C; }
-        .status-modificado { background-color: #CCFBF1; color: #0F766E; }
-        .status-aprobado { background-color: #D1FAE5; color: #065F46; }
-        
-        /* --- NUEVOS ESTILOS PARA LÍNEA DE TIEMPO --- */
-        .timeline { border-left: 2px solid #D1D5DB; padding-left: 1.5rem; }
-        .timeline-item { position: relative; padding-bottom: 1.5rem; }
-        .timeline-item:last-child { padding-bottom: 0; }
-        .timeline-dot {
-            position: absolute; left: -2.375rem; /* Ajuste para centrar el punto */
-            top: 0; width: 1.25rem; height: 1.25rem;
-            border-radius: 9999px; background-color: white;
-            border: 2px solid #D1D5DB;
-        }
-        .timeline-dot.active { border-color: #3B82F6; background-color: #3B82F6; }
-        .timeline-content { margin-top: 0.125rem; }
-        .timeline-title { font-weight: 600; color: #1F2937; }
-        .timeline-time { font-size: 0.875rem; color: #6B7280; }
-        
-        /* --- NUEVOS ESTILOS PARA DATOS GENERALES --- */
-        .data-item {
-            padding: 0.75rem; border-radius: 0.5rem; background-color: #F9FAFB;
-            border: 1px solid #E5E7EB;
-        }
-        .data-item-label {
-             font-weight: 600; color: #4B5563; font-size: 0.875rem; 
-        }
-        .data-item-value {
-             color: #1F2937; font-size: 1rem;
-        }
-        
-        /* --- NUEVOS ESTILOS PARA PESTAÑAS PRINCIPALES --- */
-        .main-tab-button {
-            font-size: 1.125rem; /* text-lg */
-            font-weight: 600;
-            padding: 0.75rem 1.25rem;
-            color: #6B7280; /* text-gray-500 */
-            border-bottom: 4px solid transparent;
-            transition: all 0.2s;
-            cursor: pointer;
-        }
-        .main-tab-button:hover {
-            color: #374151; /* text-gray-700 */
-        }
-        .main-tab-button.active-tab {
-            color: #4F46E5; /* text-indigo-600 */
-            border-color: #4F46E5; /* border-indigo-500 */
-        }
-        .main-tab-content {
-            display: none;
-        }
-        .main-tab-content.active-tab-content {
-            display: block;
-        }
-        
-        /* --- ESTILOS MODAL CREAR USUARIO --- */
-        .modal {
-            background-color: rgba(0, 0, 0, 0.6);
-            transition: opacity 0.3s ease;
-            position: fixed;
-            inset: 0;
-            z-index: 50;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 1rem;
-        }
-        .modal.hidden { display: none; }
-        .form-label { font-weight: 600; color: #374151; margin-bottom: 0.5rem; display: block; }
-        .form-input { 
-            width: 100%; padding: 0.75rem 1rem; border: 1px solid #D1D5DB;
-            border-radius: 0.5rem; background-color: #f9fafb;
-        }
-        .form-input:focus { outline: none; border-color: #4F46E5; box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.3); }
-        .message-box {
-            display: none; padding: 0.75rem 1rem; border-radius: 0.5rem;
-            margin-bottom: 1rem; text-align: center; font-weight: 500;
-        }
-        .message-success { background-color: #D1FAE5; color: #065F46; }
-        .message-error { background-color: #FEE2E2; color: #991B1B; }
+        .action-icon.icon-view { color: #3B82F6; } /* Azul */
+        .action-icon.icon-view:hover { background-color: #DBEAFE; }
+        .action-icon.icon-download { color: #6B7280; } /* Gris */
+        .action-icon.icon-download:hover { background-color: #E5E7EB; }
+        .action-icon.icon-delete { color: #EF4444; } /* Rojo */
+        .action-icon.icon-delete:hover { background-color: #FEE2E2; }
     </style>
 </head>
 <body class="p-6">
@@ -199,15 +228,15 @@
             </div>
         </header>
         
-        <div class="max-w-7xl mx-auto p-3 mb-6 bg-white rounded-xl shadow-md flex justify-between items-center">
+         <div class="max-w-7xl mx-auto p-3 mb-6 bg-white rounded-xl shadow-md flex justify-between items-center">
             <div class="flex items-center gap-3">
-                     <img src="{% static 'images/icon_usuario.png' %}" alt="Logo Usuario" class="h-8 w-8">  
-                     <span class="font-bold text-gray-800">Usuario:</span> 
-                     <span class="text-gray-900">{{ user.get_full_name|default:user.username }}</span>
-                     <span class="text-gray-300">|</span>
-                     <span class="font-bold text-gray-800">Rol:</span> 
-                     <span class="font-semibold text-indigo-600">{{ user.groups.first.name|default:"N/A" }}</span>
-                 </div>
+                 <img src="{% static 'images/icon_usuario.png' %}" alt="Logo Usuario" class="h-8 w-8">  
+                 <span class="font-bold text-gray-800">Usuario:</span> 
+                 <span class="text-gray-900">{{ user.get_full_name|default:user.username }}</span>
+                 <span class="text-gray-300">|</span>
+                 <span class="font-bold text-gray-800">Rol:</span> 
+                 <span class="font-semibold text-indigo-600">{{ user.groups.first.name|default:"N/A" }}</span>
+             </div>
              
              <div class="flex items-center gap-2"> 
                  <a href="{% url 'logout' %}" 
@@ -219,70 +248,222 @@
          </div>
          
          <div class="mb-6 border-b border-gray-200">
-             <nav id="gestion-tabs" class="flex space-x-4">
-                 <button id="main-tab-usuarios" type="button" class="main-tab-button active-tab">
-                     Gestión de Usuarios
+             <nav id="main-tabs-nav" class="flex flex-wrap -mb-px space-x-4">
+                 <button id="main-tab-dashboard" type="button" class="main-tab-button active-tab">
+                     Visión General
                  </button>
                  <button id="main-tab-formularios" type="button" class="main-tab-button">
                      Gestión de Formularios
                  </button>
+                 <button id="main-tab-usuarios" type="button" class="main-tab-button">
+                     Gestión de Usuarios
+                 </button>
+                 <button id="main-tab-auditoria" type="button" class="main-tab-button">
+                     Auditoría por Usuario
+                 </button>
+                 <button id="main-tab-sistema" type="button" class="main-tab-button">
+                     Auditoría del Sistema
+                 </button>
              </nav>
          </div>
-         
-         <div id="content-gestion-usuarios" class="main-tab-content active-tab-content">
+
+         <div id="content-dashboard" class="main-tab-content active-tab-content">
+            <div class="card">
+                <h2 class="text-2xl font-semibold text-gray-700 mb-6 border-b pb-2">Visión General</h2>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    
+                    <div class="p-6 bg-yellow-100 border-l-4 border-yellow-500 rounded-lg shadow cursor-pointer hover:shadow-lg transition-shadow" data-key="PENDIENTE" id="card-link-pendientes">
+                        <div class="flex justify-between items-center mb-2">
+                            <p class="text-lg font-semibold text-yellow-700" id="stat-card-title">Formularios Pendientes</p>
+                            <div class="relative" id="stat-card-menu-container">
+                                <button type="button" id="stat-card-menu-btn" class="text-yellow-700 hover:text-yellow-900 rounded-full p-1 hover:bg-yellow-200 z-20 relative">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"></circle><circle cx="12" cy="5" r="1"></circle><circle cx="12" cy="19" r="1"></circle></svg>
+                                </button>
+                                <div id="stat-card-menu" class="hidden absolute right-0 mt-2 w-56 bg-white rounded-md shadow-lg z-30 border">
+                                    <a href="#" data-key="PENDIENTE" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 stat-menu-item">Ver Form. Pendientes</a>
+                                    <a href="#" data-key="REQUIERE_MODIFICACION" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 stat-menu-item">Ver Req. Modificación</a>
+                                </div>
+                            </div>
+                        </div>
+                        <h3 class="text-3xl font-bold text-yellow-800" id="stat-card-number">...</h3>
+                        <p class="text-sm text-yellow-600 mt-2" id="stat-card-subtitle">Cargando...</p>
+                    </div>
+                    
+                    <div class="p-6 bg-blue-100 border-l-4 border-blue-500 rounded-lg shadow cursor-pointer hover:shadow-lg transition-shadow" id="card-link-usuarios">
+                        <h3 class="text-3xl font-bold text-blue-800" id="stat-active-users">{{ usuarios_para_auditar.count|add:1 }}</h3>
+                        <p class="text-lg font-semibold text-blue-700">Usuarios Totales</p>
+                        <p class="text-sm text-blue-600 mt-2">Usuarios en el sistema. (Haz clic para gestionar)</p>
+                    </div>
+                    
+                    <div class="p-6 bg-green-100 border-l-4 border-green-500 rounded-lg shadow cursor-pointer hover:shadow-lg transition-shadow" id="card-link-aprobados">
+                        <h3 class="text-3xl font-bold text-green-800" id="stat-approved-today">0</h3>
+                        <p class="text-lg font-semibold text-green-700">Formularios Aprobados Hoy</p>
+                        <p class="text-sm text-green-600 mt-2">Total de casos gestionados. (Haz clic para ver)</p>
+                    </div>
+
+                </div>
+            </div>
+         </div>
+         <div id="content-formularios" class="main-tab-content">
+            <div class="card">
+                <h2 class="text-2xl font-semibold text-gray-700 mb-6 border-b pb-2">Gestión de Todos los Formularios</h2>
+                
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6 p-4 bg-gray-50 rounded-lg border">
+                    <div>
+                        <label for="search-name" class="block text-sm font-medium text-gray-700">Buscar por Paciente</label>
+                        <input type="text" id="search-name" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" placeholder="Ej: Antonio Gómez">
+                    </div>
+                    <div>
+                        <label for="sort-date" class="block text-sm font-medium text-gray-700">Ordenar por Fecha</label>
+                        <select id="sort-date" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                            <option value="mas-nuevos">Más Nuevos Primero</option>
+                            <option value="mas-antiguos">Más Antiguos Primero</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="filter-status" class="block text-sm font-medium text-gray-700">Filtrar por Estado</label>
+                        <select id="filter-status" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                            <option value="todos">Todos los Estados</option>
+                            <option value="PENDIENTE">Pendiente (y Modificado)</option>
+                            <option value="REQUIERE_MODIFICACION">Requiere Modificación</option>
+                            <option value="APROBADO">Aprobado</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">&nbsp;</label>
+                        <button id="reset-filters-btn" class="btn btn-secondary mt-1 w-full" style="padding-top: 0.625rem; padding-bottom: 0.625rem;">Limpiar Filtros</button>
+                    </div>
+                </div>
+                
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Paciente</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Creado por</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="allFormsTableBody" class="bg-white divide-y divide-gray-200">
+                            <tr><td colspan="5" class="p-4 text-center text-gray-500">Cargando formularios...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+         </div>
+         <div id="content-usuarios" class="main-tab-content">
+            <div class="card">
+                <div class="flex justify-between items-center mb-6 border-b pb-2">
+                    <h2 class="text-2xl font-semibold text-gray-700">Gestión de Usuarios</h2>
+                    <button type="button" id="showCreateUserModalBtn" class="btn text-white bg-[#10B981] hover:bg-[#059669]" style="width: auto;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                        Crear Usuario
+                    </button>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6 p-4 bg-gray-50 rounded-lg border">
+                    <div class="md:col-span-2">
+                        <label for="user-search-name" class="block text-sm font-medium text-gray-700">Buscar por Username o Nombre</label>
+                        <input type="text" id="user-search-name" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" placeholder="Ej: ambulancia1">
+                    </div>
+                    <div>
+                        <label for="user-filter-role" class="block text-sm font-medium text-gray-700">Filtrar por Rol</label>
+                        <select id="user-filter-role" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                            <option value="todos">Todos los Roles</option>
+                            <option value="Supervisor">Supervisor</option>
+                            <option value="Ambulancia">Ambulancia</option>
+                            <option value="Recepcion">Recepcion</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">&nbsp;</label>
+                        <button id="reset-user-filters-btn" class="btn btn-secondary mt-1 w-full" style="padding-top: 0.625rem; padding-bottom: 0.625rem;">Limpiar Filtros</button>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Username</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nombre Completo</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rol</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="userListTableBody" class="bg-white divide-y divide-gray-200">
+                            
+                            {% for usuario in usuarios_para_auditar %}
+                                {% if not usuario.is_superuser %}
+                                <tr data-user-id="{{ usuario.id }}" class="user-table-row">
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 user-username">{{ usuario.username }}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 user-fullname">{{ usuario.get_full_name|default:"N/A" }}</td>
+                                    
+                                    {% with group_name=usuario.groups.first.name %}
+                                        {% if group_name == 'Ambulancia' %}
+                                            {% with final_role_name=group_name final_color_class="text-blue-600" %}
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold {{ final_color_class }} user-role" data-role="{{ final_role_name }}">{{ final_role_name }}</td>
+                                            {% endwith %}
+                                        {% elif group_name == 'Recepcion' %}
+                                            {% with final_role_name=group_name final_color_class="text-yellow-600" %}
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold {{ final_color_class }} user-role" data-role="{{ final_role_name }}">{{ final_role_name }}</td>
+                                            {% endwith %}
+                                        {% else %}
+                                            {% with final_role_name=group_name|default:"Sin Rol" final_color_class="text-gray-500" %}
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold {{ final_color_class }} user-role" data-role="{{ final_role_name }}">{{ final_role_name }}</td>
+                                            {% endwith %}
+                                        {% endif %}
+                                    {% endwith %}
+                                    
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm flex gap-2">
+                                        <button type="button" class="btn btn-sm btn-info btn-edit-user" 
+                                                data-user-id="{{ usuario.id }}" 
+                                                data-username="{{ usuario.username }}"
+                                                data-fullname="{{ usuario.get_full_name|default:'' }}"
+                                                data-email="{{ usuario.email|default:'' }}"
+                                                data-rut="{{ usuario.rut|default:'' }}"
+                                                data-role="{% if usuario.is_superuser %}Supervisor{% else %}{{ usuario.groups.first.name|default:'' }}{% endif %}">
+                                            Editar
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-danger btn-delete-user" data-user-id="{{ usuario.id }}">
+                                            Eliminar
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-secondary btn-view-activity" data-user-id="{{ usuario.id }}">
+                                            Ver Auditoría
+                                        </button>
+                                    </td>
+                                </tr>
+                                {% endif %}
+                            {% endfor %}
+
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+         </div>
+         <div id="content-auditoria" class="main-tab-content">
             <div class="grid grid-cols-1 lg:grid-cols-5 gap-6">
 
                 <div class="lg:col-span-2 space-y-6 flex flex-col min-h-[calc(100vh-280px)]">
                     
-                    <div class="card flex-shrink-0">
-                        <h2 class="text-2xl font-semibold text-gray-700 mb-6 border-b pb-2">Gestión de Usuarios</h2>
-                        <div class="space-y-3">
-                            <button type="button" id="showCreateUserModalBtn" class="btn text-white bg-[#10B981] hover:bg-[#059669]">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-                                Crear Usuario
-                            </button>
-                            </div>
-                    </div>
-
                     <div class="card flex-grow flex flex-col min-h-0">
                         <h2 class="text-2xl font-semibold text-gray-700 mb-6 border-b pb-2">Auditar Usuario</h2>
                         
                         <div id="userList" class="space-y-4 overflow-y-auto pr-2 flex-grow">
                             
                             {% for usuario in usuarios_para_auditar %}
-                                
-                                {% comment %} --- Determinar el rol final y la clase de color --- {% endcomment %}
-                                {% if usuario.is_superuser %}
-                                    {% with final_role_name="Supervisor" final_color_class="emergency" %}
-                                        <div class="notification-item {{ final_color_class }}" 
-                                             data-user-id="{{ usuario.id }}" 
-                                             data-user-name="{{ usuario.username }}"
-                                             data-user-role="{{ final_role_name }}">
-                                             
-                                             <p class="text-sm text-gray-700">
-                                                 <span class="font-semibold text-gray-900">Username:</span> {{ usuario.username }}
-                                             </p>
-                                             <p class="text-sm text-gray-600">
-                                                 <span class="font-semibold">Rol:</span> {{ final_role_name }}
-                                             </p>
-                                        </div>
-                                    {% endwith %}
-                                {% else %}
+                                {% if not usuario.is_superuser %}
                                     {% with group_name=usuario.groups.first.name %}
-                                        
                                         {% if group_name == 'Ambulancia' %}
                                             {% with final_role_name=group_name final_color_class="normal" %}
                                                 <div class="notification-item {{ final_color_class }}" 
                                                      data-user-id="{{ usuario.id }}" 
                                                      data-user-name="{{ usuario.username }}"
                                                      data-user-role="{{ final_role_name }}">
-                                                     
-                                                     <p class="text-sm text-gray-700">
-                                                         <span class="font-semibold text-gray-900">Username:</span> {{ usuario.username }}
-                                                     </p>
-                                                     <p class="text-sm text-gray-600">
-                                                         <span class="font-semibold">Rol:</span> {{ final_role_name }}
-                                                     </p>
+                                                     <p class="text-sm text-gray-700"><span class="font-semibold text-gray-900">Username:</span> {{ usuario.username }}</p>
+                                                     <p class="text-sm text-gray-600"><span class="font-semibold">Rol:</span> {{ final_role_name }}</p>
                                                 </div>
                                             {% endwith %}
                                         {% elif group_name == 'Recepcion' %}
@@ -291,13 +472,8 @@
                                                      data-user-id="{{ usuario.id }}" 
                                                      data-user-name="{{ usuario.username }}"
                                                      data-user-role="{{ final_role_name }}">
-                                                     
-                                                     <p class="text-sm text-gray-700">
-                                                         <span class="font-semibold text-gray-900">Username:</span> {{ usuario.username }}
-                                                     </p>
-                                                     <p class="text-sm text-gray-600">
-                                                         <span class="font-semibold">Rol:</span> {{ final_role_name }}
-                                                     </p>
+                                                     <p class="text-sm text-gray-700"><span class="font-semibold text-gray-900">Username:</span> {{ usuario.username }}</p>
+                                                     <p class="text-sm text-gray-600"><span class="font-semibold">Rol:</span> {{ final_role_name }}</p>
                                                 </div>
                                             {% endwith %}
                                         {% else %}
@@ -306,20 +482,13 @@
                                                      data-user-id="{{ usuario.id }}" 
                                                      data-user-name="{{ usuario.username }}"
                                                      data-user-role="{{ final_role_name }}">
-                                                     
-                                                     <p class="text-sm text-gray-700">
-                                                         <span class="font-semibold text-gray-900">Username:</span> {{ usuario.username }}
-                                                     </p>
-                                                     <p class="text-sm text-gray-600">
-                                                         <span class="font-semibold">Rol:</span> {{ final_role_name }}
-                                                     </p>
+                                                     <p class="text-sm text-gray-700"><span class="font-semibold text-gray-900">Username:</span> {{ usuario.username }}</p>
+                                                     <p class="text-sm text-gray-600"><span class="font-semibold">Rol:</span> {{ final_role_name }}</p>
                                                 </div>
                                             {% endwith %}
                                         {% endif %}
-                                        
                                     {% endwith %}
                                 {% endif %}
-                            
                             {% endfor %}
                             
                             <p class="text-center text-gray-500" id="userListPlaceholder" style="display: none;">Cargando usuarios...</p>
@@ -344,36 +513,25 @@
                             <div id="userAuditDataPanel" class="hidden space-y-6">
                                 <div class="border-b border-gray-200">
                                     <nav id="user-audit-tabs" class="-mb-px flex space-x-8" aria-label="Tabs">
-                                        <button id="tab-timeline" type="button" class="tab-button active-tab">Línea de Tiempo</button>
-                                        <button id="tab-formularios" type="button" class="tab-button">Formularios Creados</button>
-                                        <button id="tab-formularios-gestionados" type="button" class="tab-button">Formularios Gestionados</button>
-                                        <button id="tab-chats" type="button" class="tab-button">Chats (Generales)</button>
+                                        <button id="tab-audit-timeline" type="button" class="tab-button active-tab">Línea de Tiempo</button>
+                                        <button id="tab-audit-formularios" type="button" class="tab-button">Formularios Creados</button>
+                                        <button id="tab-audit-formularios-gestionados" type="button" class="tab-button">Formularios Gestionados</button>
+                                        <button id="tab-audit-chats" type="button" class="tab-button">Chats (Generales)</button>
                                     </nav>
                                 </div>
 
-                                <div id="content-timeline" class="tab-content active-tab-content">
-                                    <div class="overflow-x-auto">
-                                        <table class="min-w-full divide-y divide-gray-200">
-                                            <thead class="bg-gray-50">
-                                                <tr>
-                                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha y Hora</th>
-                                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tipo de Acción</th>
-                                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Detalle</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody id="auditActionsTableBody" class="bg-white divide-y divide-gray-200">
-                                                </tbody>
-                                        </table>
-                                    </div>
+                                <div id="content-audit-timeline" class="tab-content active-tab-content">
+                                    <div id="auditTimelineBody" class="timeline">
+                                        </div>
                                 </div>
                                 
-                                <div id="content-chats" class="tab-content">
+                                <div id="content-audit-chats" class="tab-content">
                                     <div id="chatHistory" class="h-64 bg-gray-100 p-3 rounded-lg overflow-y-auto mb-4 flex flex-col">
                                         </div>
                                     <p class="text-center text-sm text-gray-500">Registro de chat (solo lectura).</p>
                                 </div>
 
-                                <div id="content-formularios" class="tab-content">
+                                <div id="content-audit-formularios" class="tab-content">
                                      <div class="overflow-x-auto">
                                         <table class="min-w-full divide-y divide-gray-200">
                                             <thead class="bg-gray-50">
@@ -381,7 +539,7 @@
                                                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Paciente</th>
                                                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha</th>
                                                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
-                                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acción</th>
+                                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
                                                 </tr>
                                             </thead>
                                             <tbody id="auditFormsTableBody" class="bg-white divide-y divide-gray-200 audit-forms-table">
@@ -390,7 +548,7 @@
                                     </div>
                                 </div>
                                 
-                                <div id="content-formularios-gestionados" class="tab-content">
+                                <div id="content-audit-formularios-gestionados" class="tab-content">
                                      <div class="overflow-x-auto">
                                         <table class="min-w-full divide-y divide-gray-200">
                                             <thead class="bg-gray-50">
@@ -398,7 +556,7 @@
                                                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Paciente</th>
                                                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha</th>
                                                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
-                                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acción</th>
+                                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
                                                 </tr>
                                             </thead>
                                             <tbody id="auditFormsGestionadosTableBody" class="bg-white divide-y divide-gray-200 audit-forms-table">
@@ -429,20 +587,20 @@
                                         <button id="tab-form-timeline" type="button" class="tab-button">Línea de Tiempo</button>
                                     </nav>
                                 </div>
-
-                                <div id="content-form-datos" class="tab-content active-tab-content">
+                                
+                                <div id="content-form-datos-audit" class="tab-content active-tab-content">
                                     <div id="formAuditDatosBody" class="space-y-3">
                                     </div>
                                 </div>
                                 
-                                <div id="content-form-chat" class="tab-content">
+                                <div id="content-form-chat-audit" class="tab-content">
                                     <div id="formAuditChatHistory" class="h-64 bg-gray-100 p-3 rounded-lg overflow-y-auto mb-4 flex flex-col">
                                         <p class="m-auto text-gray-500">Cargando chat...</p>
                                     </div>
                                     <p class="text-center text-sm text-gray-500">Registro de chat (solo lectura).</p>
                                 </div>
                                 
-                                <div id="content-form-timeline" class="tab-content">
+                                <div id="content-form-timeline-audit" class="tab-content">
                                     <div id="formAuditTimelineBody" class="timeline">
                                     </div>
                                 </div>
@@ -454,58 +612,54 @@
                 </div>
             </div>
          </div>
-         
-         <div id="content-gestion-formularios" class="main-tab-content">
+         <div id="content-sistema" class="main-tab-content">
             <div class="card">
-                <h2 class="text-2xl font-semibold text-gray-700 mb-6 border-b pb-2">Gestión de Todos los Formularios</h2>
+                <h2 class="text-2xl font-semibold text-gray-700 mb-6 border-b pb-2">Auditoría Total del Sistema</h2>
                 
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6 p-4 bg-gray-50 rounded-lg border">
                     <div>
-                        <label for="search-name" class="block text-sm font-medium text-gray-700">Buscar por Paciente</label>
-                        <input type="text" id="search-name" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" placeholder="Ej: Antonio Gómez">
+                        <label for="system-search-user" class="block text-sm font-medium text-gray-700">Filtrar por Usuario</label>
+                        <input type="text" id="system-search-user" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" placeholder="Ej: ambulancia1">
                     </div>
                     <div>
-                        <label for="sort-date" class="block text-sm font-medium text-gray-700">Ordenar por Fecha</label>
-                        <select id="sort-date" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
-                            <option value="mas-nuevos">Más Nuevos Primero</option>
-                            <option value="mas-antiguos">Más Antiguos Primero</option>
+                        <label for="system-filter-action" class="block text-sm font-medium text-gray-700">Filtrar por Acción</label>
+                        <select id="system-filter-action" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                            <option value="todos">Todas las Acciones</option>
+                            <option value="Added.">Creación (Added.)</option>
+                            <option value="Changed.">Modificación (Changed.)</option>
+                            <option value="Deleted.">Eliminación (Deleted.)</option>
                         </select>
                     </div>
                     <div>
-                        <label for="filter-status" class="block text-sm font-medium text-gray-700">Filtrar por Estado</label>
-                        <select id="filter-status" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
-                            <option value="todos">Todos los Estados</option>
-                            <option value="PENDIENTE">Pendiente</option>
-                            <option value="REQUIERE_MODIFICACION">Requiere Modificación</option>
-                            <option value="MODIFICADO">Modificado</option>
-                            <option value="APROBADO">Aprobado</option>
+                        <label for="system-sort-date" class="block text-sm font-medium text-gray-700">Ordenar por Fecha</label>
+                        <select id="system-sort-date" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                            <option value="mas-nuevos">Más Nuevas Primero</option>
+                            <option value="mas-antiguos">Más Antiguas Primero</option>
                         </select>
                     </div>
-                    <div>
+                     <div>
                         <label class="block text-sm font-medium text-gray-700">&nbsp;</label>
-                        <button id="reset-filters-btn" class="btn btn-secondary mt-1 w-full" style="padding-top: 0.625rem; padding-bottom: 0.625rem;">Limpiar Filtros</button>
+                        <button id="reset-system-filters-btn" class="btn btn-secondary mt-1 w-full" style="padding-top: 0.625rem; padding-bottom: 0.625rem;">Limpiar Filtros</button>
                     </div>
                 </div>
-                
+
                 <div class="overflow-x-auto">
                     <table class="min-w-full divide-y divide-gray-200">
                         <thead class="bg-gray-50">
                             <tr>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Paciente</th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Creado por</th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha</th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha y Hora</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Usuario</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tipo de Acción</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Detalle</th>
                             </tr>
                         </thead>
-                        <tbody id="allFormsTableBody" class="bg-white divide-y divide-gray-200">
-                            <tr><td colspan="5" class="p-4 text-center text-gray-500">Cargando formularios...</td></tr>
+                        <tbody id="systemAuditTableBody" class="bg-white divide-y divide-gray-200">
+                            <tr><td colspan="4" class="p-4 text-center text-gray-500">Cargando auditoría... (Requiere API de backend)</td></tr>
                         </tbody>
                     </table>
                 </div>
             </div>
          </div>
-         
          <div id="downloadMenu" class="hidden absolute z-10 w-48 bg-white rounded-md shadow-lg border">
             <a href="#" data-format="pdf" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Descargar como PDF</a>
             <a href="#" data-format="xlsx" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Descargar como Excel</a>
@@ -513,13 +667,49 @@
 
     </div>
 
+    <div id="formDetailModal" class="modal hidden">
+        <div class="modal-overlay-bg absolute inset-0 bg-gray-900 opacity-75"></div>
+        <div class="modal-card w-full max-w-4xl relative max-h-[90vh] overflow-y-auto">
+            <button id="closeFormDetailModalBtn" type="button" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </button>
+            <div id="formDetailPanel_P2">
+                <div class="flex justify-between items-center mb-4 border-b pb-2">
+                    <h2 class="text-2xl font-semibold text-gray-700">
+                        Detalle Formulario: <span id="formDetailPatientName_P2" class="text-blue-600">...</span>
+                    </h2>
+                </div>
+                <div class="space-y-6">
+                    <div class="border-b border-gray-200">
+                        <nav id="form-detail-tabs-p2" class="-mb-px flex space-x-8" aria-label="Tabs">
+                            <button id="tab-form-datos-p2" type="button" class="tab-button active-tab">Datos Generales</button>
+                            <button id="tab-form-timeline-p2" type="button" class="tab-button">Historial Completo</button>
+                        </nav>
+                    </div>
+                    <div id="content-form-datos-p2" class="tab-content active-tab-content">
+                        <div id="formDetailDatosBody_P2" class="space-y-3"></div>
+                    </div>
+                    <div id="content-form-timeline-p2" class="tab-content">
+                        <div id="formDetailTimelineBody_P2" class="timeline"></div>
+                    </div>
+                    <div id="modal-action-buttons" class="flex justify-end gap-4 pt-4 border-t">
+                         <button type="button" class="btn btn-secondary" style="width: auto; background-color: #F59E0B; hover:bg-[#D97706]" id="btn-request-modification">
+                            Solicitar Modificación
+                         </button>
+                         <button type="button" class="btn btn-info" style="width: auto; background-color: #10B981; hover:bg-[#059669]" id="btn-approve-form">
+                            Aprobar Formulario
+                         </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div id="createUserModal" class="modal hidden">
         <div class="modal-overlay-bg absolute inset-0 bg-gray-900 opacity-75"></div>
-        <div class="card w-full max-w-lg relative">
+        <div class="modal-card w-full max-w-lg relative">
             <h2 class="text-2xl font-bold text-gray-800 mb-6">Crear Nuevo Usuario</h2>
-            
             <div id="userCreateMessage" class="message-box"></div>
-            
             <form id="createUserForm" class="space-y-4">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
@@ -560,7 +750,6 @@
                         <option value="Supervisor">Supervisor</option>
                     </select>
                 </div>
-                
                 <div class="flex justify-end gap-4 pt-6">
                     <button type="button" id="closeCreateModalBtn" class="btn btn-secondary" style="width: auto;">Cancelar</button>
                     <button type="submit" class="btn btn-info" style="width: auto; background-color: #10B981; hover:bg-[#059669]">Crear Usuario</button>
@@ -569,28 +758,133 @@
         </div>
     </div>
     
+    <div id="editUserModal" class="modal hidden">
+        <div class="modal-overlay-bg absolute inset-0 bg-gray-900 opacity-75"></div>
+        <div class="modal-card w-full max-w-lg relative">
+            <h2 class="text-2xl font-bold text-gray-800 mb-6">Editar Usuario</h2>
+            <div id="userEditMessage" class="message-box"></div>
+            <form id="editUserForm" class="space-y-4">
+                <input type="hidden" id="edit_user_id" name="user_id">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label for="edit_username" class="form-label">Username</label>
+                        <input type="text" id="edit_username" name="username" class="form-input" readonly>
+                        <span class="text-xs text-gray-500">El username no se puede cambiar.</span>
+                    </div>
+                    <div>
+                        <label for="edit_password" class="form-label">Nueva Contraseña</label>
+                        <input type="password" id="edit_password" name="password" class="form-input">
+                        <span class="text-xs text-gray-500">Dejar en blanco para no cambiar.</span>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label for="edit_first_name" class="form-label">Nombre</label>
+                        <input type="text" id="edit_first_name" name="first_name" class="form-input">
+                    </div>
+                    <div>
+                        <label for="edit_last_name" class="form-label">Apellido</label>
+                        <input type="text" id="edit_last_name" name="last_name" class="form-input">
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                     <div>
+                        <label for="edit_rut" class="form-label">RUT</label>
+                        <input type="text" id="edit_rut" name="rut" class="form-input" placeholder="12.345.678-9">
+                    </div>
+                    <div>
+                        <label for="edit_email" class="form-label">Email</label>
+                        <input type="email" id="edit_email" name="email" class="form-input" placeholder="usuario@dominio.com">
+                    </div>
+                </div>
+                <div>
+                    <label for="edit_role" class="form-label">Rol <span class="text-red-500">*</span></label>
+                    <select id="edit_role" name="role" class="form-input" required>
+                        <option value="Ambulancia">Ambulancia</option>
+                        <option value="Recepcion">Recepcion</option>
+                        <option value="Supervisor">Supervisor</option>
+                    </select>
+                </div>
+                <div class="flex justify-end gap-4 pt-6">
+                    <button type="button" id="closeEditModalBtn" class="btn btn-secondary" style="width: auto;">Cancelar</button>
+                    <button type="submit" class="btn btn-info" style="width: auto;">Guardar Cambios</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const csrftoken = getCookie('csrftoken'); 
             
             // --- Pestañas Principales ---
-            const mainTabs = document.querySelectorAll('.main-tab-button');
+            const mainTabsContainer = document.getElementById('main-tabs-nav');
+            const mainTabs = mainTabsContainer.querySelectorAll('.main-tab-button');
             const mainTabContents = document.querySelectorAll('.main-tab-content');
             
-            // --- Panel 1: Auditoría de Usuario ---
+            // --- Pestaña 1: Visión General ---
+            const cardLinkPendientes = document.getElementById('card-link-pendientes');
+            const cardLinkUsuarios = document.getElementById('card-link-usuarios');
+            const cardLinkAprobados = document.getElementById('card-link-aprobados');
+            const statCard = document.getElementById('card-link-pendientes'); 
+            const statTitle = document.getElementById('stat-card-title');
+            const statNumber = document.getElementById('stat-card-number');
+            const statSubtitle = document.getElementById('stat-card-subtitle');
+            const statMenuBtn = document.getElementById('stat-card-menu-btn');
+            const statMenu = document.getElementById('stat-card-menu');
+            
+            // --- Pestaña 2: Gestión de Formularios ---
+            const allFormsTableBody = document.getElementById('allFormsTableBody');
+            const downloadMenu = document.getElementById('downloadMenu');
+            const searchNameInput = document.getElementById('search-name');
+            const sortDateSelect = document.getElementById('sort-date');
+            const filterStatusSelect = document.getElementById('filter-status');
+            const resetFiltersBtn = document.getElementById('reset-filters-btn');
+            
+            // --- Pestaña 2: Modal de Detalle ---
+            const formDetailModal_P2 = document.getElementById('formDetailModal');
+            const closeFormDetailModalBtn_P2 = document.getElementById('closeFormDetailModalBtn');
+            const formDetailPatientName_P2 = document.getElementById('formDetailPatientName_P2');
+            const formDetailDatosBody_P2 = document.getElementById('formDetailDatosBody_P2');
+            const formDetailTimelineBody_P2 = document.getElementById('formDetailTimelineBody_P2');
+            const formDetailTabs_P2 = document.querySelectorAll('#form-detail-tabs-p2 .tab-button');
+            const formDetailTabContents_P2 = document.querySelectorAll('#formDetailPanel_P2 .tab-content');
+            const modalActionButtons = document.getElementById('modal-action-buttons');
+            
+            // --- Pestaña 3: Gestión de Usuarios ---
+            const userSearchName = document.getElementById('user-search-name');
+            const userFilterRole = document.getElementById('user-filter-role');
+            const resetUserFiltersBtn = document.getElementById('reset-user-filters-btn');
+            const userListTableBody = document.getElementById('userListTableBody');
+            
+            // --- Pestaña 3: Modal Crear Usuario ---
+            const createUserModal = document.getElementById('createUserModal');
+            const showCreateUserModalBtn = document.getElementById('showCreateUserModalBtn');
+            const closeCreateModalBtn = document.getElementById('closeCreateModalBtn');
+            const createUserForm = document.getElementById('createUserForm');
+            const userCreateMessage = document.getElementById('userCreateMessage');
+            
+            // --- Pestaña 3: Modal Editar Usuario ---
+            const editUserModal = document.getElementById('editUserModal');
+            const closeEditModalBtn = document.getElementById('closeEditModalBtn');
+            const editUserForm = document.getElementById('editUserForm');
+            const userEditMessage = document.getElementById('userEditMessage');
+
+            // --- Pestaña 4: Auditoría de Usuarios ---
             const userListDiv = document.getElementById('userList');
             const auditContent = document.getElementById('auditContent');
             const auditPlaceholder = document.getElementById('auditPlaceholder');
             const userAuditDataPanel = document.getElementById('userAuditDataPanel');
             const auditUserName = document.getElementById('auditUserName');
-            const auditActionsTableBody = document.getElementById('auditActionsTableBody');
+            const auditTimelineBody = document.getElementById('auditTimelineBody'); // <-- Corregido
             const chatHistory = document.getElementById('chatHistory');
             const auditFormsTableBody = document.getElementById('auditFormsTableBody');
             const auditFormsGestionadosTableBody = document.getElementById('auditFormsGestionadosTableBody'); 
             const userAuditTabs = document.querySelectorAll('#user-audit-tabs .tab-button');
             const userAuditTabContents = document.querySelectorAll('#userAuditDataPanel .tab-content');
             
-            // --- Panel 2: Detalle de Formulario ---
+            // --- Pestaña 4: Panel de Detalle de Formulario (Auditoría) ---
             const formAuditDetailPanel = document.getElementById('formAuditDetailPanel');
             const formAuditPatientName = document.getElementById('formAuditPatientName');
             const backToUserAuditBtn = document.getElementById('backToUserAuditBtn');
@@ -600,21 +894,49 @@
             const formAuditTabs = document.querySelectorAll('#form-audit-tabs .tab-button');
             const formAuditTabContents = document.querySelectorAll('#formAuditDetailPanel .tab-content');
             
-            // --- Panel 3: Todos los Formularios ---
-            const allFormsTableBody = document.getElementById('allFormsTableBody');
-            const downloadMenu = document.getElementById('downloadMenu');
-            const searchNameInput = document.getElementById('search-name');
-            const sortDateSelect = document.getElementById('sort-date');
-            const filterStatusSelect = document.getElementById('filter-status');
-            const resetFiltersBtn = document.getElementById('reset-filters-btn');
-            
+            // --- Pestaña 5: Auditoría del Sistema ---
+            const systemAuditTableBody = document.getElementById('systemAuditTableBody');
+            const systemSearchUser = document.getElementById('system-search-user');
+            const systemFilterAction = document.getElementById('system-filter-action');
+            const systemSortDate = document.getElementById('system-sort-date');
+            const resetSystemFiltersBtn = document.getElementById('reset-system-filters-btn');
+            let allSystemLogs = []; // Cache para Pestaña 5
+
+            // --- Estado Global ---
             let currentDownloadFormId = null;
-            let allFormsData = []; // Cache para todos los formularios
-            
+            let allFormsData = []; // Cache para Pestaña 1 y 2
             let currentAuditedUserId = null; 
             let currentAuditedUserRole = null; 
-            let currentApiData = {}; 
-            
+            let currentApiData = {}; // Cache para Auditoría (Pestaña 4)
+            let currentFormId_P2 = null; // ID para el modal de Pestaña 2
+
+            // --- Constante SweetAlert ---
+            const swalWithBootstrapButtons = Swal.mixin({
+              customClass: {
+                confirmButton: "btn btn-danger", // Rojo para eliminar
+                cancelButton: "btn btn-secondary"
+              },
+              buttonsStyling: false
+            });
+
+            // ==================================
+            // FUNCIÓN getCookie
+            // ==================================
+            function getCookie(name) {
+                let cookieValue = null;
+                if (document.cookie && document.cookie !== '') {
+                    const cookies = document.cookie.split(';');
+                    for (let i = 0; i < cookies.length; i++) {
+                        const cookie = cookies[i].trim();
+                        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                            break;
+                        }
+                    }
+                }
+                return cookieValue;
+            }
+
             // ==================================
             // LÓGICA PESTAÑAS PRINCIPALES
             // ==================================
@@ -622,211 +944,208 @@
                 mainTabs.forEach(tab => {
                     tab.addEventListener('click', () => {
                         mainTabs.forEach(t => t.classList.remove('active-tab'));
-                        mainTabContents.forEach(c => c.classList.remove('active-tab-content'));
-                        
+                        mainTabContents.forEach(c => {
+                            if (!c.classList.contains('hidden')) {
+                                c.classList.remove('active-tab-content');
+                            }
+                        });
                         tab.classList.add('active-tab');
-                        const contentId = tab.id.replace('main-tab-', 'content-gestion-');
-                        document.getElementById(contentId).classList.add('active-tab-content');
+                        const contentId = tab.id.replace('main-tab-', 'content-');
                         
-                        if (tab.id === 'main-tab-formularios') {
-                            loadAllForms();
+                        if ((contentId === 'content-formularios' || contentId === 'content-dashboard') && allFormsData.length === 0) {
+                            loadAllForms(updateDashboardStats);
                         }
+                        
+                        if (contentId === 'content-sistema' && allSystemLogs.length === 0) {
+                            loadSystemAuditData();
+                        }
+                        
+                        document.getElementById(contentId).classList.add('active-tab-content');
                     });
                 });
             }
 
-            // --- Lógica de Pestañas (Panel 1: Auditoría Usuario) ---
-            if (userAuditTabs.length > 0) {
-                userAuditTabs.forEach(tab => {
-                    tab.addEventListener('click', () => {
-                        userAuditTabs.forEach(t => t.classList.remove('active-tab'));
-                        userAuditTabContents.forEach(c => c.classList.remove('active-tab-content'));
-                        
-                        tab.classList.add('active-tab');
-                        const contentId = tab.id.replace('tab-', 'content-');
-                        document.getElementById(contentId).classList.add('active-tab-content');
+            // ==================================
+            // PESTAÑA 1: LÓGICA VISIÓN GENERAL
+            // ==================================
+            
+            if (statMenuBtn) {
+                statMenuBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    statMenu.classList.toggle('hidden');
+                });
+                document.addEventListener('click', (e) => {
+                     if (!statMenu.contains(e.target) && !statMenuBtn.contains(e.target)) {
+                        statMenu.classList.add('hidden');
+                    }
+                });
+                
+                document.querySelectorAll('.stat-menu-item').forEach(item => {
+                    item.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        const key = e.target.dataset.key;
+                        statCard.dataset.key = key;
+                        updateDashboardStats(allFormsData); 
+                        statMenu.classList.add('hidden');
                     });
                 });
             }
+
+            // --- CORREGIDO: Esta función ahora funciona ---
+            function updateDashboardStats(formsData) {
+                if (!formsData || !statCard) {
+                    console.error("Faltan datos (formsData) o tarjeta (statCard) para actualizar stats.");
+                    return;
+                }
+
+                const key = statCard.dataset.key;
+                let count = 0;
+                
+                if (key === 'PENDIENTE') {
+                    count = formsData.filter(f => f.estado === 'PENDIENTE' || f.estado === 'MODIFICADO').length;
+                    statTitle.textContent = 'Formularios Pendientes';
+                    statSubtitle.textContent = 'Acción requerida. (Haz clic para ver)';
+                    
+                    statCard.classList.remove('bg-red-100', 'border-red-500');
+                    statTitle.classList.remove('text-red-700');
+                    statSubtitle.classList.remove('text-red-600');
+                    statNumber.classList.remove('text-red-800');
+                    statMenuBtn.classList.remove('text-red-700', 'hover:text-red-900', 'hover:bg-red-200');
+                    
+                    statCard.classList.add('bg-yellow-100', 'border-yellow-500');
+                    statTitle.classList.add('text-yellow-700');
+                    statSubtitle.classList.add('text-yellow-600');
+                    statNumber.classList.add('text-yellow-800');
+                    statMenuBtn.classList.add('text-yellow-700', 'hover:text-yellow-900', 'hover:bg-yellow-200');
+
+                } else if (key === 'REQUIERE_MODIFICACION') {
+                    count = formsData.filter(f => f.estado === 'REQUIERE_MODIFICACION').length;
+                    statTitle.textContent = 'Requieren Modificación';
+                    statSubtitle.textContent = 'Formularios devueltos a ambulancia.';
+                    
+                    statCard.classList.remove('bg-yellow-100', 'border-yellow-500');
+                    statTitle.classList.remove('text-yellow-700');
+                    statSubtitle.classList.remove('text-yellow-600');
+                    statNumber.classList.remove('text-yellow-800');
+                    statMenuBtn.classList.remove('text-yellow-700', 'hover:text-yellow-900', 'hover:bg-yellow-200');
+                    
+                    statCard.classList.add('bg-red-100', 'border-red-500');
+                    statTitle.classList.add('text-red-700');
+                    statSubtitle.classList.add('text-red-600');
+                    statNumber.classList.add('text-red-800');
+                    statMenuBtn.classList.add('text-red-700', 'hover:text-red-900', 'hover:bg-red-200');
+                }
+                statNumber.textContent = count;
+            }
+
+            function navigateToTab(tabId, contentId) {
+                mainTabs.forEach(t => t.classList.remove('active-tab'));
+                mainTabContents.forEach(c => c.classList.remove('active-tab-content'));
+                document.getElementById(tabId).classList.add('active-tab');
+                document.getElementById(contentId).classList.add('active-tab-content');
+            }
+            if (cardLinkPendientes) {
+                cardLinkPendientes.addEventListener('click', (e) => {
+                    if (e.target.closest('#stat-card-menu-container')) return;
+                    navigateToTab('main-tab-formularios', 'content-formularios');
+                    const key = statCard.dataset.key || 'PENDIENTE';
+                    filterStatusSelect.value = key; 
+                    if (allFormsData.length === 0) {
+                        loadAllForms(renderAllFormsTable);
+                    } else {
+                        renderAllFormsTable();
+                    }
+                });
+            }
+            if (cardLinkUsuarios) {
+                cardLinkUsuarios.addEventListener('click', () => {
+                    navigateToTab('main-tab-usuarios', 'content-usuarios');
+                });
+            }
+            if (cardLinkAprobados) {
+                cardLinkAprobados.addEventListener('click', () => {
+                    navigateToTab('main-tab-formularios', 'content-formularios');
+                    filterStatusSelect.value = 'APROBADO';
+                     if (allFormsData.length === 0) {
+                        loadAllForms(renderAllFormsTable);
+                    } else {
+                        renderAllFormsTable();
+                    }
+                });
+            }
+
+            // ==================================
+            // PESTAÑA 2: LÓGICA GESTIÓN DE FORMULARIOS
+            // ==================================
             
-            // --- Lógica de Pestañas (Panel 2: Detalle Formulario) ---
-            if (formAuditTabs.length > 0) {
-                formAuditTabs.forEach(tab => {
-                    tab.addEventListener('click', () => {
-                        formAuditTabs.forEach(t => t.classList.remove('active-tab'));
-                        formAuditTabContents.forEach(c => c.classList.remove('active-tab-content'));
-                        
+            if (formDetailTabs_P2.length > 0) {
+                formDetailTabs_P2.forEach(tab => {
+                    tab.addEventListener('click', (e) => {
+                        e.stopPropagation(); 
+                        formDetailTabs_P2.forEach(t => t.classList.remove('active-tab'));
+                        formDetailTabContents_P2.forEach(c => c.classList.remove('active-tab-content'));
                         tab.classList.add('active-tab');
                         const contentId = tab.id.replace('tab-form-', 'content-form-');
                         document.getElementById(contentId).classList.add('active-tab-content');
                     });
                 });
             }
-
-            // --- Lógica de Carga de Auditoría (Panel 1) ---
-            if (userListDiv) {
-                userListDiv.querySelectorAll('.notification-item').forEach(item => {
-                    item.addEventListener('click', () => {
-                        formAuditDetailPanel.classList.add('hidden');
-                        auditContent.classList.remove('hidden');
-
-                        userListDiv.querySelectorAll('.notification-item').forEach(i => i.classList.remove('active'));
-                        item.classList.add('active');
-                        
-                        const userId = item.dataset.userId;
-                        const userName = item.dataset.userName;
-                        const userRole = item.dataset.userRole;
-                        
-                        currentAuditedUserId = userId; 
-                        currentAuditedUserRole = userRole; 
-
-                        loadUserAuditData(userId, userName, userRole);
-                    });
-                });
+            if (closeFormDetailModalBtn_P2) {
+                closeFormDetailModalBtn_P2.addEventListener('click', () => formDetailModal_P2.classList.add('hidden'));
+                formDetailModal_P2.querySelector('.modal-overlay-bg').addEventListener('click', () => formDetailModal_P2.classList.add('hidden'));
             }
-            
-            function loadUserAuditData(userId, userName, userRole) {
-                auditUserName.textContent = `${userName} (${userRole})`;
-                auditPlaceholder.style.display = 'none';
-                userAuditDataPanel.classList.remove('hidden');
-                
-                const timelineTab = document.getElementById('tab-timeline');
-                const formulariosTab = document.getElementById('tab-formularios');
-                const formulariosGestionadosTab = document.getElementById('tab-formularios-gestionados');
-                const chatsTab = document.getElementById('tab-chats');
-                
-                timelineTab.style.display = 'none';
-                formulariosTab.style.display = 'none';
-                formulariosGestionadosTab.style.display = 'none';
-                chatsTab.style.display = 'none';
-                
-                userAuditTabs.forEach(t => t.classList.remove('active-tab'));
-                userAuditTabContents.forEach(c => c.classList.remove('active-tab-content'));
+            if (modalActionButtons) {
+                modalActionButtons.addEventListener('click', (e) => {
+                    if (!currentFormId_P2) return;
+                    let url = '';
+                    let action = '';
+                    let button = e.target.closest('button');
+                    if (!button) return;
 
-                if (userRole === 'Ambulancia') {
-                    timelineTab.style.display = 'inline-block';
-                    formulariosTab.style.display = 'inline-block';
-                    formulariosTab.classList.add('active-tab');
-                    document.getElementById('content-formularios').classList.add('active-tab-content');
-                } else if (userRole === 'Recepcion') {
-                    timelineTab.style.display = 'inline-block';
-                    formulariosGestionadosTab.style.display = 'inline-block';
-                    formulariosGestionadosTab.classList.add('active-tab');
-                    document.getElementById('content-formularios-gestionados').classList.add('active-tab-content');
-                } else { // Para Admin/Supervisor
-                    timelineTab.style.display = 'inline-block';
-                    chatsTab.style.display = 'inline-block';
-                    timelineTab.classList.add('active-tab');
-                    document.getElementById('content-timeline').classList.add('active-tab-content');
-                }
-
-                auditActionsTableBody.innerHTML = '<tr><td colspan="3" class="p-4 text-center text-gray-500">Cargando registros...</td></tr>';
-                chatHistory.innerHTML = '<p class="m-auto text-gray-500">Cargando chat...</p>';
-                auditFormsTableBody.innerHTML = '<tr><td colspan="4" class="p-4 text-center text-gray-500">Cargando formularios...</td></tr>';
-                auditFormsGestionadosTableBody.innerHTML = '<tr><td colspan="4" class="p-4 text-center text-gray-500">Cargando formularios...</td></tr>';
-
-                const apiUrl = `/api/audit_logs/${userId}/`;
-                console.log(`[DEBUG] Llamando API de Auditoría: ${apiUrl}`);
-
-                fetch(apiUrl)
-                    .then(response => {
-                        console.log(`[DEBUG] Respuesta de Auditoría recibida. Status: ${response.status}`);
-                        if (!response.ok) {
-                            throw new Error(`Error HTTP ${response.status}: ${response.statusText}`);
-                        }
-                        return response.json();
-                    })
-                    .then(data => {
-                        console.log("[DEBUG] Datos de Auditoría recibidos:", data);
-                        currentApiData = data; 
-                        populateAuditTable(data.actions);
-                        populateChatHistory(chatHistory, data.chat, currentAuditedUserRole);
-                        
-                        // ==================================
-                        // INICIO DE LA MODIFICACIÓN (Habilitar botones)
-                        // Cambiamos false, false -> true, true
-                        // ==================================
-                        populateFormsTable(data.formularios, auditFormsTableBody, true, true, false); // (showDelete, showDownload, showCreatedBy)
-                        populateFormsTable(data.formularios_gestionados, auditFormsGestionadosTableBody, true, true, false); // (showDelete, showDownload, showCreatedBy)
-                        // ==================================
-                        // FIN DE LA MODIFICACIÓN
-                        // ==================================
-                        
-                    })
-                    .catch(error => {
-                        console.error('[DEBUG] ¡FALLÓ EL FETCH de Auditoría!', error);
-                        auditActionsTableBody.innerHTML = `<tr><td colspan="3" class="p-4 text-center text-red-500">Error al cargar registros. (Ver consola)</td></tr>`;
-                        chatHistory.innerHTML = `<p class="m-auto text-red-500">Error al cargar chat. (Ver consola)</p>`;
-                        auditFormsTableBody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-red-500">Error al cargar formularios. (Ver consola)</td></tr>`;
-                        auditFormsGestionadosTableBody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-red-500">Error al cargar formularios. (Ver consola)</td></tr>`;
-                    });
-            }
-
-            // --- Funciones para poblar los datos (Panel 1) ---
-            
-            function populateAuditTable(actions) {
-                auditActionsTableBody.innerHTML = '';
-                if (!actions || actions.length === 0) {
-                    auditActionsTableBody.innerHTML = '<tr><td colspan="3" class="p-4 text-center text-gray-500">No hay acciones registradas.</td></tr>';
-                    return;
-                }
-                actions.forEach(action => {
-                    const row = `
-                        <tr>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${action.timestamp}</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${action.type}</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${action.detail}</td>
-                        </tr>
-                    `;
-                    auditActionsTableBody.innerHTML += row;
-                });
-            }
-
-            function populateChatHistory(container, messages, auditedRole) {
-                console.log("[DEBUG] Poblando historial de chat. Mensajes:", messages, "Rol Auditado:", auditedRole);
-                container.innerHTML = '';
-                if (!messages || messages.length === 0) {
-                    container.innerHTML = '<p class="m-auto text-gray-500">No hay mensajes.</p>';
-                    return;
-                }
-                
-                if (auditedRole) {
-                    console.log("[DEBUG] Invirtiendo chat general (Panel 1)");
-                    messages.reverse();
-                }
-
-                messages.forEach(msg => {
-                    const roleToCompare = auditedRole || currentAuditedUserRole;
-
-                    if (!msg.autor_nombre || !msg.mensaje) {
-                         console.error("[DEBUG] Objeto de mensaje inválido (faltan campos):", msg);
-                         return; 
+                    if (button.id === 'btn-approve-form') {
+                        url = `{% url 'aprobar_formulario' %}`;
+                        action = 'Aprobado';
                     }
-
-                    const isPersonal = (msg.autor_rol === roleToCompare);
-                    const chatClass = isPersonal ? 'chat-personal' : 'chat-receptor';
+                    if (button.id === 'btn-request-modification') {
+                        url = `{% url 'solicitar_modificacion' %}`;
+                        action = 'Modificación Solicitada';
+                    }
                     
-                    const messageEl = `
-                        <div class="chat-message text-sm ${chatClass}">
-                            <div class="meta meta-sender">${msg.autor_nombre} (${msg.autor_rol || 'N/A'})</div>
-                            <p>${msg.mensaje}</p> 
-                            <div class="meta meta-time">${msg.timestamp || '??:??'}</div>
-                        </div>
-                    `;
-                    container.innerHTML += messageEl;
+                    if (url) {
+                        const formData = new FormData();
+                        formData.append('form_id', currentFormId_P2);
+                        button.disabled = true;
+                        button.textContent = 'Procesando...';
+
+                        fetch(url, {
+                            method: 'POST',
+                            headers: { 'X-CSRFToken': csrftoken },
+                            body: formData
+                        })
+                        .then(res => res.json())
+                        .then(data => {
+                            if(data.status === 'exito') {
+                                alert(`Formulario ${action}`);
+                                formDetailModal_P2.classList.add('hidden');
+                                loadAllForms(updateDashboardStats);
+                            } else {
+                                alert(`Error: ${data.message}`);
+                            }
+                        })
+                        .catch(err => alert(`Error de red: ${err.message}`))
+                        .finally(() => {
+                            button.disabled = false;
+                            button.textContent = action === 'Aprobado' ? 'Aprobar Formulario' : 'Solicitar Modificación';
+                        });
+                    }
                 });
-                container.scrollTop = container.scrollHeight;
             }
 
-            // ==================================
-            // INICIO DE LA MODIFICACIÓN (Función populateFormsTable)
-            // ==================================
-            function populateFormsTable(forms, tableBody, showDeleteButton, showDownloadButton, showCreatedBy = false) {
+            function populateFormsTable(forms, tableBody, showDeleteButton, showDownloadButton, showCreatedBy = false, showViewDetails = false) {
                 if (!tableBody) return; 
-                
                 tableBody.innerHTML = '';
                 if (!forms || forms.length === 0) {
-                    const colSpan = showCreatedBy ? 5 : 4;
+                    const colSpan = (showCreatedBy ? 5 : 4);
                     tableBody.innerHTML = `<tr><td colspan="${colSpan}" class="p-4 text-center text-gray-500">No se encontraron formularios.</td></tr>`;
                     return;
                 }
@@ -836,37 +1155,61 @@
                     const badgeHtml = `<span class="status-badge status-${estadoClass}">
                                            ${form.estado_display}
                                        </span>`;
+                    let buttonsHtml = '';
+
+                    const iconViewHtml = `
+                        <a href="#" class="action-icon icon-view btn-view-details" title="Ver Detalles"
+                           data-form-id="${form.id}" data-patient-name="${form.nombre_paciente}">
+                           <i class="fa-solid fa-eye fa-fw"></i>
+                        </a>`;
+                    const iconDownloadHtml = `
+                        <a href="#" class="action-icon icon-download btn-download-form" title="Descargar"
+                           data-form-id="${form.id}">
+                           <i class="fa-solid fa-download fa-fw"></i>
+                        </a>`;
+                    const iconDeleteHtml = `
+                        <a href="#" class="action-icon icon-delete btn-delete-form" title="Eliminar"
+                           data-form-id="${form.id}">
+                           <i class="fa-solid fa-trash-can fa-fw"></i>
+                        </a>`;
                     
-                    let buttonsHtml = `
-                        <button type="button" 
-                                class="btn btn-sm btn-info btn-view-details" 
-                                data-form-id="${form.id}"
-                                data-patient-name="${form.nombre_paciente}">
-                            Ver Detalles
-                        </button>
-                    `;
-                    
-                    if (showDownloadButton) {
-                         buttonsHtml += `
-                            <button type="button" 
-                                    class="btn btn-sm btn-secondary btn-download-form" 
-                                    data-form-id="${form.id}">
-                                Descargar
-                            </button>
-                        `;
-                    }
-                    if (showDeleteButton) {
-                        buttonsHtml += `
-                            <button type="button" 
-                                    class="btn btn-sm btn-danger btn-delete-form" 
-                                    data-form-id="${form.id}">
-                                Eliminar
-                            </button>
-                        `;
+                    if (tableBody === allFormsTableBody) { // Pestaña 2
+                        if (showViewDetails) {
+                             buttonsHtml += `
+                                <button type="button" 
+                                        class="btn btn-sm btn-info btn-view-details" 
+                                        data-form-id="${form.id}"
+                                        data-patient-name="${form.nombre_paciente}">
+                                    Ver Detalles
+                                </button>
+                            `;
+                        }
+                        if (showDownloadButton) {
+                             buttonsHtml += `
+                                <button type="button" 
+                                        class="btn btn-sm btn-secondary btn-download-form" 
+                                        data-form-id="${form.id}">
+                                    Descargar
+                                </button>
+                            `;
+                        }
+                        if (showDeleteButton) {
+                            buttonsHtml += `
+                                <button type="button" 
+                                        class="btn btn-sm btn-danger btn-delete-form" 
+                                        data-form-id="${form.id}">
+                                    Eliminar
+                                </button>
+                            `;
+                        }
+                    } 
+                    else { // Pestaña 4
+                        if (showViewDetails) buttonsHtml += iconViewHtml;
+                        if (showDownloadButton) buttonsHtml += iconDownloadHtml;
+                        if (showDeleteButton) buttonsHtml += iconDeleteHtml;
                     }
 
                     const createdByColumn = showCreatedBy ? `<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${form.creado_por_nombre || 'N/A'}</td>` : '';
-
                     const row = `
                         <tr id="form-row-${form.id}">
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${form.nombre_paciente}</td>
@@ -883,70 +1226,27 @@
                     tableBody.innerHTML += row;
                 });
             }
-            // ==================================
-            // FIN DE LA MODIFICACIÓN
-            // ==================================
 
-            // --- Lógica de botones en la tabla de formularios (Panel 1) ---
-            // ==================================
-            // INICIO DE LA MODIFICACIÓN (EventListener Panel 1)
-            // ==================================
-            if (userAuditDataPanel) {
-                userAuditDataPanel.addEventListener('click', function(e) {
-                    const button = e.target.closest('button');
-                    if (!button) return;
-                    
-                    const formId = button.dataset.formId; // <-- Movido arriba
-
-                    if (button.classList.contains('btn-view-details')) {
-                        const patientName = button.dataset.patientName;
-                        handleViewFormDetails(formId, patientName);
-                    }
-                    
-                    // --- Añadido para manejar Delete ---
-                    if (button.classList.contains('btn-delete-form')) {
-                        handleDeleteForm(formId, button);
-                    }
-                    
-                    // --- Añadido para manejar Download ---
-                    if (button.classList.contains('btn-download-form')) {
-                        e.stopPropagation(); 
-                        currentDownloadFormId = formId;
-                        const rect = button.getBoundingClientRect();
-                        downloadMenu.style.top = `${rect.bottom + window.scrollY}px`;
-                        downloadMenu.style.left = `${rect.left + window.scrollX - (downloadMenu.offsetWidth - rect.width)}px`;
-                        downloadMenu.classList.remove('hidden');
-                    }
-                });
-            }
-            // ==================================
-            // FIN DE LA MODIFICACIÓN
-            // ==================================
-            
-            // --- Lógica de botones en la tabla de formularios (Panel 3) ---
             if (allFormsTableBody) {
                 allFormsTableBody.addEventListener('click', function(e) {
-                    const button = e.target.closest('button');
-                    if (!button) return;
+                    const target = e.target.closest('button, a');
+                    if (!target) return;
+                    e.preventDefault(); 
                     
-                    const formId = button.dataset.formId;
-
-                    if (button.classList.contains('btn-delete-form')) {
-                        handleDeleteForm(formId, button);
+                    const formId = target.dataset.formId;
+                    if (target.classList.contains('btn-view-details')) {
+                        const patientName = target.dataset.patientName;
+                        handleViewFormDetails_P2(formId, patientName);
                     }
-                    
-                    if (button.classList.contains('btn-download-form')) {
-                        e.stopPropagation(); 
-                        currentDownloadFormId = formId;
-                        const rect = button.getBoundingClientRect();
-                        downloadMenu.style.top = `${rect.bottom + window.scrollY}px`;
-                        downloadMenu.style.left = `${rect.left + window.scrollX - (downloadMenu.offsetWidth - rect.width)}px`;
-                        downloadMenu.classList.remove('hidden');
+                    if (target.classList.contains('btn-delete-form')) {
+                        handleDeleteForm(formId, target.closest('tr'));
+                    }
+                    if (target.classList.contains('btn-download-form')) {
+                        showDownloadMenu(target, formId);
                     }
                 });
             }
             
-            // Lógica del menú de descarga
             if (downloadMenu) {
                 downloadMenu.addEventListener('click', (e) => {
                     e.preventDefault();
@@ -958,15 +1258,20 @@
                     }
                 });
             }
-            
-            // Ocultar el menú de descarga si se hace clic en otro lugar
             document.addEventListener('click', (e) => {
-                if (downloadMenu && !downloadMenu.contains(e.target) && !e.target.classList.contains('btn-download-form')) {
+                if (downloadMenu && !downloadMenu.contains(e.target) && !e.target.classList.contains('btn-download-form') && !e.target.closest('.btn-download-form')) {
                     downloadMenu.classList.add('hidden');
                 }
             });
+            function showDownloadMenu(button, formId) {
+                event.stopPropagation(); 
+                currentDownloadFormId = formId;
+                const rect = button.getBoundingClientRect();
+                downloadMenu.style.top = `${rect.bottom + window.scrollY}px`;
+                downloadMenu.style.left = `${rect.left + window.scrollX - (downloadMenu.offsetWidth - rect.width)}px`;
+                downloadMenu.classList.remove('hidden');
+            }
             
-            // --- Lógica de Filtros (Panel 3) ---
             if (searchNameInput) {
                 searchNameInput.addEventListener('input', () => renderAllFormsTable());
                 sortDateSelect.addEventListener('change', () => renderAllFormsTable());
@@ -979,209 +1284,268 @@
                 });
             }
             
-            async function loadAllForms() {
+            async function loadAllForms(callback) {
                 allFormsTableBody.innerHTML = '<tr><td colspan="5" class="p-4 text-center text-gray-500">Cargando formularios...</td></tr>';
                 try {
-                    const response = await fetch(`/api/todos_los_formularios/`);
+                    const response = await fetch(`{% url 'api_obtener_todos_los_formularios' %}`);
                     if (!response.ok) throw new Error('Error de red');
                     const data = await response.json();
-                    
                     if (data.status === 'exito') {
-                        allFormsData = data.formularios; // Guardar en caché
-                        renderAllFormsTable(); // Renderizar
+                        allFormsData = data.formularios; 
+                        renderAllFormsTable(); 
+                        if (callback) callback(allFormsData);
                     } else {
                         throw new Error(data.message);
                     }
                 } catch (error) {
-                    console.error("[DEBUG] Falló fetch de todos los formularios:", error);
+                    console.error("Error cargando formularios:", error);
                     allFormsTableBody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-red-500">${error.message}</td></tr>`;
+                    if(callback === updateDashboardStats) {
+                        statNumber.textContent = "Error";
+                        statSubtitle.textContent = "No se pudieron cargar datos.";
+                    }
                 }
             }
             
-            // Función para renderizar la tabla principal de formularios con filtros
             function renderAllFormsTable() {
                 let filteredForms = [...allFormsData];
-
                 const searchTerm = searchNameInput.value.toLowerCase();
                 if (searchTerm) {
                     filteredForms = filteredForms.filter(form => 
                         form.nombre_paciente.toLowerCase().includes(searchTerm)
                     );
                 }
-
                 const status = filterStatusSelect.value;
                 if (status !== 'todos') {
-                    filteredForms = filteredForms.filter(form => form.estado === status);
+                    if(status === 'PENDIENTE') {
+                        filteredForms = filteredForms.filter(form => form.estado === 'PENDIENTE' || form.estado === 'MODIFICADO');
+                    } else {
+                        filteredForms = filteredForms.filter(form => form.estado === status);
+                    }
                 }
-
                 const sortOrder = sortDateSelect.value;
                 filteredForms.sort((a, b) => {
                     const dateA = a.creado_en.split('-').reverse().join('-');
                     const dateB = b.creado_en.split('-').reverse().join('-');
                     if (sortOrder === 'mas-nuevos') {
-                        return dateB.localeCompare(dateA); // B vs A
+                        return dateB.localeCompare(dateA);
                     } else {
-                        return dateA.localeCompare(dateB); // A vs B
+                        return dateA.localeCompare(dateB);
                     }
                 });
-
-                populateFormsTable(filteredForms, allFormsTableBody, true, true, true); // (forms, container, showDelete, showDownload, showCreatedBy)
+                populateFormsTable(filteredForms, allFormsTableBody, true, true, true, true); 
             }
             
-            
-            function handleDeleteForm(formId, button) {
-                const row = button.closest('tr');
-                
-                const confirmacion = prompt("Esta acción es PERMANENTE.\n\nEscriba 'ELIMINAR' para confirmar la eliminación de este formulario.");
-                if (confirmacion !== 'ELIMINAR') {
-                    alert('Eliminación cancelada.');
-                    return;
-                }
-                
-                button.disabled = true;
-                button.textContent = 'Eliminando...';
-
-                fetch(`/api/formulario/eliminar/${formId}/`, {
-                    method: 'POST',
-                    headers: { 'X-CSRFToken': csrftoken }
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.status === 'exito') {
-                        alert('Formulario eliminado.');
-                        row.remove();
-                        allFormsData = allFormsData.filter(form => form.id !== formId);
-                    } else {
-                        alert('Error al eliminar: ' + data.message);
-                        button.disabled = false;
-                        button.textContent = 'Eliminar';
-                    }
-                })
-                .catch(error => {
-                    console.error('[DEBUG] ¡FALLÓ EL FETCH de Eliminar!', error);
-                    alert('Error de red: ' + error.message);
-                    button.disabled = false;
-                    button.textContent = 'Eliminar';
-                });
-            }
-            
-            // --- Lógica para mostrar el Panel 2 ---
-            
-            function handleViewFormDetails(formId, patientName) {
-                console.log(`[DEBUG] Viendo detalles del formulario. ID: ${formId}, Paciente: ${patientName}`);
-                auditContent.classList.add('hidden');
-                formAuditDetailPanel.classList.remove('hidden');
-                
-                formAuditPatientName.textContent = patientName || `Caso #${formId.substring(0,8)}`;
-                
-                formAuditTabs.forEach(t => t.classList.remove('active-tab'));
-                formAuditTabContents.forEach(c => c.classList.remove('active-tab-content'));
-                document.getElementById('tab-form-datos').classList.add('active-tab');
-                document.getElementById('content-form-datos').classList.add('active-tab-content');
-
-                const formData = currentApiData.formularios.find(f => f.id === formId) || 
-                                 currentApiData.formularios_gestionados.find(f => f.id === formId);
-                                 
-                const userActions = currentApiData.actions || [];
-                
-                loadFormAuditDatos(formId, formData);
-                loadFormAuditChat(formId);
-                loadFormAuditTimeline(formId, formData, userActions);
-            }
-            
-            if (backToUserAuditBtn) {
-                backToUserAuditBtn.addEventListener('click', () => {
-                    formAuditDetailPanel.classList.add('hidden');
-                    auditContent.classList.remove('hidden');
-                    if (currentAuditedUserId) {
-                        const userItem = userListDiv.querySelector(`.notification-item[data-user-id="${currentAuditedUserId}"]`);
-                        if (userItem) {
-                             loadUserAuditData(currentAuditedUserId, userItem.dataset.userName, userItem.dataset.userRole);
+            function handleDeleteForm(formId, row) {
+                swalWithBootstrapButtons.fire({
+                  title: "¿Estás seguro?",
+                  text: "¡No podrás revertir esto! Se eliminará el formulario.",
+                  icon: "warning",
+                  showCancelButton: true,
+                  confirmButtonText: "Sí, ¡elimínalo!",
+                  cancelButtonText: "No, ¡cancela!",
+                  reverseButtons: true
+                }).then((result) => {
+                  if (result.isConfirmed) {
+                    fetch(`{% url 'eliminar_formulario' form_id=0 %}`.replace('0', formId), {
+                        method: 'POST',
+                        headers: { 'X-CSRFToken': csrftoken }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.status === 'exito') {
+                            swalWithBootstrapButtons.fire("¡Eliminado!", "El formulario ha sido eliminado.", "success");
+                            row.remove();
+                            allFormsData = allFormsData.filter(form => form.id !== formId);
+                            if(currentApiData.formularios) {
+                                 currentApiData.formularios = currentApiData.formularios.filter(form => form.id !== formId);
+                            }
+                            if(currentApiData.formularios_gestionados) {
+                                 currentApiData.formularios_gestionados = currentApiData.formularios_gestionados.filter(form => form.id !== formId);
+                            }
+                            updateDashboardStats(allFormsData);
+                        } else {
+                            swalWithBootstrapButtons.fire("Error", `Error al eliminar: ${data.message}`, "error");
                         }
-                    }
+                    })
+                    .catch(error => {
+                        swalWithBootstrapButtons.fire("Error", `Error de red: ${error.message}`, "error");
+                    });
+                  } else if (result.dismiss === Swal.DismissReason.cancel) {
+                    swalWithBootstrapButtons.fire("Cancelado", "El formulario está a salvo :)", "error");
+                  }
                 });
             }
             
-            // --- Funciones para poblar los datos (Panel 2) ---
+            function handleViewFormDetails_P2(formId, patientName) {
+                currentFormId_P2 = formId; 
+                formDetailModal_P2.classList.remove('hidden');
+                formDetailPatientName_P2.textContent = patientName || `Caso #${formId.substring(0,8)}`;
+                
+                formDetailTabs_P2.forEach(t => t.classList.remove('active-tab'));
+                formDetailTabContents_P2.forEach(c => c.classList.remove('active-tab-content'));
+                document.getElementById('tab-form-datos-p2').classList.add('active-tab');
+                document.getElementById('content-form-datos-p2').classList.add('active-tab-content');
+
+                const formData = allFormsData.find(f => f.id === formId);
+                loadFormAuditDatos_P2(formId, formData);
+                buildUnifiedTimeline(formDetailTimelineBody_P2, formId, formData);
+            }
             
-            async function loadFormAuditDatos(formId, formData) {
-                formAuditDatosBody.innerHTML = '<p>Cargando datos...</p>';
+            async function loadFormAuditDatos_P2(formId, formData) {
+                formDetailDatosBody_P2.innerHTML = '<p>Cargando datos...</p>';
                 if (!formData) {
-                     console.error("[DEBUG] No se encontraron datos del formulario en el cache local.");
-                     formAuditDatosBody.innerHTML = `<p class="text-red-500">No se pudieron cargar los datos.</p>`;
+                     formDetailDatosBody_P2.innerHTML = `<p class="text-red-500">No se pudieron cargar los datos.</p>`;
                      return;
                 }
-                
-                formAuditDatosBody.innerHTML = `
+                formDetailDatosBody_P2.innerHTML = `
                     <div class="data-item"><span class="data-item-label">Paciente:</span> <p class="data-item-value">${formData.nombre_paciente}</p></div>
                     <div class="data-item"><span class="data-item-label">Fecha Creación:</span> <p class="data-item-value">${formData.creado_en}</p></div>
+                    <div class="data-item"><span class="data-item-label">Creado Por:</span> <p class="data-item-value">${formData.creado_por_nombre || 'N/A'}</p></div>
                 `;
-                
                 try {
-                    console.log(`[DEBUG] Buscando detalles (RUT) para form: ${formId}`);
                     const response = await fetch(`/api/formulario_detalle/${formId}/`);
                     const data = await response.json();
                     if (data.status === 'exito') {
-                         console.log("[DEBUG] Detalles recibidos:", data.detalles);
-                         formAuditDatosBody.innerHTML += `<div class="data-item"><span class="data-item-label">RUT:</span> <p class="data-item-value">${data.detalles.rut_paciente || 'N/A'}</p></div>`;
+                         formDetailDatosBody_P2.innerHTML += `<div class="data-item"><span class="data-item-label">RUT:</span> <p class="data-item-value">${data.detalles.rut_paciente || 'N/A'}</p></div>`;
                     }
-                } catch(e) { 
-                    console.error("[DEBUG] Falló fetch de detalles (RUT):", e);
-                }
+                } catch(e) { /* No es crítico */ }
             }
             
-            async function loadFormAuditChat(formId) {
-                formAuditChatHistory.innerHTML = '<p class="m-auto text-gray-500">Cargando chat...</p>';
-                try {
-                    const apiUrl = `/api/chat_mensajes/${formId}/`;
-                    console.log(`[DEBUG] Llamando API de Chat de Formulario: ${apiUrl}`);
-                    const response = await fetch(apiUrl);
-                    if (!response.ok) throw new Error('No se pudo cargar el chat');
-                    const data = await response.json();
-                    
-                    console.log(`[DEBUG] Datos de Chat de Formulario (${formId}) recibidos:`, data);
-                    
-                    if (data.status === 'exito') {
-                        populateChatHistory(formAuditChatHistory, data.mensajes, null); 
-                    } else {
-                        throw new Error(data.message);
-                    }
-                } catch (error) {
-                    console.error("[DEBUG] Falló fetch de chat de formulario:", error);
-                    formAuditChatHistory.innerHTML = `<p class="m-auto text-red-500">${error.message}</p>`;
-                }
-            }
-            
-            function loadFormAuditTimeline(formId, formData, userActions) {
-                formAuditTimelineBody.innerHTML = ''; 
-                
-                formAuditTimelineBody.innerHTML += `
-                    <div class="timeline-item">
-                        <div class="timeline-dot active"></div>
-                        <div class="timeline-content">
-                            <p class="timeline-title">Formulario Creado</p>
-                            <p class="timeline-time">${formData.creado_en}</p>
-                        </div>
-                    </div>`;
+            // --- NUEVA FUNCIÓN DE TIMELINE (Formato HH:MM — Título (Detalle)) ---
+            async function buildUnifiedTimeline(timelineBody, formId, formData) {
+                timelineBody.innerHTML = '<p>Cargando historial...</p>';
+                let events = [];
+                const baseDate = parseTimestamp(formData.creado_en, true);
+                let lastDate = baseDate;
 
+                if (formData.creado_en) {
+                    events.push({
+                        date: baseDate,
+                        title: 'Se creó el formulario',
+                        detail: `(${formData.nombre_paciente || 'N/A'})`
+                    });
+                    lastDate = new Date(baseDate.getTime() + 1000);
+                    events.push({
+                        date: lastDate,
+                        title: 'El formulario fue enviado',
+                        detail: `(a Recepción)`
+                    });
+                }
+                
+                try {
+                    const response = await fetch(`/api/chat_mensajes/${formId}/`);
+                    const data = await response.json();
+                    if (data.status === 'exito' && data.mensajes) {
+                        data.mensajes.forEach(msg => {
+                            let title = `Mensaje de ${msg.autor_nombre}`;
+                            let detail = `("${msg.mensaje}")`;
+                            const msgDate = parseTimestamp(msg.timestamp, false, true, baseDate);
+                            
+                            if(msg.autor_rol === 'Ambulancia' && msg.mensaje.toLowerCase().includes('registró la recepción')) {
+                                title = 'El creador del formulario registró la recepción';
+                                detail = `("${msg.mensaje.split('("')[1].split('")')[0]}")`;
+                            }
+                            
+                            events.push({ date: msgDate, title: title, detail: detail });
+                            if(msgDate > lastDate) lastDate = msgDate;
+                        });
+                    }
+                } catch(e) { console.warn("Error cargando chat:", e); }
+                
+                // Simular eventos de estado (ya que no tenemos timestamps)
+                if (formData.estado === 'REQUIERE_MODIFICACION') {
+                    lastDate = new Date(lastDate.getTime() + 1000);
+                    events.push({
+                        date: lastDate,
+                        title: 'Se solicitó una modificación',
+                        detail: ''
+                    });
+                }
+                if (formData.estado === 'MODIFICADO') {
+                    lastDate = new Date(lastDate.getTime() + 1000);
+                    events.push({
+                        date: lastDate,
+                        title: 'Se solicitó una modificación',
+                        detail: ''
+                    });
+                    lastDate = new Date(lastDate.getTime() + 1000);
+                    events.push({
+                        date: lastDate,
+                        title: 'El formulario fue modificado',
+                        detail: ''
+                    });
+                }
                 if (formData.estado === 'APROBADO') {
-                     formAuditTimelineBody.innerHTML += `
+                    lastDate = new Date(lastDate.getTime() + 1000);
+                    events.push({
+                        date: lastDate,
+                        title: 'El formulario fue aprobado',
+                        detail: ''
+                    });
+                    lastDate = new Date(lastDate.getTime() + 1000);
+                     events.push({
+                        date: lastDate,
+                        title: 'Finalización del proceso del formulario',
+                        detail: ''
+                    });
+                }
+                
+                events = events.filter(e => e.date !== null);
+                events.sort((a, b) => a.date - b.date);
+                timelineBody.innerHTML = '';
+                if (events.length === 0) {
+                    timelineBody.innerHTML = '<p>No hay historial de eventos.</p>';
+                    return;
+                }
+
+                events.forEach(event => {
+                    const time = event.date.toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' });
+                    const titleHtml = `<p class="timeline-title">${time} &mdash; ${event.title} <span class="font-normal text-gray-600">${event.detail}</span></p>`;
+                    timelineBody.innerHTML += `
                         <div class="timeline-item">
                             <div class="timeline-dot active"></div>
                             <div class="timeline-content">
-                                <p class="timeline-title">Formulario Aprobado</p>
-                                <p class="timeline-time">(Fecha de aprobación no registrada)</p>
+                                ${titleHtml}
                             </div>
                         </div>`;
-                } else if (formData.estado !== 'PENDIENTE') {
-                     formAuditTimelineBody.innerHTML += `
-                        <div class="timeline-item">
-                            <div class="timeline-dot active"></div>
-                            <div class="timeline-content">
-                                <p class="timeline-title">Estado Actual: ${formData.estado_display}</p>
-                                <p class="timeline-time">Desde ${formData.creado_en}</p>
-                            </div>
-                        </div>`;
+                });
+            }
+            
+            function parseTimestamp(timestampStr, isDMY = false, isTimeOnly = false, baseDate = new Date()) {
+                if (!timestampStr) return null;
+                try {
+                    if (isTimeOnly) {
+                        const timeParts = timestampStr.match(/(\d+):(\d+)\s*(AM|PM)?/i);
+                        if (!timeParts) return baseDate;
+                        let hours = parseInt(timeParts[1]);
+                        const minutes = parseInt(timeParts[2]);
+                        const period = (timeParts[3] || '').toUpperCase();
+                        if (period === 'PM' && hours < 12) hours += 12;
+                        if (period === 'AM' && hours === 12) hours = 0;
+                        const newDate = new Date(baseDate.getTime());
+                        newDate.setHours(hours, minutes, 0, 0);
+                        return newDate;
+                    }
+                    
+                    // Formato YYYY-MM-DD HH:MM:SS (de data.actions)
+                    if (timestampStr.includes(' ')) {
+                         const parts = timestampStr.split(' ');
+                         const dateParts = parts[0].split('-'); // YYYY, MM, DD
+                         const timeParts = (parts[1]) ? parts[1].split(':') : ['0', '0', '0'];
+                         return new Date(dateParts[0], dateParts[1] - 1, dateParts[2], timeParts[0] || 0, timeParts[1] || 0, timeParts[2] || 0);
+                    }
+                    
+                    // Formato DD-MM-YYYY (de data.formularios)
+                    if (isDMY) { 
+                        const dateParts = timestampStr.split('-');
+                        return new Date(dateParts[2], dateParts[1] - 1, dateParts[0], 0, 0, 0);
+                    } 
+                    
+                    return null; // Formato no reconocido
+
+                } catch(e) {
+                    return null;
                 }
             }
             
@@ -1192,9 +1556,8 @@
                 }
                 const loadingDiv = document.createElement('div');
                 loadingDiv.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
-                loadingDiv.innerHTML = '<div class="bg-white p-4 rounded-lg shadow-xl">Descargando archivo...</div>';
+                loadingDiv.innerHTML = '<div class="bg-white p-4 rounded-lg shadow-xl">Generando archivo...</div>';
                 document.body.appendChild(loadingDiv);
-                
                 try {
                     const response = await fetch(`/api/exportar_formulario/${formId}/${formato}/`);
                     if (!response.ok) {
@@ -1222,72 +1585,145 @@
                     window.URL.revokeObjectURL(url);
                     a.remove();
                 } catch (error) {
-                    console.error('Error al descargar:', error);
                     alert(`Error al descargar el archivo: ${error.message}.`);
                 } finally {
                     document.body.removeChild(loadingDiv);
                 }
             }
-
-            function getCookie(name) {
-                let cookieValue = null;
-                if (document.cookie && document.cookie !== '') {
-                    const cookies = document.cookie.split(';');
-                    for (let i = 0; i < cookies.length; i++) {
-                        const cookie = cookies[i].trim();
-                        if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                            break;
-                        }
-                    }
-                }
-                return cookieValue;
+            
+            // ==================================
+            // PESTAÑA 3: LÓGICA GESTIÓN DE USUARIOS
+            // ==================================
+            
+            function filterUserTable() {
+                const searchTerm = userSearchName.value.toLowerCase();
+                const role = userFilterRole.value;
+                const rows = userListTableBody.querySelectorAll('tr.user-table-row');
+                rows.forEach(row => {
+                    const username = row.querySelector('.user-username')?.textContent.toLowerCase() || '';
+                    const fullname = row.querySelector('.user-fullname')?.textContent.toLowerCase() || '';
+                    const userRole = row.querySelector('.user-role')?.dataset.role || '';
+                    const matchesSearch = username.includes(searchTerm) || fullname.includes(searchTerm);
+                    const matchesRole = (role === 'todos') || (userRole === role);
+                    row.style.display = (matchesSearch && matchesRole) ? '' : 'none';
+                });
+            }
+            if (userSearchName) {
+                userSearchName.addEventListener('input', filterUserTable);
+                userFilterRole.addEventListener('change', filterUserTable);
+                resetUserFiltersBtn.addEventListener('click', () => {
+                    userSearchName.value = '';
+                    userFilterRole.value = 'todos';
+                    filterUserTable();
+                });
             }
             
-            // --- LÓGICA MODAL CREAR USUARIO ---
+            if (userListTableBody) {
+                 userListTableBody.addEventListener('click', (e) => {
+                     const button = e.target.closest('button');
+                     if (!button) return;
+                     const userId = button.dataset.userId;
+                     if (button.classList.contains('btn-view-activity')) {
+                         navigateToTab('main-tab-auditoria', 'content-auditoria');
+                         const auditUserItem = userListDiv.querySelector(`.notification-item[data-user-id="${userId}"]`);
+                         if(auditUserItem) auditUserItem.click();
+                     }
+                     if (button.classList.contains('btn-edit-user')) {
+                         document.getElementById('edit_user_id').value = userId;
+                         document.getElementById('edit_username').value = button.dataset.username;
+                         const fullName = button.dataset.fullname;
+                         document.getElementById('edit_first_name').value = fullName.split(' ')[0] || '';
+                         document.getElementById('edit_last_name').value = fullName.split(' ').slice(1).join(' ') || '';
+                         document.getElementById('edit_rut').value = button.dataset.rut;
+                         document.getElementById('edit_email').value = button.dataset.email;
+                         document.getElementById('edit_role').value = button.dataset.role;
+                         document.getElementById('edit_password').value = ''; 
+                         userEditMessage.style.display = 'none';
+                         editUserModal.classList.remove('hidden');
+                     }
+                     if (button.classList.contains('btn-delete-user')) {
+                         handleDeleteUser(userId, button.closest('tr'));
+                     }
+                 });
+            }
             
-            const createUserModal = document.getElementById('createUserModal');
-            const showCreateUserModalBtn = document.getElementById('showCreateUserModalBtn');
-            const closeCreateModalBtn = document.getElementById('closeCreateModalBtn');
-            const createUserForm = document.getElementById('createUserForm');
-            const userCreateMessage = document.getElementById('userCreateMessage');
-            const modalOverlayBg = createUserModal.querySelector('.modal-overlay-bg');
+            if (closeEditModalBtn) {
+                closeEditModalBtn.addEventListener('click', () => editUserModal.classList.add('hidden'));
+                editUserModal.querySelector('.modal-overlay-bg').addEventListener('click', () => editUserModal.classList.add('hidden'));
+            }
+            if (editUserForm) {
+                editUserForm.addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    const submitButton = editUserForm.querySelector('button[type="submit"]');
+                    submitButton.disabled = true;
+                    submitButton.textContent = 'Guardando...';
 
-            const showModal = () => {
-                createUserModal.classList.remove('hidden');
-                userCreateMessage.style.display = 'none';
-                createUserForm.reset();
-            };
-            
-            const closeModal = () => {
-                createUserModal.classList.add('hidden');
-            };
+                    // TODO: Backend para editar usuario no implementado en views.py
+                    
+                    setTimeout(() => { // Simulación
+                        userEditMessage.textContent = 'Simulación: Usuario actualizado. (Backend no implementado)';
+                        userEditMessage.className = 'message-box message-success';
+                        userEditMessage.style.display = 'block';
+                        submitButton.disabled = false;
+                        submitButton.textContent = 'Guardar Cambios';
+                        setTimeout(() => {
+                            editUserModal.classList.add('hidden');
+                            location.reload(); 
+                        }, 2000);
+                    }, 1000);
+                });
+            }
+
+            function handleDeleteUser(userId, row) {
+                swalWithBootstrapButtons.fire({
+                  title: "¿Estás seguro?",
+                  text: "¡No podrás revertir esto! El usuario será eliminado.",
+                  icon: "warning",
+                  showCancelButton: true,
+                  confirmButtonText: "Sí, ¡elimínalo!",
+                  cancelButtonText: "No, ¡cancela!",
+                  reverseButtons: true
+                }).then((result) => {
+                  if (result.isConfirmed) {
+                    
+                    // TODO: Backend para eliminar usuario no implementado en views.py
+                    // fetch(`/api/supervisor/eliminar_usuario/${userId}/`, { ... })
+                    
+                    console.log("Simulando eliminación de usuario:", userId);
+                    swalWithBootstrapButtons.fire("¡Eliminado!", "El usuario ha sido eliminado. (Simulación)", "success");
+                    row.remove();
+                    
+                  } else if (result.dismiss === Swal.DismissReason.cancel) {
+                    swalWithBootstrapButtons.fire("Cancelado", "El usuario está a salvo :)", "error");
+                  }
+                });
+            }
 
             if (showCreateUserModalBtn) {
-                showCreateUserModalBtn.addEventListener('click', showModal);
+                showCreateUserModalBtn.addEventListener('click', () => {
+                    createUserModal.classList.remove('hidden');
+                    userCreateMessage.style.display = 'none';
+                    createUserForm.reset();
+                });
             }
             if (closeCreateModalBtn) {
-                closeCreateModalBtn.addEventListener('click', closeModal);
+                closeCreateModalBtn.addEventListener('click', () => createUserModal.classList.add('hidden'));
             }
-            if (modalOverlayBg) {
-                modalOverlayBg.addEventListener('click', closeModal);
+            if (createUserModal) {
+                createUserModal.querySelector('.modal-overlay-bg').addEventListener('click', () => createUserModal.classList.add('hidden'));
             }
-
             if (createUserForm) {
                 createUserForm.addEventListener('submit', async (e) => {
                     e.preventDefault();
-                    
                     const submitButton = createUserForm.querySelector('button[type="submit"]');
                     submitButton.disabled = true;
                     submitButton.textContent = 'Creando...';
-                    
                     userCreateMessage.style.display = 'none';
-
                     const formData = new FormData(createUserForm);
                     const data = Object.fromEntries(formData.entries());
 
                     try {
-                        const response = await fetch(`/api/supervisor/crear_usuario/`, { 
+                        const response = await fetch(`{% url 'api_crear_usuario' %}`, { 
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json',
@@ -1295,24 +1731,17 @@
                             },
                             body: JSON.stringify(data)
                         });
-                        
                         const result = await response.json();
-                        
                         if (response.ok && result.status === 'exito') {
                             userCreateMessage.textContent = '¡Usuario creado con éxito!';
                             userCreateMessage.className = 'message-box message-success';
                             userCreateMessage.style.display = 'block';
-                            
                             setTimeout(() => {
-                                closeModal();
-                                // Recargar la página para ver al nuevo usuario en la lista
                                 location.reload(); 
                             }, 2000);
-                            
                         } else {
                             throw new Error(result.message || 'Error desconocido');
                         }
-                        
                     } catch (error) {
                         userCreateMessage.textContent = `Error: ${error.message}`;
                         userCreateMessage.className = 'message-box message-error';
@@ -1323,7 +1752,383 @@
                     }
                 });
             }
+            
+            // ==================================
+            // PESTAÑA 4: LÓGICA AUDITORÍA POR USUARIO
+            // ==================================
+            
+            if (userAuditTabs.length > 0) {
+                userAuditTabs.forEach(tab => {
+                    tab.addEventListener('click', () => {
+                        userAuditTabs.forEach(t => t.classList.remove('active-tab'));
+                        userAuditTabContents.forEach(c => c.classList.remove('active-tab-content'));
+                        tab.classList.add('active-tab');
+                        const contentId = tab.id.replace('tab-audit-', 'content-audit-'); 
+                        document.getElementById(contentId).classList.add('active-tab-content');
+                    });
+                });
+            }
+            
+            if (formAuditTabs.length > 0) {
+                formAuditTabs.forEach(tab => {
+                    tab.addEventListener('click', () => {
+                        formAuditTabs.forEach(t => t.classList.remove('active-tab'));
+                        formAuditTabContents.forEach(c => c.classList.remove('active-tab-content'));
+                        tab.classList.add('active-tab');
+                        const contentId = tab.id.replace('tab-form-', 'content-form-') + '-audit';
+                        formAuditDetailPanel.querySelector(`#${contentId}`).classList.add('active-tab-content');
+                    });
+                });
+            }
 
+            if (userListDiv) {
+                userListDiv.querySelectorAll('.notification-item').forEach(item => {
+                    item.addEventListener('click', () => {
+                        formAuditDetailPanel.classList.add('hidden');
+                        auditContent.classList.remove('hidden');
+                        userListDiv.querySelectorAll('.notification-item').forEach(i => i.classList.remove('active'));
+                        item.classList.add('active');
+                        const userId = item.dataset.userId;
+                        const userName = item.dataset.userName;
+                        const userRole = item.dataset.userRole;
+                        currentAuditedUserId = userId; 
+                        currentAuditedUserRole = userRole; 
+                        loadUserAuditData(userId, userName, userRole);
+                    });
+                });
+            }
+            
+            async function loadUserAuditData(userId, userName, userRole) {
+                auditUserName.textContent = `${userName} (${userRole})`;
+                auditPlaceholder.style.display = 'none';
+                userAuditDataPanel.classList.remove('hidden');
+                
+                const timelineTab = document.getElementById('tab-audit-timeline');
+                const formulariosTab = document.getElementById('tab-audit-formularios');
+                const formulariosGestionadosTab = document.getElementById('tab-audit-formularios-gestionados');
+                const chatsTab = document.getElementById('tab-audit-chats');
+                
+                timelineTab.style.display = 'none';
+                formulariosTab.style.display = 'none';
+                formulariosGestionadosTab.style.display = 'none';
+                chatsTab.style.display = 'none';
+                
+                userAuditTabs.forEach(t => t.classList.remove('active-tab'));
+                userAuditTabContents.forEach(c => c.classList.remove('active-tab-content'));
+
+                if (userRole === 'Ambulancia') {
+                    timelineTab.style.display = 'inline-block';
+                    formulariosTab.style.display = 'inline-block';
+                    timelineTab.classList.add('active-tab'); // <-- Modificado: Timeline es la nueva default
+                    document.getElementById('content-audit-timeline').classList.add('active-tab-content'); // <-- Modificado
+                } else if (userRole === 'Recepcion') {
+                    timelineTab.style.display = 'inline-block';
+                    formulariosGestionadosTab.style.display = 'inline-block';
+                    timelineTab.classList.add('active-tab'); // <-- Modificado: Timeline es la nueva default
+                    document.getElementById('content-audit-timeline').classList.add('active-tab-content'); // <-- Modificado
+                } else { 
+                    timelineTab.style.display = 'inline-block';
+                    chatsTab.style.display = 'inline-block';
+                    timelineTab.classList.add('active-tab');
+                    document.getElementById('content-audit-timeline').classList.add('active-tab-content');
+                }
+
+                auditTimelineBody.innerHTML = '<p>Cargando línea de tiempo...</p>'; // <-- Modificado
+                chatHistory.innerHTML = '<p class="m-auto text-gray-500">Cargando chat...</p>';
+                auditFormsTableBody.innerHTML = '<tr><td colspan="4" class="p-4 text-center text-gray-500">Cargando formularios...</td></tr>';
+                auditFormsGestionadosTableBody.innerHTML = '<tr><td colspan="4" class="p-4 text-center text-gray-500">Cargando formularios...</td></tr>';
+
+                try {
+                    const response = await fetch(`/api/audit_logs/${userId}/`);
+                    if (!response.ok) throw new Error(`Error HTTP ${response.status}`);
+                    
+                    const data = await response.json();
+                    currentApiData = data; 
+                    
+                    // --- NUEVA FUNCIÓN DE TIMELINE (Pestaña 4) ---
+                    buildAuditTimeline(data.actions, data.formularios, data.formularios_gestionados, userRole);
+                    
+                    populateChatHistory(chatHistory, data.chat, currentAuditedUserRole);
+                    populateFormsTable(data.formularios, auditFormsTableBody, true, true, false, true); 
+                    populateFormsTable(data.formularios_gestionados, auditFormsGestionadosTableBody, true, true, false, true);
+                    
+                } catch (error) {
+                    console.error('[DEBUG] ¡FALLÓ EL FETCH de Auditoría!', error);
+                    auditTimelineBody.innerHTML = `<p class="text-red-500">Error al cargar línea de tiempo.</p>`;
+                    chatHistory.innerHTML = `<p class="m-auto text-red-500">Error al cargar chat.</p>`;
+                    auditFormsTableBody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-red-500">Error al cargar formularios.</td></tr>`;
+                    auditFormsGestionadosTableBody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-red-500">Error al cargar formularios.</td></tr>`;
+                }
+            }
+
+            // --- NUEVA LÍNEA DE TIEMPO (Pestaña 4) ---
+            function buildAuditTimeline(actions, formularios, formulariosGestionados, role) {
+                auditTimelineBody.innerHTML = '';
+                let events = [];
+                const today = new Date(); 
+                today.setHours(0, 0, 0, 0);
+                const tomorrow = new Date(today);
+                tomorrow.setDate(today.getDate() + 1);
+
+                // 1. Filtrar acciones de LogEntry de hoy
+                actions.forEach(action => {
+                    const actionDate = parseTimestamp(action.timestamp, false, false);
+                    if (actionDate >= today && actionDate < tomorrow) {
+                        events.push({
+                            date: actionDate,
+                            title: action.type,
+                            detail: `(${action.detail})`
+                        });
+                    }
+                });
+                
+                // 2. Filtrar formularios creados hoy (si es Ambulancia)
+                if (role === 'Ambulancia') {
+                    formularios.forEach(form => {
+                        const formDate = parseTimestamp(form.creado_en, true);
+                        if (formDate >= today && formDate < tomorrow) {
+                            events.push({
+                                date: formDate,
+                                title: 'Formulario Creado',
+                                detail: `(${form.nombre_paciente})`
+                            });
+                        }
+                    });
+                }
+                
+                // 3. Filtrar formularios gestionados hoy (si es Recepcion)
+                // TODO: Esto sigue dependiendo de 'creado_en'. Se necesita
+                // un 'aprobado_en' o 'modificado_en' en la API para ser preciso.
+                if (role === 'Recepcion') {
+                    formulariosGestionados.forEach(form => {
+                         const formDate = parseTimestamp(form.creado_en, true);
+                         if (formDate >= today && formDate < tomorrow) {
+                            events.push({
+                                date: formDate,
+                                title: `Formulario Gestionado (${form.estado_display})`,
+                                detail: `(${form.nombre_paciente})`
+                            });
+                        }
+                    });
+                }
+                
+                events.sort((a, b) => b.date - a.date); // Más nuevos primero
+
+                if (events.length === 0) {
+                    auditTimelineBody.innerHTML = '<p class="text-center text-gray-500">No hay acciones registradas hoy.</p>';
+                    return;
+                }
+
+                events.forEach(event => {
+                    const time = event.date.toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' });
+                    const titleHtml = `<p class="timeline-title">${time} &mdash; ${event.title} <span class="font-normal text-gray-600">${event.detail}</span></p>`;
+                    auditTimelineBody.innerHTML += `
+                        <div class="timeline-item">
+                            <div class="timeline-dot active"></div>
+                            <div class="timeline-content">
+                                ${titleHtml}
+                            </div>
+                        </div>`;
+                });
+            }
+
+            function populateChatHistory(container, messages, auditedRole) {
+                container.innerHTML = '';
+                if (!messages || messages.length === 0) {
+                    container.innerHTML = '<p class="m-auto text-gray-500">No hay mensajes.</p>';
+                    return;
+                }
+                if (auditedRole) {
+                    messages.reverse();
+                }
+                messages.forEach(msg => {
+                    if (!msg.autor_nombre || !msg.mensaje) return; 
+                    const isPersonal = (auditedRole && (msg.autor_rol === auditedRole));
+                    const chatClass = isPersonal ? 'chat-personal' : 'chat-receptor';
+                    const messageEl = `
+                        <div class="chat-message text-sm ${chatClass}">
+                            <div class="meta meta-sender">${msg.autor_nombre} (${msg.autor_rol || 'N/A'})</div>
+                            <p>${msg.mensaje}</p> 
+                            <div class="meta meta-time">${msg.timestamp || '??:??'}</div>
+                        </div>
+                    `;
+                    container.innerHTML += messageEl;
+                });
+                container.scrollTop = container.scrollHeight;
+            }
+
+            if (userAuditDataPanel) {
+                userAuditDataPanel.addEventListener('click', function(e) {
+                    const target = e.target.closest('button, a'); 
+                    if (!target) return;
+                    e.preventDefault();
+                    
+                    const formId = target.dataset.formId;
+                    if (target.classList.contains('btn-view-details')) {
+                        const patientName = target.dataset.patientName;
+                        handleViewFormDetails_Audit(formId, patientName);
+                    }
+                    if (target.classList.contains('btn-delete-form')) {
+                        handleDeleteForm(formId, target.closest('tr'));
+                    }
+                    if (target.classList.contains('btn-download-form')) {
+                        showDownloadMenu(target, formId);
+                    }
+                });
+            }
+            
+            function handleViewFormDetails_Audit(formId, patientName) {
+                auditContent.classList.add('hidden');
+                formAuditDetailPanel.classList.remove('hidden');
+                formAuditPatientName.textContent = patientName || `Caso #${formId.substring(0,8)}`;
+                
+                formAuditTabs.forEach(t => t.classList.remove('active-tab'));
+                formAuditTabContents.forEach(c => c.classList.remove('active-tab-content'));
+                document.getElementById('tab-form-datos').classList.add('active-tab');
+                formAuditDetailPanel.querySelector('#content-form-datos-audit').classList.add('active-tab-content');
+
+                const formData = currentApiData.formularios.find(f => f.id === formId) || 
+                                 currentApiData.formularios_gestionados.find(f => f.id === formId);
+                
+                loadFormAuditDatos_Audit(formId, formData);
+                loadFormAuditChat_Audit(formId);
+                buildUnifiedTimeline(formAuditTimelineBody, formId, formData);
+            }
+            
+            if (backToUserAuditBtn) {
+                backToUserAuditBtn.addEventListener('click', () => {
+                    formAuditDetailPanel.classList.add('hidden');
+                    auditContent.classList.remove('hidden');
+                    if (currentAuditedUserId) {
+                        const userItem = userListDiv.querySelector(`.notification-item[data-user-id="${currentAuditedUserId}"]`);
+                        if (userItem) {
+                             loadUserAuditData(currentAuditedUserId, userItem.dataset.userName, userItem.dataset.userRole);
+                        }
+                    }
+                });
+            }
+            
+            async function loadFormAuditDatos_Audit(formId, formData) {
+                formAuditDatosBody.innerHTML = '<p>Cargando datos...</p>';
+                if (!formData) {
+                     formAuditDatosBody.innerHTML = `<p class="text-red-500">No se pudieron cargar los datos.</p>`;
+                     return;
+                }
+                formAuditDatosBody.innerHTML = `
+                    <div class="data-item"><span class="data-item-label">Paciente:</span> <p class="data-item-value">${formData.nombre_paciente}</p></div>
+                    <div class="data-item"><span class="data-item-label">Fecha Creación:</span> <p class="data-item-value">${formData.creado_en}</p></div>
+                `;
+                try {
+                    const response = await fetch(`/api/formulario_detalle/${formId}/`);
+                    const data = await response.json();
+                    if (data.status === 'exito') {
+                         formAuditDatosBody.innerHTML += `<div class="data-item"><span class="data-item-label">RUT:</span> <p class="data-item-value">${data.detalles.rut_paciente || 'N/A'}</p></div>`;
+                    }
+                } catch(e) { /* No es crítico */ }
+            }
+            
+            async function loadFormAuditChat_Audit(formId) {
+                formAuditChatHistory.innerHTML = '<p class="m-auto text-gray-500">Cargando chat...</p>';
+                try {
+                    const response = await fetch(`/api/chat_mensajes/${formId}/`);
+                    if (!response.ok) throw new Error('No se pudo cargar el chat');
+                    const data = await response.json();
+                    if (data.status === 'exito') {
+                        populateChatHistory(formAuditChatHistory, data.mensajes, null); 
+                    } else {
+                        throw new Error(data.message);
+                    }
+                } catch (error) {
+                    formAuditChatHistory.innerHTML = `<p class="m-auto text-red-500">${error.message}</p>`;
+                }
+            }
+
+            // ==================================
+            // PESTAÑA 5: LÓGICA AUDITORÍA DEL SISTEMA
+            // ==================================
+            
+            async function loadSystemAuditData() {
+                systemAuditTableBody.innerHTML = '<tr><td colspan="4" class="p-4 text-center text-gray-500">Cargando auditoría...</td></tr>';
+
+                // TODO: Esta es la función que debe ser creada en views.py
+                // const response = await fetch(`/api/sistema/todos_los_logs/`);
+                
+                // Simulación por ahora:
+                setTimeout(() => {
+                    allSystemLogs = [
+                        { timestamp: '2025-11-15 10:40:00', user: 'supervisor_admin', type: 'Deleted.', detail: 'formularioatencion object (Formulario...)'},
+                        { timestamp: '2025-11-15 10:35:00', user: 'ambulancia1', type: 'Login', detail: 'Inicio de sesión'},
+                        { timestamp: '2025-11-15 10:33:00', user: 'supervisor_admin', type: 'Changed.', detail: 'recepcion1'},
+                        { timestamp: '2025-11-15 10:32:00', user: 'supervisor_admin', type: 'Added.', detail: 'ambulancia3'},
+                        { timestamp: '2025-11-15 10:31:00', user: 'recepcion1', type: 'Changed.', detail: 'formularioatencion object (Formulario...)'},
+                        { timestamp: '2025-11-15 10:30:00', user: 'ambulancia1', type: 'Added.', detail: 'formularioatencion object (Formulario...)'},
+                    ];
+                    renderSystemAuditTable();
+                }, 1000);
+            }
+            
+            function renderSystemAuditTable() {
+                let filteredLogs = [...allSystemLogs];
+                const searchTerm = systemSearchUser.value.toLowerCase();
+                if (searchTerm) {
+                    filteredLogs = filteredLogs.filter(log => 
+                        log.user.toLowerCase().includes(searchTerm)
+                    );
+                }
+                const action = systemFilterAction.value;
+                if (action !== 'todos') {
+                    filteredLogs = filteredLogs.filter(log => log.type === action);
+                }
+                const sortOrder = systemSortDate.value;
+                filteredLogs.sort((a, b) => {
+                    const dateA = new Date(a.timestamp);
+                    const dateB = new Date(b.timestamp);
+                    if (sortOrder === 'mas-nuevos') {
+                        return dateB - dateA;
+                    } else {
+                        return dateA - dateB;
+                    }
+                });
+                populateSystemAuditTable(filteredLogs);
+            }
+            
+            function populateSystemAuditTable(logs) {
+                systemAuditTableBody.innerHTML = '';
+                if (!logs || logs.length === 0) {
+                    systemAuditTableBody.innerHTML = '<tr><td colspan="4" class="p-4 text-center text-gray-500">No se encontraron registros.</td></tr>';
+                    return;
+                }
+                logs.forEach(log => {
+                    const row = `
+                        <tr>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${log.timestamp}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${log.user}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${log.type}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${log.detail}</td>
+                        </tr>
+                    `;
+                    systemAuditTableBody.innerHTML += row;
+                });
+            }
+
+            if(systemSearchUser) {
+                systemSearchUser.addEventListener('input', renderSystemAuditTable);
+                systemFilterAction.addEventListener('change', renderSystemAuditTable);
+                systemSortDate.addEventListener('change', renderSystemAuditTable);
+                resetSystemFiltersBtn.addEventListener('click', () => {
+                    systemSearchUser.value = '';
+                    systemFilterAction.value = 'todos';
+                    systemSortDate.value = 'mas-nuevos';
+                    renderSystemAuditTable();
+                });
+            }
+
+
+            // ==================================
+            // CARGA INICIAL
+            // ==================================
+            loadAllForms(updateDashboardStats); 
+            
         });
     </script>
 </body>
