@@ -56,14 +56,20 @@ urlpatterns = [
     # --- API de Auditoría ---
     re_path(r'^api/audit_logs/(?P<user_id>[0-9]+)/$', views.obtener_registros_auditoria, name='api_obtener_registros_auditoria'),
     
-    # ==================================
-    # INICIO DE LA MODIFICACIÓN
-    # ==================================
     # --- API para la nueva pestaña "Formularios" del Supervisor ---
     path('api/todos_los_formularios/', views.api_obtener_todos_los_formularios, name='api_obtener_todos_los_formularios'),
     
     # --- API para crear usuarios desde el panel de Supervisor ---
     path('api/supervisor/crear_usuario/', views.api_crear_usuario_view, name='api_crear_usuario'),
+    
+    
+    # ==================================
+    # INICIO DE LA MODIFICACIÓN
+    # ==================================
+    # APIs para Editar, Eliminar y Auditoría del Sistema
+    path('api/supervisor/editar_usuario/<int:user_id>/', views.api_editar_usuario_view, name='api_editar_usuario'),
+    path('api/supervisor/eliminar_usuario/<int:user_id>/', views.api_eliminar_usuario_view, name='api_eliminar_usuario'),
+    path('api/sistema/todos_los_logs/', views.api_obtener_logs_del_sistema, name='api_obtener_logs_del_sistema'),
     # ==================================
     # FIN DE LA MODIFICACIÓN
     # ==================================

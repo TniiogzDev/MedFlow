@@ -56,7 +56,6 @@ class CustomUser(AbstractUser):
         return self.username
 
 # --- Modelo de Formulario de Atención ---
-# (Este modelo no se modifica)
 class FormularioAtencion(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     creado_por = models.ForeignKey(
@@ -83,6 +82,15 @@ class FormularioAtencion(models.Model):
         blank=True, 
         related_name='formularios_aprobados'
     )
+    
+    # ==================================
+    # INICIO DE LA MODIFICACIÓN
+    # ==================================
+    # Añadimos el campo para la fecha de aprobación
+    aprobado_en = models.DateTimeField(blank=True, null=True)
+    # ==================================
+    # FIN DE LA MODIFICACIÓN
+    # ==================================
 
     # --- Campos de Bloqueo Temporal ("En Revisión") ---
     revisado_por = models.ForeignKey(

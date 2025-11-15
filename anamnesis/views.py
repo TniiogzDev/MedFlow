@@ -318,10 +318,11 @@ def aprobar_formulario_view(request):
             
             formulario.estado = 'APROBADO'
             formulario.aprobado_por = request.user 
+            formulario.aprobado_en = timezone.now() # Guardar la fecha de aprobación
             formulario.revisado_por = None 
             formulario.revisado_en = None
             
-            formulario.save(update_fields=['estado', 'aprobado_por', 'revisado_por', 'revisado_en'])
+            formulario.save(update_fields=['estado', 'aprobado_por', 'aprobado_en', 'revisado_por', 'revisado_en'])
             
             return JsonResponse({'status': 'exito', 'message': 'Formulario aprobado'})
         except Exception as e:
@@ -340,10 +341,11 @@ def solicitar_modificacion_view(request):
             
             formulario.estado = 'REQUIERE_MODIFICACION' 
             formulario.aprobado_por = None 
+            formulario.aprobado_en = None # Limpiar fecha de aprobación si se rechaza
             formulario.revisado_por = None 
             formulario.revisado_en = None
             
-            formulario.save(update_fields=['estado', 'aprobado_por', 'revisado_por', 'revisado_en'])
+            formulario.save(update_fields=['estado', 'aprobado_por', 'aprobado_en', 'revisado_por', 'revisado_en'])
             
             return JsonResponse({'status': 'exito', 'message': 'Modificación solicitada'})
         except Exception as e:
@@ -453,7 +455,7 @@ def chat_formulario_view(request, form_id):
         formulario = FormularioAtencion.objects.get(id=form_id)
         es_creador = (formulario.creado_por == request.user)
         es_recepcion = request.user.groups.filter(name='Recepcion').exists()
-        es_supervisor = request.user.is_superuser
+        es_supervisor = (request.user.is_superuser or request.user.groups.filter(name='Supervisor').exists())
         if not (es_creador or es_recepcion or es_supervisor):
             messages.error(request, 'No tienes permiso para ver este chat.')
             return redirect('menu_ambulancia') 
@@ -609,6 +611,10 @@ def api_obtener_todos_los_formularios(request):
                 'id': str(form.id),
                 'nombre_paciente': form.nombre_paciente or "N/N",
                 'creado_en': form.creado_en.strftime("%d-%m-%Y"),
+                
+                # --- CAMPO AÑADIDO PARA STATS ---
+                'aprobado_en': form.aprobado_en.strftime("%Y-%m-%d") if form.aprobado_en else None,
+
                 'estado': form.estado,
                 'estado_display': form.get_estado_display(),
                 'creado_por_nombre': form.creado_por.username if form.creado_por else "Desconocido",
@@ -618,14 +624,13 @@ def api_obtener_todos_los_formularios(request):
         return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
 
 # ==================================
-# INICIO DE LA MODIFICACIÓN (API CREAR USUARIO)
+# API CREAR USUARIO
 # ==================================
 @login_required
 def api_crear_usuario_view(request):
     """
     API para que el Supervisor cree nuevos usuarios desde un modal.
     """
-    # Solo supervisores pueden crear usuarios
     if not (request.user.is_superuser or request.user.groups.filter(name='Supervisor').exists()):
         return JsonResponse({'status': 'error', 'message': 'Acceso no autorizado'}, status=403)
 
@@ -634,49 +639,38 @@ def api_crear_usuario_view(request):
             data = json.loads(request.body)
             User = get_user_model()
 
-            # Campos requeridos
             username = data.get('username')
             password = data.get('password')
             role_name = data.get('role')
-            rut = data.get('rut') # <-- Obtenemos el RUT
+            rut = data.get('rut') 
 
-            # Validamos que los campos requeridos no estén vacíos
             if not (username and password and role_name and rut):
                 return JsonResponse({'status': 'error', 'message': 'Username, Contraseña, Rol y RUT son requeridos.'}, status=400)
 
-            # --- NUEVA VALIDACIÓN ---
-            # 1. Verificar si el usuario ya existe
             if User.objects.filter(username=username).exists():
                 return JsonResponse({'status': 'error', 'message': f'El username "{username}" ya existe.'}, status=400)
 
-            # 2. Verificar si el RUT ya existe
             if User.objects.filter(rut=rut).exists():
                 return JsonResponse({'status': 'error', 'message': f'El RUT "{rut}" ya está registrado a nombre de otro usuario.'}, status=400)
-            # --- FIN DE LA VALIDACIÓN ---
 
-            # Crear el usuario
             user = User.objects.create_user(username=username, password=password)
 
-            # Asignar campos adicionales
             user.first_name = data.get('first_name', '')
             user.last_name = data.get('last_name', '')
             user.email = data.get('email', '')
-            user.rut = rut # Asignamos el RUT
+            user.rut = rut 
             user.save()
 
-            # Asignar rol (Grupo)
             try:
                 group = Group.objects.get(name=role_name)
                 user.groups.add(group)
                 
-                # Si el rol es Supervisor, darle permisos de staff y superusuario
                 if role_name == 'Supervisor':
                     user.is_staff = True
                     user.is_superuser = True
                     user.save()
                     
             except Group.DoesNotExist:
-                # Si el rol no existe, borrar el usuario creado para evitar inconsistencias
                 user.delete()
                 return JsonResponse({'status': 'error', 'message': f'El rol "{role_name}" no existe en el sistema.'}, status=400)
             
@@ -686,11 +680,131 @@ def api_crear_usuario_view(request):
             return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
     
     return JsonResponse({'status': 'error', 'message': 'Método no permitido'}, status=405)
-# ==================================
-# FIN DE LA MODIFICACIÓN
-# ==================================
 
-# Vista para exportar un formulario en PDF o Excel
+# ==================================
+# API: EDITAR USUARIO (CORREGIDA)
+# ==================================
+@login_required
+def api_editar_usuario_view(request, user_id):
+    # ==================================
+    # INICIO DE LA MODIFICACIÓN
+    # ==================================
+    if not (request.user.is_superuser or request.user.groups.filter(name='Supervisor').exists()):
+    # ==================================
+    # FIN DE LA MODIFICACIÓN
+    # ==================================
+        return JsonResponse({'status': 'error', 'message': 'Acceso no autorizado'}, status=403)
+    
+    User = get_user_model()
+    try:
+        usuario_a_editar = User.objects.get(id=user_id)
+    except User.DoesNotExist:
+        return JsonResponse({'status': 'error', 'message': 'Usuario no encontrado'}, status=404)
+
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            
+            # Actualizar campos
+            usuario_a_editar.first_name = data.get('first_name', usuario_a_editar.first_name)
+            usuario_a_editar.last_name = data.get('last_name', usuario_a_editar.last_name)
+            usuario_a_editar.email = data.get('email', usuario_a_editar.email)
+            usuario_a_editar.rut = data.get('rut', usuario_a_editar.rut)
+            
+            # Actualizar contraseña (si se envió una nueva)
+            if data.get('password'):
+                usuario_a_editar.set_password(data.get('password'))
+            
+            # Actualizar Rol
+            role_name = data.get('role')
+            if role_name:
+                group = Group.objects.get(name=role_name)
+                usuario_a_editar.groups.clear() # Limpiar roles antiguos
+                usuario_a_editar.groups.add(group)
+                
+                # Ajustar permisos de staff/superuser si es Supervisor
+                if role_name == 'Supervisor':
+                    usuario_a_editar.is_staff = True
+                    usuario_a_editar.is_superuser = True
+                else:
+                    usuario_a_editar.is_staff = False
+                    usuario_a_editar.is_superuser = False
+
+            usuario_a_editar.save()
+            return JsonResponse({'status': 'exito', 'message': 'Usuario actualizado'})
+            
+        except Group.DoesNotExist:
+             return JsonResponse({'status': 'error', 'message': f'El rol "{role_name}" no existe'}, status=400)
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+    
+    return JsonResponse({'status': 'error', 'message': 'Método no permitido'}, status=405)
+
+# ==================================
+# API: ELIMINAR USUARIO (CORREGIDA)
+# ==================================
+@login_required
+def api_eliminar_usuario_view(request, user_id):
+    # ==================================
+    # INICIO DE LA MODIFICACIÓN
+    # ==================================
+    if not (request.user.is_superuser or request.user.groups.filter(name='Supervisor').exists()):
+    # ==================================
+    # FIN DE LA MODIFICACIÓN
+    # ==================================
+        return JsonResponse({'status': 'error', 'message': 'Acceso no autorizado'}, status=403)
+    
+    User = get_user_model()
+    try:
+        usuario_a_eliminar = User.objects.get(id=user_id)
+    except User.DoesNotExist:
+        return JsonResponse({'status': 'error', 'message': 'Usuario no encontrado'}, status=404)
+
+    if request.method == 'POST': # Usamos POST por seguridad (con CSRF)
+        try:
+            username = usuario_a_eliminar.username
+            usuario_a_eliminar.delete()
+            return JsonResponse({'status': 'exito', 'message': f'Usuario {username} eliminado'})
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+    
+    return JsonResponse({'status': 'error', 'message': 'Método no permitido'}, status=405)
+
+# ==================================
+# API: AUDITORÍA DEL SISTEMA (CORREGIDA)
+# ==================================
+@login_required
+def api_obtener_logs_del_sistema(request):
+    # ==================================
+    # INICIO DE LA MODIFICACIÓN
+    # ==================================
+    if not (request.user.is_superuser or request.user.groups.filter(name='Supervisor').exists()):
+    # ==================================
+    # FIN DE LA MODIFICACIÓN
+    # ==================================
+        return JsonResponse({'status': 'error', 'message': 'Acceso no autorizado'}, status=403)
+    
+    try:
+        # Obtener todos los logs, con el nombre de usuario
+        logs = LogEntry.objects.all().select_related('user').order_by('-action_time')
+        
+        lista_logs = []
+        for log in logs:
+            lista_logs.append({
+                'timestamp': log.action_time.strftime('%Y-%m-%d %H:%M:%S'),
+                'user': log.user.username if log.user else 'Sistema',
+                'type': log.get_change_message(), # 'Added.', 'Changed.', 'Deleted.'
+                'detail': str(log.object_repr)
+            })
+        
+        return JsonResponse({'status': 'exito', 'logs': lista_logs})
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+
+
+# ==================================
+# API DE EXPORTACIÓN (Sin cambios)
+# ==================================
 @login_required
 def exportar_formulario_view(request, form_id, formato):
     try:

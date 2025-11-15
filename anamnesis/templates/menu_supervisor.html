@@ -298,7 +298,7 @@
                     <div class="p-6 bg-green-100 border-l-4 border-green-500 rounded-lg shadow cursor-pointer hover:shadow-lg transition-shadow" id="card-link-aprobados">
                         <h3 class="text-3xl font-bold text-green-800" id="stat-approved-today">0</h3>
                         <p class="text-lg font-semibold text-green-700">Formularios Aprobados Hoy</p>
-                        <p class="text-sm text-green-600 mt-2">Total de casos gestionados. (Haz clic para ver)</p>
+                        <p class="text-sm text-green-600 mt-2">Total de casos gestionados hoy. (Haz clic para ver)</p>
                     </div>
 
                 </div>
@@ -521,6 +521,7 @@
                                 </div>
 
                                 <div id="content-audit-timeline" class="tab-content active-tab-content">
+                                    <h3 class="text-lg font-semibold text-gray-700 mb-4">Actividad de Hoy</h3>
                                     <div id="auditTimelineBody" class="timeline">
                                         </div>
                                 </div>
@@ -654,7 +655,7 @@
                             </tr>
                         </thead>
                         <tbody id="systemAuditTableBody" class="bg-white divide-y divide-gray-200">
-                            <tr><td colspan="4" class="p-4 text-center text-gray-500">Cargando auditoría... (Requiere API de backend)</td></tr>
+                            <tr><td colspan="4" class="p-4 text-center text-gray-500">Cargando auditoría...</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -877,7 +878,7 @@
             const auditPlaceholder = document.getElementById('auditPlaceholder');
             const userAuditDataPanel = document.getElementById('userAuditDataPanel');
             const auditUserName = document.getElementById('auditUserName');
-            const auditTimelineBody = document.getElementById('auditTimelineBody'); // <-- Corregido
+            const auditTimelineBody = document.getElementById('auditTimelineBody'); 
             const chatHistory = document.getElementById('chatHistory');
             const auditFormsTableBody = document.getElementById('auditFormsTableBody');
             const auditFormsGestionadosTableBody = document.getElementById('auditFormsGestionadosTableBody'); 
@@ -991,7 +992,6 @@
                 });
             }
 
-            // --- CORREGIDO: Esta función ahora funciona ---
             function updateDashboardStats(formsData) {
                 if (!formsData || !statCard) {
                     console.error("Faltan datos (formsData) o tarjeta (statCard) para actualizar stats.");
@@ -1036,6 +1036,11 @@
                     statMenuBtn.classList.add('text-red-700', 'hover:text-red-900', 'hover:bg-red-200');
                 }
                 statNumber.textContent = count;
+                
+                // --- CÁLCULO PARA APROBADOS HOY (Corregido) ---
+                const today = new Date().toISOString().split('T')[0]; // "2025-11-15"
+                const approvedTodayCount = formsData.filter(f => f.aprobado_en === today).length;
+                document.getElementById('stat-approved-today').textContent = approvedTodayCount;
             }
 
             function navigateToTab(tabId, contentId) {
@@ -1285,7 +1290,10 @@
             }
             
             async function loadAllForms(callback) {
-                allFormsTableBody.innerHTML = '<tr><td colspan="5" class="p-4 text-center text-gray-500">Cargando formularios...</td></tr>';
+                // No mostrar "cargando" si los datos ya están
+                if(allFormsData.length === 0) {
+                    allFormsTableBody.innerHTML = '<tr><td colspan="5" class="p-4 text-center text-gray-500">Cargando formularios...</td></tr>';
+                }
                 try {
                     const response = await fetch(`{% url 'api_obtener_todos_los_formularios' %}`);
                     if (!response.ok) throw new Error('Error de red');
@@ -1417,6 +1425,11 @@
                 timelineBody.innerHTML = '<p>Cargando historial...</p>';
                 let events = [];
                 const baseDate = parseTimestamp(formData.creado_en, true);
+                if (!baseDate) {
+                    timelineBody.innerHTML = '<p>Error al leer la fecha de creación del formulario.</p>';
+                    return;
+                }
+                
                 let lastDate = baseDate;
 
                 if (formData.creado_en) {
@@ -1477,13 +1490,15 @@
                     });
                 }
                 if (formData.estado === 'APROBADO') {
-                    lastDate = new Date(lastDate.getTime() + 1000);
+                    // Usar la fecha real si existe
+                    const approvalDate = formData.aprobado_en ? parseTimestamp(formData.aprobado_en, false, false) : new Date(lastDate.getTime() + 1000);
+                    
                     events.push({
-                        date: lastDate,
+                        date: approvalDate,
                         title: 'El formulario fue aprobado',
                         detail: ''
                     });
-                    lastDate = new Date(lastDate.getTime() + 1000);
+                    lastDate = new Date(approvalDate.getTime() + 1000);
                      events.push({
                         date: lastDate,
                         title: 'Finalización del proceso del formulario',
@@ -1528,12 +1543,12 @@
                         return newDate;
                     }
                     
-                    // Formato YYYY-MM-DD HH:MM:SS (de data.actions)
-                    if (timestampStr.includes(' ')) {
-                         const parts = timestampStr.split(' ');
+                    // Formato YYYY-MM-DD HH:MM:SS (de data.actions y aprobado_en)
+                    if (timestampStr.includes('T') || timestampStr.includes(' ')) {
+                         const parts = timestampStr.split('T'); // Django usa T
                          const dateParts = parts[0].split('-'); // YYYY, MM, DD
                          const timeParts = (parts[1]) ? parts[1].split(':') : ['0', '0', '0'];
-                         return new Date(dateParts[0], dateParts[1] - 1, dateParts[2], timeParts[0] || 0, timeParts[1] || 0, timeParts[2] || 0);
+                         return new Date(dateParts[0], dateParts[1] - 1, dateParts[2], timeParts[0] || 0, timeParts[1] || 0, timeParts[2].split('.')[0] || 0);
                     }
                     
                     // Formato DD-MM-YYYY (de data.formularios)
@@ -1541,6 +1556,12 @@
                         const dateParts = timestampStr.split('-');
                         return new Date(dateParts[2], dateParts[1] - 1, dateParts[0], 0, 0, 0);
                     } 
+                    
+                    // Formato YYYY-MM-DD (de aprobado_en)
+                    const dateParts = timestampStr.split('-');
+                    if (dateParts.length === 3 && dateParts[0].length === 4) {
+                        return new Date(dateParts[0], dateParts[1] - 1, dateParts[2]);
+                    }
                     
                     return null; // Formato no reconocido
 
@@ -1651,6 +1672,8 @@
                 closeEditModalBtn.addEventListener('click', () => editUserModal.classList.add('hidden'));
                 editUserModal.querySelector('.modal-overlay-bg').addEventListener('click', () => editUserModal.classList.add('hidden'));
             }
+            
+            // --- CONECTADO A LA API ---
             if (editUserForm) {
                 editUserForm.addEventListener('submit', (e) => {
                     e.preventDefault();
@@ -1658,22 +1681,45 @@
                     submitButton.disabled = true;
                     submitButton.textContent = 'Guardando...';
 
-                    // TODO: Backend para editar usuario no implementado en views.py
+                    const formData = new FormData(editUserForm);
+                    const data = Object.fromEntries(formData.entries());
+                    const userId = data.user_id;
                     
-                    setTimeout(() => { // Simulación
-                        userEditMessage.textContent = 'Simulación: Usuario actualizado. (Backend no implementado)';
-                        userEditMessage.className = 'message-box message-success';
+                    fetch(`{% url 'api_editar_usuario' 0 %}`.replace('0', userId), {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': csrftoken
+                        },
+                        body: JSON.stringify(data)
+                    })
+                    .then(res => res.json())
+                    .then(result => {
+                        if (result.status === 'exito') {
+                            userEditMessage.textContent = '¡Usuario actualizado con éxito!';
+                            userEditMessage.className = 'message-box message-success';
+                            userEditMessage.style.display = 'block';
+                            setTimeout(() => {
+                                editUserModal.classList.add('hidden');
+                                location.reload(); 
+                            }, 2000);
+                        } else {
+                            throw new Error(result.message);
+                        }
+                    })
+                    .catch(error => {
+                        userEditMessage.textContent = `Error: ${error.message}`;
+                        userEditMessage.className = 'message-box message-error';
                         userEditMessage.style.display = 'block';
+                    })
+                    .finally(() => {
                         submitButton.disabled = false;
                         submitButton.textContent = 'Guardar Cambios';
-                        setTimeout(() => {
-                            editUserModal.classList.add('hidden');
-                            location.reload(); 
-                        }, 2000);
-                    }, 1000);
+                    });
                 });
             }
 
+            // --- CONECTADO A LA API ---
             function handleDeleteUser(userId, row) {
                 swalWithBootstrapButtons.fire({
                   title: "¿Estás seguro?",
@@ -1686,12 +1732,22 @@
                 }).then((result) => {
                   if (result.isConfirmed) {
                     
-                    // TODO: Backend para eliminar usuario no implementado en views.py
-                    // fetch(`/api/supervisor/eliminar_usuario/${userId}/`, { ... })
-                    
-                    console.log("Simulando eliminación de usuario:", userId);
-                    swalWithBootstrapButtons.fire("¡Eliminado!", "El usuario ha sido eliminado. (Simulación)", "success");
-                    row.remove();
+                    fetch(`{% url 'api_eliminar_usuario' 0 %}`.replace('0', userId), {
+                       method: 'POST', 
+                       headers: { 'X-CSRFToken': csrftoken }
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.status === 'exito') {
+                            swalWithBootstrapButtons.fire("¡Eliminado!", "El usuario ha sido eliminado.", "success");
+                            row.remove();
+                        } else {
+                            throw new Error(data.message);
+                        }
+                    })
+                    .catch(error => {
+                        swalWithBootstrapButtons.fire("Error", `Error al eliminar: ${error.message}`, "error");
+                    });
                     
                   } else if (result.dismiss === Swal.DismissReason.cancel) {
                     swalWithBootstrapButtons.fire("Cancelado", "El usuario está a salvo :)", "error");
@@ -1819,13 +1875,13 @@
                 if (userRole === 'Ambulancia') {
                     timelineTab.style.display = 'inline-block';
                     formulariosTab.style.display = 'inline-block';
-                    timelineTab.classList.add('active-tab'); // <-- Modificado: Timeline es la nueva default
-                    document.getElementById('content-audit-timeline').classList.add('active-tab-content'); // <-- Modificado
+                    timelineTab.classList.add('active-tab'); 
+                    document.getElementById('content-audit-timeline').classList.add('active-tab-content'); 
                 } else if (userRole === 'Recepcion') {
                     timelineTab.style.display = 'inline-block';
                     formulariosGestionadosTab.style.display = 'inline-block';
-                    timelineTab.classList.add('active-tab'); // <-- Modificado: Timeline es la nueva default
-                    document.getElementById('content-audit-timeline').classList.add('active-tab-content'); // <-- Modificado
+                    timelineTab.classList.add('active-tab'); 
+                    document.getElementById('content-audit-timeline').classList.add('active-tab-content'); 
                 } else { 
                     timelineTab.style.display = 'inline-block';
                     chatsTab.style.display = 'inline-block';
@@ -1833,7 +1889,7 @@
                     document.getElementById('content-audit-timeline').classList.add('active-tab-content');
                 }
 
-                auditTimelineBody.innerHTML = '<p>Cargando línea de tiempo...</p>'; // <-- Modificado
+                auditTimelineBody.innerHTML = '<p>Cargando línea de tiempo...</p>'; 
                 chatHistory.innerHTML = '<p class="m-auto text-gray-500">Cargando chat...</p>';
                 auditFormsTableBody.innerHTML = '<tr><td colspan="4" class="p-4 text-center text-gray-500">Cargando formularios...</td></tr>';
                 auditFormsGestionadosTableBody.innerHTML = '<tr><td colspan="4" class="p-4 text-center text-gray-500">Cargando formularios...</td></tr>';
@@ -1845,9 +1901,7 @@
                     const data = await response.json();
                     currentApiData = data; 
                     
-                    // --- NUEVA FUNCIÓN DE TIMELINE (Pestaña 4) ---
                     buildAuditTimeline(data.actions, data.formularios, data.formularios_gestionados, userRole);
-                    
                     populateChatHistory(chatHistory, data.chat, currentAuditedUserRole);
                     populateFormsTable(data.formularios, auditFormsTableBody, true, true, false, true); 
                     populateFormsTable(data.formularios_gestionados, auditFormsGestionadosTableBody, true, true, false, true);
@@ -1861,7 +1915,7 @@
                 }
             }
 
-            // --- NUEVA LÍNEA DE TIEMPO (Pestaña 4) ---
+            // --- LÍNEA DE TIEMPO (Pestaña 4) ---
             function buildAuditTimeline(actions, formularios, formulariosGestionados, role) {
                 auditTimelineBody.innerHTML = '';
                 let events = [];
@@ -1870,10 +1924,9 @@
                 const tomorrow = new Date(today);
                 tomorrow.setDate(today.getDate() + 1);
 
-                // 1. Filtrar acciones de LogEntry de hoy
                 actions.forEach(action => {
                     const actionDate = parseTimestamp(action.timestamp, false, false);
-                    if (actionDate >= today && actionDate < tomorrow) {
+                    if (actionDate && actionDate >= today && actionDate < tomorrow) {
                         events.push({
                             date: actionDate,
                             title: action.type,
@@ -1882,11 +1935,10 @@
                     }
                 });
                 
-                // 2. Filtrar formularios creados hoy (si es Ambulancia)
                 if (role === 'Ambulancia') {
                     formularios.forEach(form => {
                         const formDate = parseTimestamp(form.creado_en, true);
-                        if (formDate >= today && formDate < tomorrow) {
+                        if (formDate && formDate >= today && formDate < tomorrow) {
                             events.push({
                                 date: formDate,
                                 title: 'Formulario Creado',
@@ -1896,13 +1948,10 @@
                     });
                 }
                 
-                // 3. Filtrar formularios gestionados hoy (si es Recepcion)
-                // TODO: Esto sigue dependiendo de 'creado_en'. Se necesita
-                // un 'aprobado_en' o 'modificado_en' en la API para ser preciso.
                 if (role === 'Recepcion') {
                     formulariosGestionados.forEach(form => {
                          const formDate = parseTimestamp(form.creado_en, true);
-                         if (formDate >= today && formDate < tomorrow) {
+                         if (formDate && formDate >= today && formDate < tomorrow) {
                             events.push({
                                 date: formDate,
                                 title: `Formulario Gestionado (${form.estado_display})`,
@@ -2047,24 +2096,24 @@
             // PESTAÑA 5: LÓGICA AUDITORÍA DEL SISTEMA
             // ==================================
             
+            // --- CONECTADO A LA API ---
             async function loadSystemAuditData() {
                 systemAuditTableBody.innerHTML = '<tr><td colspan="4" class="p-4 text-center text-gray-500">Cargando auditoría...</td></tr>';
 
-                // TODO: Esta es la función que debe ser creada en views.py
-                // const response = await fetch(`/api/sistema/todos_los_logs/`);
-                
-                // Simulación por ahora:
-                setTimeout(() => {
-                    allSystemLogs = [
-                        { timestamp: '2025-11-15 10:40:00', user: 'supervisor_admin', type: 'Deleted.', detail: 'formularioatencion object (Formulario...)'},
-                        { timestamp: '2025-11-15 10:35:00', user: 'ambulancia1', type: 'Login', detail: 'Inicio de sesión'},
-                        { timestamp: '2025-11-15 10:33:00', user: 'supervisor_admin', type: 'Changed.', detail: 'recepcion1'},
-                        { timestamp: '2025-11-15 10:32:00', user: 'supervisor_admin', type: 'Added.', detail: 'ambulancia3'},
-                        { timestamp: '2025-11-15 10:31:00', user: 'recepcion1', type: 'Changed.', detail: 'formularioatencion object (Formulario...)'},
-                        { timestamp: '2025-11-15 10:30:00', user: 'ambulancia1', type: 'Added.', detail: 'formularioatencion object (Formulario...)'},
-                    ];
-                    renderSystemAuditTable();
-                }, 1000);
+                try {
+                    const response = await fetch(`{% url 'api_obtener_logs_del_sistema' %}`);
+                    if (!response.ok) throw new Error('Error de red al cargar logs');
+                    const data = await response.json();
+                    if (data.status === 'exito') {
+                        allSystemLogs = data.logs;
+                        renderSystemAuditTable();
+                    } else {
+                        throw new Error(data.message);
+                    }
+                } catch (error) {
+                    console.error("Error cargando logs del sistema:", error);
+                    systemAuditTableBody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-red-500">${error.message}</td></tr>`;
+                }
             }
             
             function renderSystemAuditTable() {
