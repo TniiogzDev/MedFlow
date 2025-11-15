@@ -1,0 +1,570 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crear Formulario de Atención</title>
+    
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="icon" href="{% static 'images/logo.png' %}" type="image/png">
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f0f2f5; }
+        
+        /* 1. Padding de tarjeta quitado de CSS (para ponerlo en HTML) */
+        .step-card { background-color: white; border-radius: 1rem; box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.07), 0 4px 6px -4px rgb(0 0 0 / 0.1); transition: opacity 0.5s ease-in-out, transform 0.5s ease-in-out; border-top: 3px solid #EF4444; }
+        
+        .form-label { font-weight: 600; color: #374151; margin-bottom: 0.5rem; display: block; }
+        
+        /* ================================== */
+        /* INICIO DE LA CORRECCIÓN CLAVE */
+        /* Se eliminó 'width: 100%;' de .form-input */
+        /* ================================== */
+        .form-input { 
+            /* width: 100%; <-- ¡ELIMINADO! Este era el problema. */
+            padding: 0.75rem 1rem; 
+            border: 1px solid #D1D5DB;
+            border-radius: 0.5rem;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            background-color: #f9fafb;
+        }
+        /* ================================== */
+        /* FIN DE LA CORRECCIÓN CLAVE */
+        /* ================================== */
+        
+        .form-input:focus { outline: none; border-color: #EF4444; box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.3); background-color: white; }
+        .btn { font-weight: 600; padding: 0.75rem 1.5rem; border-radius: 0.5rem; text-align: center; transition: all 0.3s; border: 1px solid transparent; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .btn-primary { background-color: #EF4444; color: white; } /* Rojo */
+        .btn-primary:hover:not(:disabled) { background-color: #DC2626; }
+        .btn-secondary { background-color: #E5E7EB; color: #374151; }
+        .btn-secondary:hover:not(:disabled) { background-color: #D1D5DB; }
+        
+        .btn-submit { background-color: #16A34A; color: white; }
+        .btn-submit:hover:not(:disabled) { background-color: #15803D; }
+        .btn-modal-confirm { background-color: #2563EB; color: white; }
+        .btn-modal-confirm:hover:not(:disabled) { background-color: #1D4ED8; }
+
+        .option-button { background-color: #E5E7EB; color: #374151; padding: 0.75rem 1rem; border-radius: 0.5rem; font-weight: 500; cursor: pointer; transition: all 0.2s; }
+        .option-button:hover { background-color: #D1D5DB; }
+        .option-button.active { background-color: #EF4444; color: white; box-shadow: 0 2px 6px rgba(239, 68, 68, 0.3); }
+        .progress-bar-container { width: 100%; background-color: #e5e7eb; border-radius: 9999px; height: 8px; }
+        .progress-bar-fill { background-color: #EF4444; height: 100%; border-radius: 9999px; transition: width 0.5s ease-in-out; }
+        .step { display: none; }
+        .step.active { display: block; }
+
+        .message-box {
+            display: none; padding: 1rem; border-radius: 0.5rem;
+            margin: 1.5rem 0; text-align: center; font-weight: 500;
+        }
+        .message-success { background-color: #D1FAE5; color: #065F46; }
+        .message-error { background-color: #FEE2E2; color: #991B1B; }
+        
+        .modal {
+            opacity: 0; pointer-events: none; transition: opacity 0.3s ease-in-out;
+        }
+        .modal-content {
+             transform: scale(0.95); transition: transform 0.3s ease-in-out;
+        }
+        .modal.active {
+            opacity: 1; pointer-events: all;
+        }
+        .modal.active .modal-content {
+            transform: scale(1);
+        }
+    </style>
+</head>
+
+<body class="min-h-screen p-2 sm:p-4">
+
+    <script>
+        const djangoUser = { isAuthenticated: {{ user.is_authenticated|yesno:"true,false" }}, username: "{{ user.username|escapejs }}", fullName: "{{ user.get_full_name|default:user.username|escapejs }}", role: "{{ user.groups.first.name|default:'Sin Rol'|escapejs }}" };
+        function getCookie(name) { let cookieValue = null; if (document.cookie && document.cookie !== '') { const cookies = document.cookie.split(';'); for (let i = 0; i < cookies.length; i++) { const cookie = cookies[i].trim(); if (cookie.substring(0, name.length + 1) === (name + '=')) { cookieValue = decodeURIComponent(cookie.substring(name.length + 1)); break; } } } return cookieValue; }
+    </script>
+    
+    <div id="appContainer" class="w-full">
+         
+         <div id="appHeader" class="max-w-4xl mx-auto p-3 mb-6 bg-white rounded-xl shadow-md block sm:flex sm:justify-between sm:items-center">
+            
+            <div class="flex items-center justify-center text-center sm:text-left sm:justify-start gap-3">
+                 <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                 <div class="text-xs sm:text-sm"> <span class="font-bold text-gray-800">Usuario:</span> <span id="loggedInUserName">{{ user.get_full_name|default:user.username }}</span> | <span class="font-bold text-gray-800">Rol:</span> <span id="loggedInUserRole">{{ user.groups.first.name|default:'Sin Rol' }}</span> </div>
+            </div>
+            
+             <div class="flex items-center justify-center gap-2 mt-4 sm:mt-0"> 
+                 <a href="{% url 'menu_ambulancia' %}" class="btn bg-indigo-600 hover:bg-indigo-700 text-white text-sm">Volver al Menú</a> 
+                 <a href="{% url 'logout' %}" class="btn bg-gray-600 hover:bg-gray-700 text-white text-sm">Cerrar Sesión</a> 
+             </div>
+         </div>
+
+         <div id="ambulanceView" class="container mx-auto max-w-2xl w-full">
+             <header class="text-center mb-6"> 
+                 
+                 <h1 class="text-xl sm:text-3xl font-bold text-gray-800">Crear Nuevo Formulario de Atención</h1> 
+                 <p class="text-gray-600 mb-6">Complete todos los pasos para notificar a recepción.</p>
+            </header>
+            
+            <div id="messageBox" class="message-box"></div>
+
+            <div class="mb-6"> 
+                <div class="progress-bar-container"> 
+                    <div id="progressBar" class="progress-bar-fill" style="width: 25%;"></div> 
+                </div> 
+                <div id="progressText" class="text-center text-sm text-gray-500 mt-2">Paso 1 de 4: Identificación</div> 
+            </div>
+            
+            <form id="createForm">
+                 
+                 <div id="step-1" class="step active"> 
+                     <div class="step-card p-4 sm:p-8"> 
+                         <h2 class="text-2xl font-bold text-gray-800 mb-6 text-center">1. Identificación</h2> 
+                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6"> 
+                             <div>
+                                 <label for="patientName" class="form-label">Nombre</label>
+                                 <input type="text" id="patientName" class="form-input w-full" placeholder="Ej: Juan Pérez" value=""
+                                        oninput="this.value = this.value.replace(/[^a-zA-Z\sñÑáéíóúÁÉÍÓÚ]/g, '')">
+                             </div> 
+                             <div>
+                                 <label for="patientId" class="form-label">RUT / DNI</label>
+                                 
+                                 <div class="flex items-center gap-2">
+                                     <input type="text" id="patientId" class="form-input flex-1 min-w-0" placeholder="11.111.111" 
+                                            inputmode="numeric" 
+                                            maxlength="10" oninput="formatRut(this)">
+                                     
+                                     <span class="text-gray-500 font-bold">-</span>
+                                     
+                                     <input type="text" id="patientDv" class="form-input w-12 flex-none text-center px-1" placeholder="K" 
+                                            maxlength="1" 
+                                            oninput="this.value = this.value.replace(/[^0-9kK]/g, '').toUpperCase()">
+                                 </div>
+                                 </div> 
+                             <div>
+                                 <label for="patientAge" class="form-label">Edad</label>
+                                 <div class="flex gap-2 items-center">
+                                     <input type="number" id="patientAge" class="form-input w-1/2" placeholder="Ej: 45" min="0" max="150" value="">
+                                     
+                                     <div id="ageUnitButtons" class="w-1/2 grid grid-cols-2 gap-2">
+                                         <button type="button" class="btn text-sm option-button active" data-unit="Años">A</button>
+                                         <button type="button" class="btn text-sm option-button" data-unit="Meses">M</button>
+                                     </div>
+                                 </div>
+                             </div> 
+                             <div>
+                                 <label class="form-label">Sexo</label>
+                                 <div class="grid grid-cols-2 gap-4" id="genderButtons">
+                                     <button type="button" class="option-button" data-value="Hombre">Hombre</button>
+                                     <button type="button" class="option-button" data-value="Mujer">Mujer</button>
+                                 </div>
+                             </div> 
+                         </div> 
+                     </div> 
+                 </div>
+
+                 <div id="step-2" class="step"> 
+                     <div class="step-card p-4 sm:p-8"> 
+                         <h2 class="text-2xl font-bold text-gray-800 mb-6 text-center">2. Signos Vitales</h2> 
+                         <div class="grid grid-cols-2 md:grid-cols-3 gap-4"> 
+                             <div>
+                                 <label for="bloodPressure" class="form-label">Presion Arterial</label>
+                                 <input type="text" id="bloodPressure" class="form-input w-full" placeholder="120/80" value="" 
+                                        maxlength="7" 
+                                        oninput="this.value = this.value.replace(/[^0-9\/]/g, '')">
+                             </div> 
+                             <div>
+                                 <label for="heartRate" class="form-label">Frecuencia Cardiaca</label>
+                                 <input type="text" inputmode="numeric" id="heartRate" class="form-input w-full" placeholder="lpm" value="" 
+                                        maxlength="3" 
+                                        oninput="this.value = this.value.replace(/[^0-9]/g, '')">
+                             </div> 
+                             <div>
+                                 <label for="respiratoryRate" class="form-label">Frecuencia Respiratoria</label>
+                                 <input type="text" inputmode="numeric" id="respiratoryRate" class="form-input w-full" placeholder="rpm" value="" 
+                                        maxlength="3" 
+                                        oninput="this.value = this.value.replace(/[^0-9]/g, '')">
+                             </div> 
+                             <div>
+                                 <label for="temperature" class="form-label">Temperatura (°C)</label>
+                                 <input type="text" inputmode="decimal" id="temperature" class="form-input w-full" placeholder="36.5" value="" 
+                                        maxlength="4" 
+                                        oninput="this.value = this.value.replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1');">
+                             </div> 
+                             <div>
+                                 <label for="oxygenSaturation" class="form-label">Saturación Oxígeno (%)</label>
+                                 <input type="text" inputmode="numeric" id="oxygenSaturation" class="form-input w-full" placeholder="98" value="" 
+                                        maxlength="3" 
+                                        oninput="this.value = this.value.replace(/[^0-9]/g, '')">
+                             </div> 
+                             <div>
+                                 <label for="glasgow" class="form-label">Glasgow</label>
+                                 <input type="number" id="glasgow" class="form-input w-full" placeholder="15" value="">
+                             </div> 
+                         </div> 
+                     </div> 
+                 </div>
+
+                 <div id="step-3" class="step"> 
+                     <div class="step-card p-4 sm:p-8"> 
+                         <h2 class="text-2xl font-bold text-gray-800 mb-6 text-center">3. Anamnesis</h2> 
+                         <div class="space-y-6"> 
+                             <div>
+                                 <label for="incidentReason" class="form-label">Motivo</label>
+                                 <textarea id="incidentReason" class="form-input w-full" rows="3" placeholder="Describa..."></textarea>
+                             </div> 
+                             <div>
+                                 <label for="medicalHistory" class="form-label">Antecedentes</label>
+                                 <textarea id="medicalHistory" class="form-input w-full" rows="3" placeholder="Ej: hipertensión arterial (HTA) ..."></textarea>
+                             </div> 
+                             <div>
+                                 <label for="treatment" class="form-label">Tratamiento</label>
+                                 <textarea id="treatment" class="form-input w-full" rows="3" placeholder="Ej: Paracetamol..."></textarea>
+                             </div> 
+                             <div>
+                                 <label for="patientRequests" class="form-label text-amber-700">Solicitudes</label>
+                                 <textarea id="patientRequests" class="form-input border-amber-300 w-full" rows="2" placeholder="Ej: no reanimar..."></textarea>
+                             </div> 
+                         </div> 
+                     </div> 
+                 </div>
+
+                 <div id="step-4" class="step"> 
+                     <div class="step-card border-2 border-red-300 p-4 sm:p-8"> 
+                         <h2 class="text-2xl font-bold text-red-700 mb-6 text-center">4. Notificación</h2> 
+                         <div class="space-y-6"> 
+                             <div>
+                                 <label for="triageCode" class="form-label text-red-600">Triage | Urgencia de la atención</label>
+                                 <select id="triageCode" class="form-input border-red-300 w-full">
+                                     <option value="Rojo" selected>🔴 - Codigo Rojo</option>
+                                     <option value="Amarillo">🟡 - Codigo Amarillo</option>
+                                     <option value="Verde">🟢 - Codigo Verde</option>
+                                 </select>
+                             </div> 
+                             <div>
+                                 <label for="instructions" class="form-label text-red-600">Instrucciones</label>
+                                 <textarea id="instructions" class="form-input border-red-300 w-full" rows="3" placeholder="Ej: Preparar box..."></textarea>
+                             </div> 
+                             <div>
+                                 <label class="form-label text-red-600">Hora Estimada de Llegada</label>
+                                 <div class="grid grid-cols-2 gap-4">
+                                     <input type="date" id="etaDate" class="form-input border-red-300 w-full" value="">
+                                     <input type="time" id="etaTime" class="form-input border-red-300 w-full" value="">
+                                 </div>
+                             </div> 
+                         </div> 
+                     </div> 
+                 </div>
+
+                <div class="mt-8 flex justify-between items-center gap-4">
+                    
+                    <button type="button" id="prevButton" class="btn btn-secondary gap-2 w-full flex-1 sm:w-auto">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+                        Anterior
+                    </button>
+                    
+                    <div class="flex gap-4 w-full flex-1 sm:w-auto">
+                        <button type="button" id="nextButton" class="btn btn-primary w-full sm:w-auto">Siguiente</button>
+                        
+                        <button type="submit" id="submitBtn" class="btn btn-submit w-full sm:w-auto">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                            </svg>
+                            Enviar Formulario
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="modalContainer"> 
+        <div id="confirmationModal" class="modal fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center p-4 z-50"> 
+            <div class="modal-content bg-white rounded-lg shadow-xl p-6 max-w-sm w-full text-center"> 
+                <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-blue-100">
+                    <svg class="h-6 w-6 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 002-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/>
+                    </svg>
+                </div> 
+                <h3 class="text-lg font-medium text-gray-900 mt-4">Confirmar Envío</h3> 
+                <p class="text-sm text-gray-500 mt-2">¿Estás seguro de que deseas enviar este formulario a recepción?</p> 
+                <div id="modal-content-normal" class="mt-6 space-y-3"> 
+                    <button id="confirmSendButton" type="button" class="btn btn-modal-confirm w-full">Sí, Enviar</button> 
+                    <button id="cancelSendButton" type="button" class="btn btn-secondary w-full">No, seguir editando</button> 
+                </div> 
+                <div id="modal-content-loading" class="hidden mt-6 space-y-3">
+                     <p class="text-sm text-gray-500">Enviando, por favor espera...</p>
+                </div>
+            </div> 
+        </div> 
+    </div>
+
+
+    <script>
+        // ==================================
+        // INICIO 2ª MODIFICACIÓN (SCRIPT DE RUT)
+        // Esta es la nueva función que SÍ funciona.
+        // ==================================
+        function formatRut(rutInput) {
+            // 1. Limpiar todo excepto números
+            let v = rutInput.value.replace(/[^0-9]/g, '');
+            
+            // 2. Limitar a 8 dígitos (para 11.111.111)
+            // (Si necesitas RUTs más largos, cambia este 8 a 9 o 10)
+            v = v.slice(0, 8); 
+            
+            // 3. Formatear al revés para poner puntos
+            let vFormateado = '';
+            let j = 0;
+            // Iterar al revés
+            for (let i = v.length - 1; i >= 0; i--) {
+                vFormateado = v[i] + vFormateado; // Añadir el número al principio
+                j++;
+                // Pone un punto cada 3 números, excepto al final
+                if (j % 3 === 0 && i !== 0) {
+                    vFormateado = '.' + vFormateado;
+                }
+            }
+            
+            // Asignar el valor formateado de vuelta al input
+            rutInput.value = vFormateado;
+        }
+        // ==================================
+        // FIN 2ª MODIFICACIÓN (SCRIPT DE RUT)
+        // ==================================
+
+        document.addEventListener('DOMContentLoaded', () => {
+            
+            // ========================================================================
+            // SECCIÓN 1: REFERENCIAS AL DOM
+            // (Esta parte no se cortó)
+            // ========================================================================
+            
+            const form = document.getElementById('createForm');
+            const pasos = document.querySelectorAll('.step'); 
+            const botonAnterior = document.getElementById('prevButton'); 
+            const botonSiguiente = document.getElementById('nextButton'); 
+            const botonSubmit = document.getElementById('submitBtn'); 
+            const barraProgreso = document.getElementById('progressBar'); 
+            const textoProgreso = document.getElementById('progressText'); 
+            const messageBox = document.getElementById('messageBox'); 
+            
+            // Modal y sus botones
+            const modalConfirmacion = document.getElementById('confirmationModal'); 
+            const modalContentNormal = document.getElementById('modal-content-normal');
+            const modalContentLoading = document.getElementById('modal-content-loading');
+            const confirmSendButton = document.getElementById('confirmSendButton');
+            const cancelSendButton = document.getElementById('cancelSendButton');
+
+            // Inputs
+            const inputNombre = document.getElementById('patientName'); 
+            
+            const inputRutBody = document.getElementById('patientId');
+            const inputRutDv = document.getElementById('patientDv');
+
+            const inputEdad = document.getElementById('patientAge'); 
+            const inputPa = document.getElementById('bloodPressure'); 
+            const inputFc = document.getElementById('heartRate'); 
+            const inputFr = document.getElementById('respiratoryRate'); 
+            const inputTemp = document.getElementById('temperature'); 
+            const inputSat = document.getElementById('oxygenSaturation'); 
+            const inputGlasgow = document.getElementById('glasgow'); 
+            const inputMotivo = document.getElementById('incidentReason'); 
+            const inputAntecedentes = document.getElementById('medicalHistory'); 
+            const inputTratamiento = document.getElementById('treatment'); 
+            const inputSolicitudes = document.getElementById('patientRequests'); 
+            const inputTriage = document.getElementById('triageCode'); 
+            const inputInstrucciones = document.getElementById('instructions'); 
+            const inputEtaDate = document.getElementById('etaDate'); 
+            const inputEtaTime = document.getElementById('etaTime'); 
+            
+            const botonesGenero = document.querySelectorAll('#genderButtons .option-button'); 
+            const botonesUnidadEdad = document.querySelectorAll('#ageUnitButtons .option-button'); 
+            
+            // ========================================================================
+            // SECCIÓN 2: ESTADO INTERNO DEL SCRIPT
+            // ========================================================================
+            
+            let pasoActual = 1; 
+            const totalPasos = 4;
+            const titulosPasos = ["Identificación", "Signos Vitales", "Anamnesis", "Notificación"];
+            
+            let datosPaciente = { 
+                sexo: "", 
+                unidadEdad: "Años" 
+            }; 
+            
+            // ========================================================================
+            // SECCIÓN 3: FUNCIONES AUXILIARES (UI)
+            // ========================================================================
+
+            const actualizarAsistente = () => { 
+                if (!barraProgreso || !textoProgreso || !botonAnterior || !botonSiguiente || !botonSubmit) return; 
+                
+                const p = (pasoActual / totalPasos) * 100; 
+                barraProgreso.style.width = `${p}%`; 
+                if(pasoActual > 0 && pasoActual <= titulosPasos.length) { 
+                    textoProgreso.textContent = `Paso ${pasoActual}/${totalPasos}: ${titulosPasos[pasoActual - 1]}`; 
+                } 
+                
+                pasos.forEach(p => p.classList.remove('active')); 
+                const s = document.getElementById(`step-${pasoActual}`); 
+                if (s) s.classList.add('active'); 
+                
+                // Corrección JS: 'display' en lugar de 'visibility'
+                botonAnterior.style.display = (pasoActual === 1) ? 'none' : 'inline-flex'; 
+                botonSiguiente.style.display = (pasoActual < totalPasos) ? 'inline-flex' : 'none';
+                botonSubmit.style.display = (pasoActual === totalPasos) ? 'inline-flex' : 'none';
+            };
+
+            const mostrarModal = (modal) => { 
+                if (modal) { 
+                    modal.classList.add('active'); 
+                    document.body.classList.add('modal-active'); 
+                } 
+            };
+            
+            const ocultarModal = (modal) => { 
+                if (modal) { 
+                    modal.classList.remove('active');
+                    document.body.classList.remove('modal-active'); 
+                } 
+            };
+
+            const mostrarMensaje = (tipo, mensaje) => {
+                messageBox.textContent = mensaje;
+                messageBox.className = `message-box ${tipo === 'exito' ? 'message-success' : 'message-error'}`;
+                messageBox.style.display = 'block';
+                window.scrollTo(0, 0); 
+            };
+            
+            // ========================================================================
+            // SECCIÓN 4: LÓGICA PRINCIPAL (API)
+            // ========================================================================
+
+            const enviarFormularioAPI = async () => {
+                modalContentNormal.classList.add('hidden');
+                modalContentLoading.classList.remove('hidden');
+
+                // Combinar RUT
+                const fullRut = (inputRutBody?.value && inputRutDv?.value) 
+                                ? `${inputRutBody.value}-${inputRutDv.value}` 
+                                : null;
+
+                const formData = { 
+                    nombre: inputNombre?.value || null, 
+                    rut: fullRut, // <-- RUT Modificado
+                    edad: inputEdad?.value || null, 
+                    sexo: datosPaciente.sexo, 
+                    unidadEdad: datosPaciente.unidadEdad,
+                    presionArterial: inputPa?.value || null, 
+                    frecuenciaCardiaca: inputFc?.value || null, 
+                    frecuenciaRespiratoria: inputFr?.value || null, 
+                    temperatura: inputTemp?.value || null, 
+                    saturacionOxigeno: inputSat?.value || null, 
+                    glasgow: inputGlasgow?.value || null, 
+                    motivoConsulta: inputMotivo?.value || null, 
+                    antecedentes: inputAntecedentes?.value || null, 
+                    tratamiento: inputTratamiento?.value || null, 
+                    solicitudesPaciente: inputSolicitudes?.value || null, 
+                    triage: inputTriage?.value || 'Rojo', 
+                    instrucciones: inputInstrucciones?.value || null, 
+                    etaDate: inputEtaDate?.value || null, 
+                    etaTime: inputEtaTime?.value || null, 
+                }; 
+
+                try {
+                    const response = await fetch(`{% url 'enviar_formulario' %}`, {
+                        method: 'POST', 
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': getCookie('csrftoken') 
+                        },
+                        body: JSON.stringify(formData) 
+                    });
+
+                    const data = await response.json(); 
+
+                    if (response.ok && data.status === 'exito') {
+                        ocultarModal(modalConfirmacion);
+                        mostrarMensaje('exito', '¡Formulario enviado con éxito! Redirigiendo al menú...');
+                        
+                        setTimeout(() => {
+                            window.location.href = '{% url "menu_ambulancia" %}';
+                        }, 2000);
+
+                    } else {
+                        throw new Error(data.message || 'Error desconocido al enviar');
+                    }
+
+                } catch (error) {
+                    ocultarModal(modalConfirmacion);
+                    mostrarMensaje('error', `Error: ${error.message}`);
+                    
+                    modalContentNormal.classList.remove('hidden');
+                    modalContentLoading.classList.add('hidden');
+                }
+            };
+
+            // ========================================================================
+            // SECCIÓN 5: MANEJADORES DE EVENTOS (Listeners)
+            // ========================================================================
+            
+             if (botonSiguiente) { 
+                 botonSiguiente.addEventListener('click', () => { 
+                    if (pasoActual < totalPasos) { 
+                        pasoActual++; 
+                        actualizarAsistente();
+                    }
+                 }); 
+             }
+            if (botonAnterior) { 
+                botonAnterior.addEventListener('click', () => { 
+                    if (pasoActual > 1) { 
+                        pasoActual--;
+                        actualizarAsistente();
+                    } 
+                }); 
+            }
+            
+            botonesGenero.forEach(b => { 
+                b.addEventListener('click', () => { 
+                    botonesGenero.forEach(btn => btn.classList.remove('active')); 
+                    b.classList.add('active'); 
+                    datosPaciente.sexo = b.dataset.value; 
+                }); 
+            });
+            botonesUnidadEdad.forEach(b => { 
+                b.addEventListener('click', () => { 
+                    botonesUnidadEdad.forEach(btn => btn.classList.remove('active'));
+                    b.classList.add('active');
+                    datosPaciente.unidadEdad = b.dataset.unit;
+                }); 
+            });
+            
+            if (form) {
+                form.addEventListener('submit', (e) => {
+                    e.preventDefault(); 
+                    mostrarModal(modalConfirmacion);
+                });
+            }
+
+            if (confirmSendButton) {
+                confirmSendButton.addEventListener('click', enviarFormularioAPI);
+            }
+
+            if (cancelSendButton) {
+                cancelSendButton.addEventListener('click', () => {
+                    ocultarModal(modalConfirmacion);
+                });
+            }
+            
+            // ========================================================================
+            // SECCIÓN 6: INICIALIZACIÓN
+            // ========================================================================
+            
+            ocultarModal(modalConfirmacion);
+            actualizarAsistente(); 
+        });
+    </script>
+    </body>
+</html>

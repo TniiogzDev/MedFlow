@@ -1,0 +1,142 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8"> 
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Medflow</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <link rel="icon" href="{% static 'images/logo.png' %}" type="image/png">
+    
+    <style>
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background-color: #f0f2f5; 
+        }
+        .form-label { 
+            font-weight: 600; 
+            color: #374151;
+            margin-bottom: 0.5rem; 
+            display: block; 
+        }
+        .form-input { 
+            width: 100%; 
+            padding: 0.75rem 1rem; 
+            border: 1px solid #D1D5DB;
+            border-radius: 0.5rem;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            background-color: #f9fafb;
+        }
+        .form-input:focus { 
+            outline: none;
+            border-color: #EF4444;
+            box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.3);
+            background-color: white; 
+        }
+        .btn { 
+            font-weight: 600; 
+            padding: 0.75rem 1.5rem; 
+            border-radius: 0.5rem; 
+            text-align: center; 
+            transition: all 0.3s; 
+            border: 1px solid transparent; 
+            cursor: pointer; 
+        }
+        .btn-primary { 
+            background-color: #EF4444; 
+            color: white; 
+        }
+        .btn-primary:hover { 
+            background-color: #DC2626;
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);
+        }
+        .help-link { 
+            color: #3B82F6;
+            transition: color 0.2s; 
+            cursor: pointer; 
+        }
+        .help-link:hover { 
+            color: #1D4ED8;
+            text-decoration: underline; 
+        }
+    </style> 
+</head> 
+<body class="min-h-screen p-4 flex items-center justify-center">
+
+    <div id="loginView" class="container mx-auto max-w-sm w-full"> 
+    
+        <div class="bg-white p-8 rounded-2xl shadow-lg text-center">
+                
+            <div class="flex items-center gap-3 mb-6 w-fit mx-auto">
+                <img src="{% static 'images/logo.png' %}" alt="Logo Medflow" class="h-8 w-8">
+                <h1 class="text-3xl font-bold text-gray-800">Medflow</h1> 
+            </div>
+            
+            <h2 class="text-xl font-semibold text-gray-700 mb-4">Menú Inicio de Sesión</h2>
+            
+            {% if error %}
+                <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4 text-sm" role="alert"> 
+                    <span class="block sm:inline">{{ error }}</span> 
+                </div>
+            {% endif %} 
+
+            <form action="{% url 'login' %}" method="post" class="space-y-4">
+                
+                {% csrf_token %}
+                
+                <div>
+                    <label for="username" class="form-label text-left">Ingresar Usuario</label> 
+                    <input type="text" id="username" class="form-input" name="username" required> 
+                </div> 
+                
+                <div>
+                    <label for="password" class="form-label text-left">Ingresar Contraseña</label> 
+                    <input type="password" id="password" class="form-input" name="password" required> 
+                </div> 
+                
+                <button type="submit" class="btn btn-primary w-full">Ingresar</button> 
+                
+            </form> 
+            
+            <div class="mt-8 pt-4 border-t border-gray-200 text-left">
+                
+                <h3 class="text-lg font-semibold text-gray-700 mb-3 text-center">Menú Ayuda</h3>
+                
+                <ul class="space-y-3 text-sm">
+                    <li class="hover:opacity-80">
+                        <span class="font-medium text-gray-500">▪</span> 
+                        <a href="#" class="help-link">Olvidé mi contraseña</a> 
+                    </li>
+                    
+                </ul> 
+                <div class="mt-4 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                    <p class="font-bold text-gray-800 mb-1">Dato de contacto:</p>
+                    <ul class="list-disc list-inside text-gray-600">
+                        <li>Email: soporte@Medflow.cl</li>
+                    </ul>
+                </div> 
+            </div> 
+        </div> 
+    </div> 
+    
+    {% if no_role_error %}
+        <script>
+            // Espera a que el DOM esté cargado
+            document.addEventListener('DOMContentLoaded', function() {
+                // Dispara el SweetAlert que pediste
+                Swal.fire({
+                icon: "info", // "info" es mejor que "error" para este caso
+                title: "Acceso Pendiente",
+                text: "{{ no_role_error }}", // <- Inyecta el mensaje de la view
+                footer: 'Contacta a un administrador si crees que esto es un error.'
+                });
+            });
+        </script>
+        {% endif %}
+    </body> 
+</html>

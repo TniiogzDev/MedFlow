@@ -1,0 +1,1330 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel Supervisor</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="icon" href="{% static 'images/logo.png' %}" type="image/png">
+    
+    <style>
+         body { font-family: 'Inter', sans-serif; background-color: #f0f2f5; }
+        .card {
+            background-color: white;
+            border-radius: 1rem;
+            padding: 2rem;
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.07), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+        }
+        .btn {
+            font-weight: 600;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            transition: all 0.3s;
+            border: 1px solid transparent;
+            cursor: pointer;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem; 
+            text-decoration: none; 
+        }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        
+        /* --- Clases de botones añadidas --- */
+        .btn-sm {
+            padding: 0.25rem 0.75rem; /* Más pequeño */
+            font-size: 0.875rem;
+            font-weight: 500;
+            width: auto; /* Ancho automático */
+        }
+        .btn-danger { background-color: #EF4444; color: white; }
+        .btn-danger:hover { background-color: #DC2626; }
+        .btn-info { background-color: #3B82F6; color: white; }
+        .btn-info:hover { background-color: #2563EB; }
+        .btn-secondary { background-color: #6B7280; color: white; }
+        .btn-secondary:hover { background-color: #4B5563; }
+        /* --- --- */
+
+        /* Estilos de Lista */
+        .notification-item {
+            padding: 1rem; border-radius: 0.5rem; transition: transform 0.2s, box-shadow 0.2s;
+            cursor: pointer; background-color: white; border: 1px solid #E5E7EB;
+            border-left: 5px solid;
+        }
+        .notification-item:hover { transform: translateY(-2px); box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+        .notification-item.emergency { border-left-color: #EF4444; background-color: #FEF2F2; }
+        .notification-item.normal { border-left-color: #3B82F6; background-color: #EFF6FF; }
+        .notification-item.warning { border-left-color: #F59E0B; background-color: #FFFBEB; }
+        .notification-item.active { box-shadow: 0 4px 10px rgba(0,0,0,0.1); transform: none; }
+        .notification-item.normal.active { background-color: #3B82F6; color: white; }
+        .notification-item.warning.active { background-color: #F59E0B; color: white; }
+        .notification-item.emergency.active { background-color: #EF4444; color: white; }
+        .notification-item.active p, .notification-item.active p span { color: white !important; }
+        .notification-item.active .text-gray-400 { color: #E5E7EB !important; }
+
+        /* Estilos de Chat */
+        .chat-message { max-width: 80%; padding: 0.65rem 1rem; border-radius: 1rem; margin-bottom: 0.5rem; line-height: 1.4; word-wrap: break-word; }
+        .chat-receptor { background-color: #EEF2FF; margin-left: auto; color: #1E3A8A; border-bottom-right-radius: 0.25rem; }
+        .chat-personal { background-color: #E5E7EB; margin-right: auto; border-bottom-left-radius: 0.25rem; color: #1F2937; }
+        .chat-message .meta { font-size: 0.75rem; color: #6B7280; }
+        .chat-message .meta-sender { font-weight: 600; margin-bottom: 0.1rem;}
+        .chat-message .meta-time { text-align: right; margin-top: 0.2rem;}
+        
+        /* Estilos de Pestañas (Tabs) */
+        .tab-button {
+            padding-bottom: 0.5rem; /* pb-2 */
+            border-bottom-width: 2px;
+            border-color: transparent;
+            font-size: 0.875rem; /* text-sm */
+            font-weight: 600; /* font-semibold */
+            color: #6B7280; /* text-gray-500 */
+            cursor: pointer;
+        }
+        .tab-button:hover {
+            color: #374151; /* hover:text-gray-700 */
+            border-color: #D1D5DB; /* hover:border-gray-300 */
+        }
+        .tab-button.active-tab {
+            color: #4F46E5; /* text-indigo-600 */
+            border-color: #4F46E5; /* border-indigo-500 */
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active-tab-content {
+            display: block;
+        }
+        
+        /* --- Estilos para los badges de estado del formulario --- */
+        .status-badge {
+            padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.75rem;
+            font-weight: 600; text-transform: capitalize;
+        }
+        .status-pendiente { background-color: #FEF3C7; color: #92400E; }
+        .status-requiere_modificacion { background-color: #FEF2F2; color: #B91C1C; }
+        .status-modificado { background-color: #CCFBF1; color: #0F766E; }
+        .status-aprobado { background-color: #D1FAE5; color: #065F46; }
+        
+        /* --- NUEVOS ESTILOS PARA LÍNEA DE TIEMPO --- */
+        .timeline { border-left: 2px solid #D1D5DB; padding-left: 1.5rem; }
+        .timeline-item { position: relative; padding-bottom: 1.5rem; }
+        .timeline-item:last-child { padding-bottom: 0; }
+        .timeline-dot {
+            position: absolute; left: -2.375rem; /* Ajuste para centrar el punto */
+            top: 0; width: 1.25rem; height: 1.25rem;
+            border-radius: 9999px; background-color: white;
+            border: 2px solid #D1D5DB;
+        }
+        .timeline-dot.active { border-color: #3B82F6; background-color: #3B82F6; }
+        .timeline-content { margin-top: 0.125rem; }
+        .timeline-title { font-weight: 600; color: #1F2937; }
+        .timeline-time { font-size: 0.875rem; color: #6B7280; }
+        
+        /* --- NUEVOS ESTILOS PARA DATOS GENERALES --- */
+        .data-item {
+            padding: 0.75rem; border-radius: 0.5rem; background-color: #F9FAFB;
+            border: 1px solid #E5E7EB;
+        }
+        .data-item-label {
+             font-weight: 600; color: #4B5563; font-size: 0.875rem; 
+        }
+        .data-item-value {
+             color: #1F2937; font-size: 1rem;
+        }
+        
+        /* --- NUEVOS ESTILOS PARA PESTAÑAS PRINCIPALES --- */
+        .main-tab-button {
+            font-size: 1.125rem; /* text-lg */
+            font-weight: 600;
+            padding: 0.75rem 1.25rem;
+            color: #6B7280; /* text-gray-500 */
+            border-bottom: 4px solid transparent;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+        .main-tab-button:hover {
+            color: #374151; /* text-gray-700 */
+        }
+        .main-tab-button.active-tab {
+            color: #4F46E5; /* text-indigo-600 */
+            border-color: #4F46E5; /* border-indigo-500 */
+        }
+        .main-tab-content {
+            display: none;
+        }
+        .main-tab-content.active-tab-content {
+            display: block;
+        }
+        
+        /* --- ESTILOS MODAL CREAR USUARIO --- */
+        .modal {
+            background-color: rgba(0, 0, 0, 0.6);
+            transition: opacity 0.3s ease;
+            position: fixed;
+            inset: 0;
+            z-index: 50;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+        .modal.hidden { display: none; }
+        .form-label { font-weight: 600; color: #374151; margin-bottom: 0.5rem; display: block; }
+        .form-input { 
+            width: 100%; padding: 0.75rem 1rem; border: 1px solid #D1D5DB;
+            border-radius: 0.5rem; background-color: #f9fafb;
+        }
+        .form-input:focus { outline: none; border-color: #4F46E5; box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.3); }
+        .message-box {
+            display: none; padding: 0.75rem 1rem; border-radius: 0.5rem;
+            margin-bottom: 1rem; text-align: center; font-weight: 500;
+        }
+        .message-success { background-color: #D1FAE5; color: #065F46; }
+        .message-error { background-color: #FEE2E2; color: #991B1B; }
+    </style>
+</head>
+<body class="p-6">
+
+    <div class="container mx-auto max-w-7xl">
+        
+        <header class="mb-6 flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-indigo-600"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+                <h1 class="text-3xl font-bold text-gray-800">Panel de Control del Supervisor</h1>
+            </div>
+        </header>
+        
+        <div class="max-w-7xl mx-auto p-3 mb-6 bg-white rounded-xl shadow-md flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                     <img src="{% static 'images/icon_usuario.png' %}" alt="Logo Usuario" class="h-8 w-8">  
+                     <span class="font-bold text-gray-800">Usuario:</span> 
+                     <span class="text-gray-900">{{ user.get_full_name|default:user.username }}</span>
+                     <span class="text-gray-300">|</span>
+                     <span class="font-bold text-gray-800">Rol:</span> 
+                     <span class="font-semibold text-indigo-600">{{ user.groups.first.name|default:"N/A" }}</span>
+                 </div>
+             
+             <div class="flex items-center gap-2"> 
+                 <a href="{% url 'logout' %}" 
+                    class="btn text-white text-sm px-4 py-2 bg-gray-600 hover:bg-gray-700" 
+                    style="width: auto;">
+                    Cerrar Sesión
+                 </a> 
+             </div>
+         </div>
+         
+         <div class="mb-6 border-b border-gray-200">
+             <nav id="gestion-tabs" class="flex space-x-4">
+                 <button id="main-tab-usuarios" type="button" class="main-tab-button active-tab">
+                     Gestión de Usuarios
+                 </button>
+                 <button id="main-tab-formularios" type="button" class="main-tab-button">
+                     Gestión de Formularios
+                 </button>
+             </nav>
+         </div>
+         
+         <div id="content-gestion-usuarios" class="main-tab-content active-tab-content">
+            <div class="grid grid-cols-1 lg:grid-cols-5 gap-6">
+
+                <div class="lg:col-span-2 space-y-6 flex flex-col min-h-[calc(100vh-280px)]">
+                    
+                    <div class="card flex-shrink-0">
+                        <h2 class="text-2xl font-semibold text-gray-700 mb-6 border-b pb-2">Gestión de Usuarios</h2>
+                        <div class="space-y-3">
+                            <button type="button" id="showCreateUserModalBtn" class="btn text-white bg-[#10B981] hover:bg-[#059669]">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                                Crear Usuario
+                            </button>
+                            </div>
+                    </div>
+
+                    <div class="card flex-grow flex flex-col min-h-0">
+                        <h2 class="text-2xl font-semibold text-gray-700 mb-6 border-b pb-2">Auditar Usuario</h2>
+                        
+                        <div id="userList" class="space-y-4 overflow-y-auto pr-2 flex-grow">
+                            
+                            {% for usuario in usuarios_para_auditar %}
+                                
+                                {% comment %} --- Determinar el rol final y la clase de color --- {% endcomment %}
+                                {% if usuario.is_superuser %}
+                                    {% with final_role_name="Supervisor" final_color_class="emergency" %}
+                                        <div class="notification-item {{ final_color_class }}" 
+                                             data-user-id="{{ usuario.id }}" 
+                                             data-user-name="{{ usuario.username }}"
+                                             data-user-role="{{ final_role_name }}">
+                                             
+                                             <p class="text-sm text-gray-700">
+                                                 <span class="font-semibold text-gray-900">Username:</span> {{ usuario.username }}
+                                             </p>
+                                             <p class="text-sm text-gray-600">
+                                                 <span class="font-semibold">Rol:</span> {{ final_role_name }}
+                                             </p>
+                                        </div>
+                                    {% endwith %}
+                                {% else %}
+                                    {% with group_name=usuario.groups.first.name %}
+                                        
+                                        {% if group_name == 'Ambulancia' %}
+                                            {% with final_role_name=group_name final_color_class="normal" %}
+                                                <div class="notification-item {{ final_color_class }}" 
+                                                     data-user-id="{{ usuario.id }}" 
+                                                     data-user-name="{{ usuario.username }}"
+                                                     data-user-role="{{ final_role_name }}">
+                                                     
+                                                     <p class="text-sm text-gray-700">
+                                                         <span class="font-semibold text-gray-900">Username:</span> {{ usuario.username }}
+                                                     </p>
+                                                     <p class="text-sm text-gray-600">
+                                                         <span class="font-semibold">Rol:</span> {{ final_role_name }}
+                                                     </p>
+                                                </div>
+                                            {% endwith %}
+                                        {% elif group_name == 'Recepcion' %}
+                                            {% with final_role_name=group_name final_color_class="warning" %}
+                                                <div class="notification-item {{ final_color_class }}" 
+                                                     data-user-id="{{ usuario.id }}" 
+                                                     data-user-name="{{ usuario.username }}"
+                                                     data-user-role="{{ final_role_name }}">
+                                                     
+                                                     <p class="text-sm text-gray-700">
+                                                         <span class="font-semibold text-gray-900">Username:</span> {{ usuario.username }}
+                                                     </p>
+                                                     <p class="text-sm text-gray-600">
+                                                         <span class="font-semibold">Rol:</span> {{ final_role_name }}
+                                                     </p>
+                                                </div>
+                                            {% endwith %}
+                                        {% else %}
+                                            {% with final_role_name=group_name|default:"Sin Rol" final_color_class="emergency" %}
+                                                <div class="notification-item {{ final_color_class }}" 
+                                                     data-user-id="{{ usuario.id }}" 
+                                                     data-user-name="{{ usuario.username }}"
+                                                     data-user-role="{{ final_role_name }}">
+                                                     
+                                                     <p class="text-sm text-gray-700">
+                                                         <span class="font-semibold text-gray-900">Username:</span> {{ usuario.username }}
+                                                     </p>
+                                                     <p class="text-sm text-gray-600">
+                                                         <span class="font-semibold">Rol:</span> {{ final_role_name }}
+                                                     </p>
+                                                </div>
+                                            {% endwith %}
+                                        {% endif %}
+                                        
+                                    {% endwith %}
+                                {% endif %}
+                            
+                            {% endfor %}
+                            
+                            <p class="text-center text-gray-500" id="userListPlaceholder" style="display: none;">Cargando usuarios...</p>
+                        </div>
+                        </div>
+                </div>
+
+                <div class="lg:col-span-3 min-h-[calc(100vh-280px)] overflow-y-auto">
+                    <div class="card">
+                        
+                        <div id="auditContent">
+                            <h2 class="text-2xl font-semibold text-gray-700 mb-4 border-b pb-2">
+                                Registro de Auditoría: <span id="auditUserName" class="text-indigo-600">...</span>
+                            </h2>
+                            
+                            <div id="auditPlaceholder" class="flex items-center justify-center min-h-[200px]">
+                                <p class="text-center text-gray-500 text-lg">
+                                    Seleccione un usuario de la izquierda para ver su registro.
+                                </p>
+                            </div>
+                            
+                            <div id="userAuditDataPanel" class="hidden space-y-6">
+                                <div class="border-b border-gray-200">
+                                    <nav id="user-audit-tabs" class="-mb-px flex space-x-8" aria-label="Tabs">
+                                        <button id="tab-timeline" type="button" class="tab-button active-tab">Línea de Tiempo</button>
+                                        <button id="tab-formularios" type="button" class="tab-button">Formularios Creados</button>
+                                        <button id="tab-formularios-gestionados" type="button" class="tab-button">Formularios Gestionados</button>
+                                        <button id="tab-chats" type="button" class="tab-button">Chats (Generales)</button>
+                                    </nav>
+                                </div>
+
+                                <div id="content-timeline" class="tab-content active-tab-content">
+                                    <div class="overflow-x-auto">
+                                        <table class="min-w-full divide-y divide-gray-200">
+                                            <thead class="bg-gray-50">
+                                                <tr>
+                                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha y Hora</th>
+                                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tipo de Acción</th>
+                                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Detalle</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="auditActionsTableBody" class="bg-white divide-y divide-gray-200">
+                                                </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                                
+                                <div id="content-chats" class="tab-content">
+                                    <div id="chatHistory" class="h-64 bg-gray-100 p-3 rounded-lg overflow-y-auto mb-4 flex flex-col">
+                                        </div>
+                                    <p class="text-center text-sm text-gray-500">Registro de chat (solo lectura).</p>
+                                </div>
+
+                                <div id="content-formularios" class="tab-content">
+                                     <div class="overflow-x-auto">
+                                        <table class="min-w-full divide-y divide-gray-200">
+                                            <thead class="bg-gray-50">
+                                                <tr>
+                                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Paciente</th>
+                                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha</th>
+                                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
+                                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acción</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="auditFormsTableBody" class="bg-white divide-y divide-gray-200 audit-forms-table">
+                                                </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                                
+                                <div id="content-formularios-gestionados" class="tab-content">
+                                     <div class="overflow-x-auto">
+                                        <table class="min-w-full divide-y divide-gray-200">
+                                            <thead class="bg-gray-50">
+                                                <tr>
+                                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Paciente</th>
+                                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha</th>
+                                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
+                                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acción</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="auditFormsGestionadosTableBody" class="bg-white divide-y divide-gray-200 audit-forms-table">
+                                                </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                                
+                            </div>
+                        </div>
+                        
+                        <div id="formAuditDetailPanel" class="hidden">
+                            <div class="flex justify-between items-center mb-4 border-b pb-2">
+                                <h2 class="text-2xl font-semibold text-gray-700">
+                                    Detalle Formulario: <span id="formAuditPatientName" class="text-blue-600">...</span>
+                                </h2>
+                                <button id="backToUserAuditBtn" type="button" class="btn btn-secondary btn-sm" style="width: auto;">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+                                    Volver a Auditoría
+                                </button>
+                            </div>
+                            
+                            <div class="space-y-6">
+                                <div class="border-b border-gray-200">
+                                    <nav id="form-audit-tabs" class="-mb-px flex space-x-8" aria-label="Tabs">
+                                        <button id="tab-form-datos" type="button" class="tab-button active-tab">Datos Generales</button>
+                                        <button id="tab-form-chat" type="button" class="tab-button">Chat</button>
+                                        <button id="tab-form-timeline" type="button" class="tab-button">Línea de Tiempo</button>
+                                    </nav>
+                                </div>
+
+                                <div id="content-form-datos" class="tab-content active-tab-content">
+                                    <div id="formAuditDatosBody" class="space-y-3">
+                                    </div>
+                                </div>
+                                
+                                <div id="content-form-chat" class="tab-content">
+                                    <div id="formAuditChatHistory" class="h-64 bg-gray-100 p-3 rounded-lg overflow-y-auto mb-4 flex flex-col">
+                                        <p class="m-auto text-gray-500">Cargando chat...</p>
+                                    </div>
+                                    <p class="text-center text-sm text-gray-500">Registro de chat (solo lectura).</p>
+                                </div>
+                                
+                                <div id="content-form-timeline" class="tab-content">
+                                    <div id="formAuditTimelineBody" class="timeline">
+                                    </div>
+                                </div>
+                                
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+         </div>
+         
+         <div id="content-gestion-formularios" class="main-tab-content">
+            <div class="card">
+                <h2 class="text-2xl font-semibold text-gray-700 mb-6 border-b pb-2">Gestión de Todos los Formularios</h2>
+                
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6 p-4 bg-gray-50 rounded-lg border">
+                    <div>
+                        <label for="search-name" class="block text-sm font-medium text-gray-700">Buscar por Paciente</label>
+                        <input type="text" id="search-name" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" placeholder="Ej: Antonio Gómez">
+                    </div>
+                    <div>
+                        <label for="sort-date" class="block text-sm font-medium text-gray-700">Ordenar por Fecha</label>
+                        <select id="sort-date" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                            <option value="mas-nuevos">Más Nuevos Primero</option>
+                            <option value="mas-antiguos">Más Antiguos Primero</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="filter-status" class="block text-sm font-medium text-gray-700">Filtrar por Estado</label>
+                        <select id="filter-status" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                            <option value="todos">Todos los Estados</option>
+                            <option value="PENDIENTE">Pendiente</option>
+                            <option value="REQUIERE_MODIFICACION">Requiere Modificación</option>
+                            <option value="MODIFICADO">Modificado</option>
+                            <option value="APROBADO">Aprobado</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">&nbsp;</label>
+                        <button id="reset-filters-btn" class="btn btn-secondary mt-1 w-full" style="padding-top: 0.625rem; padding-bottom: 0.625rem;">Limpiar Filtros</button>
+                    </div>
+                </div>
+                
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Paciente</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Creado por</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="allFormsTableBody" class="bg-white divide-y divide-gray-200">
+                            <tr><td colspan="5" class="p-4 text-center text-gray-500">Cargando formularios...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+         </div>
+         
+         <div id="downloadMenu" class="hidden absolute z-10 w-48 bg-white rounded-md shadow-lg border">
+            <a href="#" data-format="pdf" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Descargar como PDF</a>
+            <a href="#" data-format="xlsx" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Descargar como Excel</a>
+         </div>
+
+    </div>
+
+    <div id="createUserModal" class="modal hidden">
+        <div class="modal-overlay-bg absolute inset-0 bg-gray-900 opacity-75"></div>
+        <div class="card w-full max-w-lg relative">
+            <h2 class="text-2xl font-bold text-gray-800 mb-6">Crear Nuevo Usuario</h2>
+            
+            <div id="userCreateMessage" class="message-box"></div>
+            
+            <form id="createUserForm" class="space-y-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label for="new_username" class="form-label">Username <span class="text-red-500">*</span></label>
+                        <input type="text" id="new_username" name="username" class="form-input" required>
+                    </div>
+                    <div>
+                        <label for="new_password" class="form-label">Contraseña <span class="text-red-500">*</span></label>
+                        <input type="password" id="new_password" name="password" class="form-input" required>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label for="new_first_name" class="form-label">Nombre</label>
+                        <input type="text" id="new_first_name" name="first_name" class="form-input">
+                    </div>
+                    <div>
+                        <label for="new_last_name" class="form-label">Apellido</label>
+                        <input type="text" id="new_last_name" name="last_name" class="form-input">
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                     <div>
+                        <label for="new_rut" class="form-label">RUT <span class="text-red-500">*</span></label>
+                        <input type="text" id="new_rut" name="rut" class="form-input" placeholder="12.345.678-9" required>
+                    </div>
+                    <div>
+                        <label for="new_email" class="form-label">Email</label>
+                        <input type="email" id="new_email" name="email" class="form-input" placeholder="usuario@dominio.com">
+                    </div>
+                </div>
+                <div>
+                    <label for="new_role" class="form-label">Rol <span class="text-red-500">*</span></label>
+                    <select id="new_role" name="role" class="form-input" required>
+                        <option value="">Seleccione un rol...</option>
+                        <option value="Ambulancia">Ambulancia</option>
+                        <option value="Recepcion">Recepcion</option>
+                        <option value="Supervisor">Supervisor</option>
+                    </select>
+                </div>
+                
+                <div class="flex justify-end gap-4 pt-6">
+                    <button type="button" id="closeCreateModalBtn" class="btn btn-secondary" style="width: auto;">Cancelar</button>
+                    <button type="submit" class="btn btn-info" style="width: auto; background-color: #10B981; hover:bg-[#059669]">Crear Usuario</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const csrftoken = getCookie('csrftoken'); 
+            
+            // --- Pestañas Principales ---
+            const mainTabs = document.querySelectorAll('.main-tab-button');
+            const mainTabContents = document.querySelectorAll('.main-tab-content');
+            
+            // --- Panel 1: Auditoría de Usuario ---
+            const userListDiv = document.getElementById('userList');
+            const auditContent = document.getElementById('auditContent');
+            const auditPlaceholder = document.getElementById('auditPlaceholder');
+            const userAuditDataPanel = document.getElementById('userAuditDataPanel');
+            const auditUserName = document.getElementById('auditUserName');
+            const auditActionsTableBody = document.getElementById('auditActionsTableBody');
+            const chatHistory = document.getElementById('chatHistory');
+            const auditFormsTableBody = document.getElementById('auditFormsTableBody');
+            const auditFormsGestionadosTableBody = document.getElementById('auditFormsGestionadosTableBody'); 
+            const userAuditTabs = document.querySelectorAll('#user-audit-tabs .tab-button');
+            const userAuditTabContents = document.querySelectorAll('#userAuditDataPanel .tab-content');
+            
+            // --- Panel 2: Detalle de Formulario ---
+            const formAuditDetailPanel = document.getElementById('formAuditDetailPanel');
+            const formAuditPatientName = document.getElementById('formAuditPatientName');
+            const backToUserAuditBtn = document.getElementById('backToUserAuditBtn');
+            const formAuditDatosBody = document.getElementById('formAuditDatosBody');
+            const formAuditChatHistory = document.getElementById('formAuditChatHistory');
+            const formAuditTimelineBody = document.getElementById('formAuditTimelineBody');
+            const formAuditTabs = document.querySelectorAll('#form-audit-tabs .tab-button');
+            const formAuditTabContents = document.querySelectorAll('#formAuditDetailPanel .tab-content');
+            
+            // --- Panel 3: Todos los Formularios ---
+            const allFormsTableBody = document.getElementById('allFormsTableBody');
+            const downloadMenu = document.getElementById('downloadMenu');
+            const searchNameInput = document.getElementById('search-name');
+            const sortDateSelect = document.getElementById('sort-date');
+            const filterStatusSelect = document.getElementById('filter-status');
+            const resetFiltersBtn = document.getElementById('reset-filters-btn');
+            
+            let currentDownloadFormId = null;
+            let allFormsData = []; // Cache para todos los formularios
+            
+            let currentAuditedUserId = null; 
+            let currentAuditedUserRole = null; 
+            let currentApiData = {}; 
+            
+            // ==================================
+            // LÓGICA PESTAÑAS PRINCIPALES
+            // ==================================
+            if (mainTabs.length > 0) {
+                mainTabs.forEach(tab => {
+                    tab.addEventListener('click', () => {
+                        mainTabs.forEach(t => t.classList.remove('active-tab'));
+                        mainTabContents.forEach(c => c.classList.remove('active-tab-content'));
+                        
+                        tab.classList.add('active-tab');
+                        const contentId = tab.id.replace('main-tab-', 'content-gestion-');
+                        document.getElementById(contentId).classList.add('active-tab-content');
+                        
+                        if (tab.id === 'main-tab-formularios') {
+                            loadAllForms();
+                        }
+                    });
+                });
+            }
+
+            // --- Lógica de Pestañas (Panel 1: Auditoría Usuario) ---
+            if (userAuditTabs.length > 0) {
+                userAuditTabs.forEach(tab => {
+                    tab.addEventListener('click', () => {
+                        userAuditTabs.forEach(t => t.classList.remove('active-tab'));
+                        userAuditTabContents.forEach(c => c.classList.remove('active-tab-content'));
+                        
+                        tab.classList.add('active-tab');
+                        const contentId = tab.id.replace('tab-', 'content-');
+                        document.getElementById(contentId).classList.add('active-tab-content');
+                    });
+                });
+            }
+            
+            // --- Lógica de Pestañas (Panel 2: Detalle Formulario) ---
+            if (formAuditTabs.length > 0) {
+                formAuditTabs.forEach(tab => {
+                    tab.addEventListener('click', () => {
+                        formAuditTabs.forEach(t => t.classList.remove('active-tab'));
+                        formAuditTabContents.forEach(c => c.classList.remove('active-tab-content'));
+                        
+                        tab.classList.add('active-tab');
+                        const contentId = tab.id.replace('tab-form-', 'content-form-');
+                        document.getElementById(contentId).classList.add('active-tab-content');
+                    });
+                });
+            }
+
+            // --- Lógica de Carga de Auditoría (Panel 1) ---
+            if (userListDiv) {
+                userListDiv.querySelectorAll('.notification-item').forEach(item => {
+                    item.addEventListener('click', () => {
+                        formAuditDetailPanel.classList.add('hidden');
+                        auditContent.classList.remove('hidden');
+
+                        userListDiv.querySelectorAll('.notification-item').forEach(i => i.classList.remove('active'));
+                        item.classList.add('active');
+                        
+                        const userId = item.dataset.userId;
+                        const userName = item.dataset.userName;
+                        const userRole = item.dataset.userRole;
+                        
+                        currentAuditedUserId = userId; 
+                        currentAuditedUserRole = userRole; 
+
+                        loadUserAuditData(userId, userName, userRole);
+                    });
+                });
+            }
+            
+            function loadUserAuditData(userId, userName, userRole) {
+                auditUserName.textContent = `${userName} (${userRole})`;
+                auditPlaceholder.style.display = 'none';
+                userAuditDataPanel.classList.remove('hidden');
+                
+                const timelineTab = document.getElementById('tab-timeline');
+                const formulariosTab = document.getElementById('tab-formularios');
+                const formulariosGestionadosTab = document.getElementById('tab-formularios-gestionados');
+                const chatsTab = document.getElementById('tab-chats');
+                
+                timelineTab.style.display = 'none';
+                formulariosTab.style.display = 'none';
+                formulariosGestionadosTab.style.display = 'none';
+                chatsTab.style.display = 'none';
+                
+                userAuditTabs.forEach(t => t.classList.remove('active-tab'));
+                userAuditTabContents.forEach(c => c.classList.remove('active-tab-content'));
+
+                if (userRole === 'Ambulancia') {
+                    timelineTab.style.display = 'inline-block';
+                    formulariosTab.style.display = 'inline-block';
+                    formulariosTab.classList.add('active-tab');
+                    document.getElementById('content-formularios').classList.add('active-tab-content');
+                } else if (userRole === 'Recepcion') {
+                    timelineTab.style.display = 'inline-block';
+                    formulariosGestionadosTab.style.display = 'inline-block';
+                    formulariosGestionadosTab.classList.add('active-tab');
+                    document.getElementById('content-formularios-gestionados').classList.add('active-tab-content');
+                } else { // Para Admin/Supervisor
+                    timelineTab.style.display = 'inline-block';
+                    chatsTab.style.display = 'inline-block';
+                    timelineTab.classList.add('active-tab');
+                    document.getElementById('content-timeline').classList.add('active-tab-content');
+                }
+
+                auditActionsTableBody.innerHTML = '<tr><td colspan="3" class="p-4 text-center text-gray-500">Cargando registros...</td></tr>';
+                chatHistory.innerHTML = '<p class="m-auto text-gray-500">Cargando chat...</p>';
+                auditFormsTableBody.innerHTML = '<tr><td colspan="4" class="p-4 text-center text-gray-500">Cargando formularios...</td></tr>';
+                auditFormsGestionadosTableBody.innerHTML = '<tr><td colspan="4" class="p-4 text-center text-gray-500">Cargando formularios...</td></tr>';
+
+                const apiUrl = `/api/audit_logs/${userId}/`;
+                console.log(`[DEBUG] Llamando API de Auditoría: ${apiUrl}`);
+
+                fetch(apiUrl)
+                    .then(response => {
+                        console.log(`[DEBUG] Respuesta de Auditoría recibida. Status: ${response.status}`);
+                        if (!response.ok) {
+                            throw new Error(`Error HTTP ${response.status}: ${response.statusText}`);
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        console.log("[DEBUG] Datos de Auditoría recibidos:", data);
+                        currentApiData = data; 
+                        populateAuditTable(data.actions);
+                        populateChatHistory(chatHistory, data.chat, currentAuditedUserRole);
+                        
+                        // ==================================
+                        // INICIO DE LA MODIFICACIÓN (Habilitar botones)
+                        // Cambiamos false, false -> true, true
+                        // ==================================
+                        populateFormsTable(data.formularios, auditFormsTableBody, true, true, false); // (showDelete, showDownload, showCreatedBy)
+                        populateFormsTable(data.formularios_gestionados, auditFormsGestionadosTableBody, true, true, false); // (showDelete, showDownload, showCreatedBy)
+                        // ==================================
+                        // FIN DE LA MODIFICACIÓN
+                        // ==================================
+                        
+                    })
+                    .catch(error => {
+                        console.error('[DEBUG] ¡FALLÓ EL FETCH de Auditoría!', error);
+                        auditActionsTableBody.innerHTML = `<tr><td colspan="3" class="p-4 text-center text-red-500">Error al cargar registros. (Ver consola)</td></tr>`;
+                        chatHistory.innerHTML = `<p class="m-auto text-red-500">Error al cargar chat. (Ver consola)</p>`;
+                        auditFormsTableBody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-red-500">Error al cargar formularios. (Ver consola)</td></tr>`;
+                        auditFormsGestionadosTableBody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-red-500">Error al cargar formularios. (Ver consola)</td></tr>`;
+                    });
+            }
+
+            // --- Funciones para poblar los datos (Panel 1) ---
+            
+            function populateAuditTable(actions) {
+                auditActionsTableBody.innerHTML = '';
+                if (!actions || actions.length === 0) {
+                    auditActionsTableBody.innerHTML = '<tr><td colspan="3" class="p-4 text-center text-gray-500">No hay acciones registradas.</td></tr>';
+                    return;
+                }
+                actions.forEach(action => {
+                    const row = `
+                        <tr>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${action.timestamp}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${action.type}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${action.detail}</td>
+                        </tr>
+                    `;
+                    auditActionsTableBody.innerHTML += row;
+                });
+            }
+
+            function populateChatHistory(container, messages, auditedRole) {
+                console.log("[DEBUG] Poblando historial de chat. Mensajes:", messages, "Rol Auditado:", auditedRole);
+                container.innerHTML = '';
+                if (!messages || messages.length === 0) {
+                    container.innerHTML = '<p class="m-auto text-gray-500">No hay mensajes.</p>';
+                    return;
+                }
+                
+                if (auditedRole) {
+                    console.log("[DEBUG] Invirtiendo chat general (Panel 1)");
+                    messages.reverse();
+                }
+
+                messages.forEach(msg => {
+                    const roleToCompare = auditedRole || currentAuditedUserRole;
+
+                    if (!msg.autor_nombre || !msg.mensaje) {
+                         console.error("[DEBUG] Objeto de mensaje inválido (faltan campos):", msg);
+                         return; 
+                    }
+
+                    const isPersonal = (msg.autor_rol === roleToCompare);
+                    const chatClass = isPersonal ? 'chat-personal' : 'chat-receptor';
+                    
+                    const messageEl = `
+                        <div class="chat-message text-sm ${chatClass}">
+                            <div class="meta meta-sender">${msg.autor_nombre} (${msg.autor_rol || 'N/A'})</div>
+                            <p>${msg.mensaje}</p> 
+                            <div class="meta meta-time">${msg.timestamp || '??:??'}</div>
+                        </div>
+                    `;
+                    container.innerHTML += messageEl;
+                });
+                container.scrollTop = container.scrollHeight;
+            }
+
+            // ==================================
+            // INICIO DE LA MODIFICACIÓN (Función populateFormsTable)
+            // ==================================
+            function populateFormsTable(forms, tableBody, showDeleteButton, showDownloadButton, showCreatedBy = false) {
+                if (!tableBody) return; 
+                
+                tableBody.innerHTML = '';
+                if (!forms || forms.length === 0) {
+                    const colSpan = showCreatedBy ? 5 : 4;
+                    tableBody.innerHTML = `<tr><td colspan="${colSpan}" class="p-4 text-center text-gray-500">No se encontraron formularios.</td></tr>`;
+                    return;
+                }
+                
+                forms.forEach(form => {
+                    const estadoClass = form.estado.toLowerCase().replace(/_/g, '_');
+                    const badgeHtml = `<span class="status-badge status-${estadoClass}">
+                                           ${form.estado_display}
+                                       </span>`;
+                    
+                    let buttonsHtml = `
+                        <button type="button" 
+                                class="btn btn-sm btn-info btn-view-details" 
+                                data-form-id="${form.id}"
+                                data-patient-name="${form.nombre_paciente}">
+                            Ver Detalles
+                        </button>
+                    `;
+                    
+                    if (showDownloadButton) {
+                         buttonsHtml += `
+                            <button type="button" 
+                                    class="btn btn-sm btn-secondary btn-download-form" 
+                                    data-form-id="${form.id}">
+                                Descargar
+                            </button>
+                        `;
+                    }
+                    if (showDeleteButton) {
+                        buttonsHtml += `
+                            <button type="button" 
+                                    class="btn btn-sm btn-danger btn-delete-form" 
+                                    data-form-id="${form.id}">
+                                Eliminar
+                            </button>
+                        `;
+                    }
+
+                    const createdByColumn = showCreatedBy ? `<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${form.creado_por_nombre || 'N/A'}</td>` : '';
+
+                    const row = `
+                        <tr id="form-row-${form.id}">
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${form.nombre_paciente}</td>
+                            ${createdByColumn}
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${form.creado_en}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm">${badgeHtml}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                <div class="flex items-center gap-2">
+                                    ${buttonsHtml}
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                    tableBody.innerHTML += row;
+                });
+            }
+            // ==================================
+            // FIN DE LA MODIFICACIÓN
+            // ==================================
+
+            // --- Lógica de botones en la tabla de formularios (Panel 1) ---
+            // ==================================
+            // INICIO DE LA MODIFICACIÓN (EventListener Panel 1)
+            // ==================================
+            if (userAuditDataPanel) {
+                userAuditDataPanel.addEventListener('click', function(e) {
+                    const button = e.target.closest('button');
+                    if (!button) return;
+                    
+                    const formId = button.dataset.formId; // <-- Movido arriba
+
+                    if (button.classList.contains('btn-view-details')) {
+                        const patientName = button.dataset.patientName;
+                        handleViewFormDetails(formId, patientName);
+                    }
+                    
+                    // --- Añadido para manejar Delete ---
+                    if (button.classList.contains('btn-delete-form')) {
+                        handleDeleteForm(formId, button);
+                    }
+                    
+                    // --- Añadido para manejar Download ---
+                    if (button.classList.contains('btn-download-form')) {
+                        e.stopPropagation(); 
+                        currentDownloadFormId = formId;
+                        const rect = button.getBoundingClientRect();
+                        downloadMenu.style.top = `${rect.bottom + window.scrollY}px`;
+                        downloadMenu.style.left = `${rect.left + window.scrollX - (downloadMenu.offsetWidth - rect.width)}px`;
+                        downloadMenu.classList.remove('hidden');
+                    }
+                });
+            }
+            // ==================================
+            // FIN DE LA MODIFICACIÓN
+            // ==================================
+            
+            // --- Lógica de botones en la tabla de formularios (Panel 3) ---
+            if (allFormsTableBody) {
+                allFormsTableBody.addEventListener('click', function(e) {
+                    const button = e.target.closest('button');
+                    if (!button) return;
+                    
+                    const formId = button.dataset.formId;
+
+                    if (button.classList.contains('btn-delete-form')) {
+                        handleDeleteForm(formId, button);
+                    }
+                    
+                    if (button.classList.contains('btn-download-form')) {
+                        e.stopPropagation(); 
+                        currentDownloadFormId = formId;
+                        const rect = button.getBoundingClientRect();
+                        downloadMenu.style.top = `${rect.bottom + window.scrollY}px`;
+                        downloadMenu.style.left = `${rect.left + window.scrollX - (downloadMenu.offsetWidth - rect.width)}px`;
+                        downloadMenu.classList.remove('hidden');
+                    }
+                });
+            }
+            
+            // Lógica del menú de descarga
+            if (downloadMenu) {
+                downloadMenu.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const format = e.target.dataset.format;
+                    if (format && currentDownloadFormId) {
+                        descargarArchivo(currentDownloadFormId, format);
+                        downloadMenu.classList.add('hidden');
+                        currentDownloadFormId = null;
+                    }
+                });
+            }
+            
+            // Ocultar el menú de descarga si se hace clic en otro lugar
+            document.addEventListener('click', (e) => {
+                if (downloadMenu && !downloadMenu.contains(e.target) && !e.target.classList.contains('btn-download-form')) {
+                    downloadMenu.classList.add('hidden');
+                }
+            });
+            
+            // --- Lógica de Filtros (Panel 3) ---
+            if (searchNameInput) {
+                searchNameInput.addEventListener('input', () => renderAllFormsTable());
+                sortDateSelect.addEventListener('change', () => renderAllFormsTable());
+                filterStatusSelect.addEventListener('change', () => renderAllFormsTable());
+                resetFiltersBtn.addEventListener('click', () => {
+                    searchNameInput.value = '';
+                    sortDateSelect.value = 'mas-nuevos';
+                    filterStatusSelect.value = 'todos';
+                    renderAllFormsTable();
+                });
+            }
+            
+            async function loadAllForms() {
+                allFormsTableBody.innerHTML = '<tr><td colspan="5" class="p-4 text-center text-gray-500">Cargando formularios...</td></tr>';
+                try {
+                    const response = await fetch(`/api/todos_los_formularios/`);
+                    if (!response.ok) throw new Error('Error de red');
+                    const data = await response.json();
+                    
+                    if (data.status === 'exito') {
+                        allFormsData = data.formularios; // Guardar en caché
+                        renderAllFormsTable(); // Renderizar
+                    } else {
+                        throw new Error(data.message);
+                    }
+                } catch (error) {
+                    console.error("[DEBUG] Falló fetch de todos los formularios:", error);
+                    allFormsTableBody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-red-500">${error.message}</td></tr>`;
+                }
+            }
+            
+            // Función para renderizar la tabla principal de formularios con filtros
+            function renderAllFormsTable() {
+                let filteredForms = [...allFormsData];
+
+                const searchTerm = searchNameInput.value.toLowerCase();
+                if (searchTerm) {
+                    filteredForms = filteredForms.filter(form => 
+                        form.nombre_paciente.toLowerCase().includes(searchTerm)
+                    );
+                }
+
+                const status = filterStatusSelect.value;
+                if (status !== 'todos') {
+                    filteredForms = filteredForms.filter(form => form.estado === status);
+                }
+
+                const sortOrder = sortDateSelect.value;
+                filteredForms.sort((a, b) => {
+                    const dateA = a.creado_en.split('-').reverse().join('-');
+                    const dateB = b.creado_en.split('-').reverse().join('-');
+                    if (sortOrder === 'mas-nuevos') {
+                        return dateB.localeCompare(dateA); // B vs A
+                    } else {
+                        return dateA.localeCompare(dateB); // A vs B
+                    }
+                });
+
+                populateFormsTable(filteredForms, allFormsTableBody, true, true, true); // (forms, container, showDelete, showDownload, showCreatedBy)
+            }
+            
+            
+            function handleDeleteForm(formId, button) {
+                const row = button.closest('tr');
+                
+                const confirmacion = prompt("Esta acción es PERMANENTE.\n\nEscriba 'ELIMINAR' para confirmar la eliminación de este formulario.");
+                if (confirmacion !== 'ELIMINAR') {
+                    alert('Eliminación cancelada.');
+                    return;
+                }
+                
+                button.disabled = true;
+                button.textContent = 'Eliminando...';
+
+                fetch(`/api/formulario/eliminar/${formId}/`, {
+                    method: 'POST',
+                    headers: { 'X-CSRFToken': csrftoken }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'exito') {
+                        alert('Formulario eliminado.');
+                        row.remove();
+                        allFormsData = allFormsData.filter(form => form.id !== formId);
+                    } else {
+                        alert('Error al eliminar: ' + data.message);
+                        button.disabled = false;
+                        button.textContent = 'Eliminar';
+                    }
+                })
+                .catch(error => {
+                    console.error('[DEBUG] ¡FALLÓ EL FETCH de Eliminar!', error);
+                    alert('Error de red: ' + error.message);
+                    button.disabled = false;
+                    button.textContent = 'Eliminar';
+                });
+            }
+            
+            // --- Lógica para mostrar el Panel 2 ---
+            
+            function handleViewFormDetails(formId, patientName) {
+                console.log(`[DEBUG] Viendo detalles del formulario. ID: ${formId}, Paciente: ${patientName}`);
+                auditContent.classList.add('hidden');
+                formAuditDetailPanel.classList.remove('hidden');
+                
+                formAuditPatientName.textContent = patientName || `Caso #${formId.substring(0,8)}`;
+                
+                formAuditTabs.forEach(t => t.classList.remove('active-tab'));
+                formAuditTabContents.forEach(c => c.classList.remove('active-tab-content'));
+                document.getElementById('tab-form-datos').classList.add('active-tab');
+                document.getElementById('content-form-datos').classList.add('active-tab-content');
+
+                const formData = currentApiData.formularios.find(f => f.id === formId) || 
+                                 currentApiData.formularios_gestionados.find(f => f.id === formId);
+                                 
+                const userActions = currentApiData.actions || [];
+                
+                loadFormAuditDatos(formId, formData);
+                loadFormAuditChat(formId);
+                loadFormAuditTimeline(formId, formData, userActions);
+            }
+            
+            if (backToUserAuditBtn) {
+                backToUserAuditBtn.addEventListener('click', () => {
+                    formAuditDetailPanel.classList.add('hidden');
+                    auditContent.classList.remove('hidden');
+                    if (currentAuditedUserId) {
+                        const userItem = userListDiv.querySelector(`.notification-item[data-user-id="${currentAuditedUserId}"]`);
+                        if (userItem) {
+                             loadUserAuditData(currentAuditedUserId, userItem.dataset.userName, userItem.dataset.userRole);
+                        }
+                    }
+                });
+            }
+            
+            // --- Funciones para poblar los datos (Panel 2) ---
+            
+            async function loadFormAuditDatos(formId, formData) {
+                formAuditDatosBody.innerHTML = '<p>Cargando datos...</p>';
+                if (!formData) {
+                     console.error("[DEBUG] No se encontraron datos del formulario en el cache local.");
+                     formAuditDatosBody.innerHTML = `<p class="text-red-500">No se pudieron cargar los datos.</p>`;
+                     return;
+                }
+                
+                formAuditDatosBody.innerHTML = `
+                    <div class="data-item"><span class="data-item-label">Paciente:</span> <p class="data-item-value">${formData.nombre_paciente}</p></div>
+                    <div class="data-item"><span class="data-item-label">Fecha Creación:</span> <p class="data-item-value">${formData.creado_en}</p></div>
+                `;
+                
+                try {
+                    console.log(`[DEBUG] Buscando detalles (RUT) para form: ${formId}`);
+                    const response = await fetch(`/api/formulario_detalle/${formId}/`);
+                    const data = await response.json();
+                    if (data.status === 'exito') {
+                         console.log("[DEBUG] Detalles recibidos:", data.detalles);
+                         formAuditDatosBody.innerHTML += `<div class="data-item"><span class="data-item-label">RUT:</span> <p class="data-item-value">${data.detalles.rut_paciente || 'N/A'}</p></div>`;
+                    }
+                } catch(e) { 
+                    console.error("[DEBUG] Falló fetch de detalles (RUT):", e);
+                }
+            }
+            
+            async function loadFormAuditChat(formId) {
+                formAuditChatHistory.innerHTML = '<p class="m-auto text-gray-500">Cargando chat...</p>';
+                try {
+                    const apiUrl = `/api/chat_mensajes/${formId}/`;
+                    console.log(`[DEBUG] Llamando API de Chat de Formulario: ${apiUrl}`);
+                    const response = await fetch(apiUrl);
+                    if (!response.ok) throw new Error('No se pudo cargar el chat');
+                    const data = await response.json();
+                    
+                    console.log(`[DEBUG] Datos de Chat de Formulario (${formId}) recibidos:`, data);
+                    
+                    if (data.status === 'exito') {
+                        populateChatHistory(formAuditChatHistory, data.mensajes, null); 
+                    } else {
+                        throw new Error(data.message);
+                    }
+                } catch (error) {
+                    console.error("[DEBUG] Falló fetch de chat de formulario:", error);
+                    formAuditChatHistory.innerHTML = `<p class="m-auto text-red-500">${error.message}</p>`;
+                }
+            }
+            
+            function loadFormAuditTimeline(formId, formData, userActions) {
+                formAuditTimelineBody.innerHTML = ''; 
+                
+                formAuditTimelineBody.innerHTML += `
+                    <div class="timeline-item">
+                        <div class="timeline-dot active"></div>
+                        <div class="timeline-content">
+                            <p class="timeline-title">Formulario Creado</p>
+                            <p class="timeline-time">${formData.creado_en}</p>
+                        </div>
+                    </div>`;
+
+                if (formData.estado === 'APROBADO') {
+                     formAuditTimelineBody.innerHTML += `
+                        <div class="timeline-item">
+                            <div class="timeline-dot active"></div>
+                            <div class="timeline-content">
+                                <p class="timeline-title">Formulario Aprobado</p>
+                                <p class="timeline-time">(Fecha de aprobación no registrada)</p>
+                            </div>
+                        </div>`;
+                } else if (formData.estado !== 'PENDIENTE') {
+                     formAuditTimelineBody.innerHTML += `
+                        <div class="timeline-item">
+                            <div class="timeline-dot active"></div>
+                            <div class="timeline-content">
+                                <p class="timeline-title">Estado Actual: ${formData.estado_display}</p>
+                                <p class="timeline-time">Desde ${formData.creado_en}</p>
+                            </div>
+                        </div>`;
+                }
+            }
+            
+            async function descargarArchivo(formId, formato) {
+                if (!formId) {
+                    alert('Error: ID de formulario no encontrado');
+                    return;
+                }
+                const loadingDiv = document.createElement('div');
+                loadingDiv.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+                loadingDiv.innerHTML = '<div class="bg-white p-4 rounded-lg shadow-xl">Descargando archivo...</div>';
+                document.body.appendChild(loadingDiv);
+                
+                try {
+                    const response = await fetch(`/api/exportar_formulario/${formId}/${formato}/`);
+                    if (!response.ok) {
+                        const text = await response.text();
+                        throw new Error(`Error ${response.status}: ${text || 'Error del servidor'}`);
+                    }
+                    const header = response.headers.get('Content-Disposition');
+                    let filename = `formulario_${formId}.${formato}`; 
+                    if (header) {
+                        const parts = header.split(';');
+                        parts.forEach(part => {
+                            if (part.trim().startsWith('filename=')) {
+                                filename = part.split('=')[1].trim().replaceAll('"', '');
+                            }
+                        });
+                    }
+                    const blob = await response.blob();
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.style.display = 'none';
+                    a.href = url;
+                    a.download = filename;
+                    document.body.appendChild(a);
+                    a.click();
+                    window.URL.revokeObjectURL(url);
+                    a.remove();
+                } catch (error) {
+                    console.error('Error al descargar:', error);
+                    alert(`Error al descargar el archivo: ${error.message}.`);
+                } finally {
+                    document.body.removeChild(loadingDiv);
+                }
+            }
+
+            function getCookie(name) {
+                let cookieValue = null;
+                if (document.cookie && document.cookie !== '') {
+                    const cookies = document.cookie.split(';');
+                    for (let i = 0; i < cookies.length; i++) {
+                        const cookie = cookies[i].trim();
+                        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                            break;
+                        }
+                    }
+                }
+                return cookieValue;
+            }
+            
+            // --- LÓGICA MODAL CREAR USUARIO ---
+            
+            const createUserModal = document.getElementById('createUserModal');
+            const showCreateUserModalBtn = document.getElementById('showCreateUserModalBtn');
+            const closeCreateModalBtn = document.getElementById('closeCreateModalBtn');
+            const createUserForm = document.getElementById('createUserForm');
+            const userCreateMessage = document.getElementById('userCreateMessage');
+            const modalOverlayBg = createUserModal.querySelector('.modal-overlay-bg');
+
+            const showModal = () => {
+                createUserModal.classList.remove('hidden');
+                userCreateMessage.style.display = 'none';
+                createUserForm.reset();
+            };
+            
+            const closeModal = () => {
+                createUserModal.classList.add('hidden');
+            };
+
+            if (showCreateUserModalBtn) {
+                showCreateUserModalBtn.addEventListener('click', showModal);
+            }
+            if (closeCreateModalBtn) {
+                closeCreateModalBtn.addEventListener('click', closeModal);
+            }
+            if (modalOverlayBg) {
+                modalOverlayBg.addEventListener('click', closeModal);
+            }
+
+            if (createUserForm) {
+                createUserForm.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    
+                    const submitButton = createUserForm.querySelector('button[type="submit"]');
+                    submitButton.disabled = true;
+                    submitButton.textContent = 'Creando...';
+                    
+                    userCreateMessage.style.display = 'none';
+
+                    const formData = new FormData(createUserForm);
+                    const data = Object.fromEntries(formData.entries());
+
+                    try {
+                        const response = await fetch(`/api/supervisor/crear_usuario/`, { 
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRFToken': csrftoken
+                            },
+                            body: JSON.stringify(data)
+                        });
+                        
+                        const result = await response.json();
+                        
+                        if (response.ok && result.status === 'exito') {
+                            userCreateMessage.textContent = '¡Usuario creado con éxito!';
+                            userCreateMessage.className = 'message-box message-success';
+                            userCreateMessage.style.display = 'block';
+                            
+                            setTimeout(() => {
+                                closeModal();
+                                // Recargar la página para ver al nuevo usuario en la lista
+                                location.reload(); 
+                            }, 2000);
+                            
+                        } else {
+                            throw new Error(result.message || 'Error desconocido');
+                        }
+                        
+                    } catch (error) {
+                        userCreateMessage.textContent = `Error: ${error.message}`;
+                        userCreateMessage.className = 'message-box message-error';
+                        userCreateMessage.style.display = 'block';
+                    } finally {
+                        submitButton.disabled = false;
+                        submitButton.textContent = 'Crear Usuario';
+                    }
+                });
+            }
+
+        });
+    </script>
+</body>
+</html>

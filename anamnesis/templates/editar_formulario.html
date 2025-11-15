@@ -1,0 +1,543 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edicion Formulario - {{ formulario.id|stringformat:".8" }}</title>
+    
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="icon" href="{% static 'images/logo.png' %}" type="image/png">
+    <style>
+        /* Estilos CSS (Basados en tu formulario_ambulancia.html) */
+        body { font-family: 'Inter', sans-serif; background-color: #f0f2f5; }
+        .step-card { background-color: white; border-radius: 1rem; padding: 2rem; box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.07), 0 4px 6px -4px rgb(0 0 0 / 0.1); transition: opacity 0.5s ease-in-out, transform 0.5s ease-in-out; border-top: 3px solid #EF4444; }
+        .form-label { font-weight: 600; color: #374151; margin-bottom: 0.5rem; display: block; }
+        .form-input { width: 100%; padding: 0.75rem 1rem; border: 1px solid #D1D5DB; border-radius: 0.5rem; transition: border-color 0.2s, box-shadow 0.2s; background-color: #f9fafb; }
+        .form-input:focus { outline: none; border-color: #EF4444; box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.3); background-color: white; }
+        .btn { font-weight: 600; padding: 0.75rem 1.5rem; border-radius: 0.5rem; text-align: center; transition: all 0.3s; border: 1px solid transparent; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .btn-primary { background-color: #EF4444; color: white; } /* Rojo */
+        .btn-primary:hover:not(:disabled) { background-color: #DC2626; }
+        .btn-secondary { background-color: #E5E7EB; color: #374151; }
+        .btn-secondary:hover:not(:disabled) { background-color: #D1D5DB; }
+        
+        /* Botón de Actualizar (Verde) */
+        .btn-submit { background-color: #16A34A; color: white; }
+        .btn-submit:hover:not(:disabled) { background-color: #15803D; }
+
+        .option-button { background-color: #E5E7EB; color: #374151; padding: 0.75rem 1rem; border-radius: 0.5rem; font-weight: 500; cursor: pointer; transition: all 0.2s; }
+        .option-button:hover { background-color: #D1D5DB; }
+        .option-button.active { background-color: #EF4444; color: white; box-shadow: 0 2px 6px rgba(239, 68, 68, 0.3); }
+        .progress-bar-container { width: 100%; background-color: #e5e7eb; border-radius: 9999px; height: 8px; }
+        .progress-bar-fill { background-color: #EF4444; height: 100%; border-radius: 9999px; transition: width 0.5s ease-in-out; }
+        .step { display: none; }
+        .step.active { display: block; }
+
+        /* Estilos para el mensaje de éxito/error */
+        .message-box {
+            display: none; padding: 1rem; border-radius: 0.5rem;
+            margin: 1.5rem 0; text-align: center; font-weight: 500;
+        }
+        .message-success { background-color: #D1FAE5; color: #065F46; } /* Verde */
+        .message-error { background-color: #FEE2E2; color: #991B1B; } /* Rojo */
+    </style>
+</head>
+<body class="min-h-screen p-4">
+
+    <script>
+        // ========================================================================
+        // SECCIÓN GLOBAL: DATOS INYECTADOS POR DJANGO
+        // ========================================================================
+        
+        /**
+         * Objeto que almacena la información del usuario logueado.
+         * Estos datos son "inyectados" por Django al renderizar el HTML.
+         */
+        const djangoUser = { isAuthenticated: {{ user.is_authenticated|yesno:"true,false" }}, username: "{{ user.username|escapejs }}", fullName: "{{ user.get_full_name|default:user.username|escapejs }}", role: "{{ user.groups.first.name|default:'Sin Rol'|escapejs }}" };
+        
+        /**
+         * Función: getCookie
+         * Propósito: Obtener el Token CSRF (Seguridad de Django).
+         * Explicación: Necesario para todas las solicitudes POST/PUT/DELETE
+         * para autenticar la petición contra el backend de Django.
+         * @param {string} name - El nombre de la cookie (usualmente 'csrftoken').
+         * @returns {string} El valor del token CSRF.
+         */
+        function getCookie(name) { let cookieValue = null; if (document.cookie && document.cookie !== '') { const cookies = document.cookie.split(';'); for (let i = 0; i < cookies.length; i++) { const cookie = cookies[i].trim(); if (cookie.substring(0, name.length + 1) === (name + '=')) { cookieValue = decodeURIComponent(cookie.substring(name.length + 1)); break; } } } return cookieValue; }
+    </script>
+    
+    <div id="appContainer" class="w-full">
+        <div id="appHeader" class="max-w-4xl mx-auto p-3 mb-6 bg-white rounded-xl shadow-md flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                 <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                 <div class="text-sm"> <span class="font-bold text-gray-800">Usuario:</span> <span id="loggedInUserName">{{ user.get_full_name|default:user.username }}</span> | <span class="font-bold text-gray-800">Rol:</span> <span id="loggedInUserRole">{{ user.groups.first.name|default:'Sin Rol' }}</span> </div>
+             </div>
+             <div class="flex items-center gap-2"> 
+                 <a href="{% url 'menu_ambulancia' %}" class="btn bg-indigo-600 hover:bg-indigo-700 text-white text-sm">Volver al Menú</a> 
+                 <a href="{% url 'logout' %}" class="btn bg-gray-600 hover:bg-gray-700 text-white text-sm">Cerrar Sesión</a> 
+             </div>
+         </div>
+
+         <div id="ambulanceView" class="container mx-auto max-w-2xl w-full">
+             <header class="text-center mb-6"> 
+                 <h1 class="text-3xl font-bold text-gray-800">Editar Formulario de Atención</h1> 
+                 <p class="text-gray-600 mb-6">Modificando caso de: <span class="font-bold">{{ formulario.nombre_paciente|default:'N/A' }}</span> (ID: {{ formulario.id }})</p>
+            </header>
+            
+            <div id="messageBox" class="message-box"></div>
+
+            <div class="mb-6"> 
+                <div class="progress-bar-container"> 
+                    <div id="progressBar" class="progress-bar-fill" style="width: 25%;"></div> 
+                </div> 
+                <div id="progressText" class="text-center text-sm text-gray-500 mt-2">Paso 1 de 4: Identificación</div> 
+            </div>
+            
+            <form id="editForm">
+                 <div id="step-1" class="step active"> 
+                     <div class="step-card"> 
+                         <h2 class="text-2xl font-bold text-gray-800 mb-6 text-center">1. Identificación</h2> 
+                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6"> 
+                             <div>
+                                 <label for="patientName" class="form-label">Nombre</label>
+                                 <input type="text" id="patientName" class="form-input" placeholder="Ej: Juan Pérez" value="{{ formulario.nombre_paciente|default:'' }}">
+                             </div> 
+                             <div>
+                                 <label for="patientId" class="form-label">RUT / DNI</label>
+                                 <input type="text" id="patientId" class="form-input" placeholder="Ej: 11.222.303-K" maxlength="12" value="{{ formulario.rut_paciente|default:'' }}">
+                             </div> 
+                             <div>
+                                 <label for="patientAge" class="form-label">Edad</label>
+                                 <div class="flex gap-2 items-center">
+                                     <input type="number" id="patientAge" class="form-input w-1/2" placeholder="Ej: 45" min="0" max="120" value="{{ formulario.edad_paciente|default:'' }}">
+                                     <div id="ageUnitButtons" class="w-1/2 grid grid-cols-2 gap-2">
+                                         <button type="button" class="btn btn-secondary text-sm option-button {% if formulario.unidad_edad_paciente == 'Años' %}active{% endif %}" data-unit="Años">A</button>
+                                         <button type="button" class="btn btn-secondary text-sm option-button {% if formulario.unidad_edad_paciente == 'Meses' %}active{% endif %}" data-unit="Meses">M</button>
+                                     </div>
+                                 </div>
+                             </div> 
+                             <div>
+                                 <label class="form-label">Sexo</label>
+                                 <div class="grid grid-cols-2 gap-4" id="genderButtons">
+                                     <button type="button" class="option-button {% if formulario.sexo_paciente == 'Hombre' %}active{% endif %}" data-value="Hombre">Hombre</button>
+                                     <button type="button" class="option-button {% if formulario.sexo_paciente == 'Mujer' %}active{% endif %}" data-value="Mujer">Mujer</button>
+                                 </div>
+                             </div> 
+                         </div> 
+                     </div> 
+                 </div>
+
+                 <div id="step-2" class="step"> 
+                     <div class="step-card"> 
+                         <h2 class="text-2xl font-bold text-gray-800 mb-6 text-center">2. Signos Vitales</h2> 
+                         <div class="grid grid-cols-2 md:grid-cols-3 gap-4"> 
+                             <div>
+                                 <label for="bloodPressure" class="form-label">PA</label>
+                                 <input type="text" id="bloodPressure" class="form-input" placeholder="120/80" value="{{ formulario.presion_arterial|default:'' }}">
+                             </div> 
+                             <div>
+                                 <label for="heartRate" class="form-label">FC</label>
+                                 <input type="number" id="heartRate" class="form-input" placeholder="lpm" value="{{ formulario.frecuencia_cardiaca|default:'' }}">
+                             </div> 
+                             <div>
+                                 <label for="respiratoryRate" class="form-label">FR</label>
+                                 <input type="number" id="respiratoryRate" class="form-input" placeholder="rpm" value="{{ formulario.frecuencia_respiratoria|default:'' }}">
+                             </div> 
+                             <div>
+                                 <label for="temperature" class="form-label">T°C</label>
+                                 <input type="text" id="temperature" class="form-input" placeholder="36.5" value="{{ formulario.temperatura|default:'' }}">
+                             </div> 
+                             <div>
+                                 <label for="oxygenSaturation" class="form-label">Sat O₂%</label>
+                                 <input type="text" id="oxygenSaturation" class="form-input" placeholder="98" value="{{ formulario.saturacion_oxigeno|default:'' }}">
+                             </div> 
+                             <div>
+                                 <label for="glasgow" class="form-label">Glasgow</label>
+                                 <input type="number" id="glasgow" class="form-input" placeholder="15" value="{{ formulario.glasgow|default:'' }}">
+                             </div> 
+                         </div> 
+                     </div> 
+                 </div>
+
+                 <div id="step-3" class="step"> 
+                     <div class="step-card"> 
+                         <h2 class="text-2xl font-bold text-gray-800 mb-6 text-center">3. Anamnesis</h2> 
+                         <div class="space-y-6"> 
+                             <div>
+                                 <label for="incidentReason" class="form-label">Motivo</label>
+                                 <textarea id="incidentReason" class="form-input" rows="3" placeholder="Describa...">{{ formulario.motivo_consulta|default:'' }}</textarea>
+                             </div> 
+                             <div>
+                                 <label for="medicalHistory" class="form-label">Antecedentes</label>
+                                 <textarea id="medicalHistory" class="form-input" rows="3" placeholder="Ej: HTA...">{{ formulario.antecedentes|default:'' }}</textarea>
+                             </div> 
+                             <div>
+                                 <label for="treatment" class="form-label">Tratamiento</label>
+                                 <textarea id="treatment" class="form-input" rows="3" placeholder="Ej: Paracetamol...">{{ formulario.tratamiento_administrado|default:'' }}</textarea>
+                             </div> 
+                             <div>
+                                 <label for="patientRequests" class="form-label text-amber-700">Solicitudes</label>
+                                 <textarea id="patientRequests" class="form-input border-amber-300" rows="2" placeholder="Ej: no reanimar...">{{ formulario.solicitudes_paciente|default:'' }}</textarea>
+                             </div> 
+                         </div> 
+                     </div> 
+                 </div>
+
+                 <div id="step-4" class="step"> 
+                     <div class="step-card border-2 border-red-300"> 
+                         <h2 class="text-2xl font-bold text-red-700 mb-6 text-center">4. Notificación</h2> 
+                         <div class="space-y-6"> 
+                             <div>
+                                 <label for="triageCode" class="form-label text-red-600">Triage</label>
+                                 <select id="triageCode" class="form-input border-red-300">
+                                     <option value="Rojo" {% if formulario.triage == 'Rojo' %}selected{% endif %}>🔴 Rojo</option>
+                                     <option value="Amarillo" {% if formulario.triage == 'Amarillo' %}selected{% endif %}>🟡 Amarillo</option>
+                                     <option value="Verde" {% if formulario.triage == 'Verde' %}selected{% endif %}>🟢 Verde</option>
+                                 </select>
+                             </div> 
+                             <div>
+                                 <label for="instructions" class="form-label text-red-600">Instrucciones</label>
+                                 <textarea id="instructions" class="form-input border-red-300" rows="3" placeholder="Ej: Preparar box...">{{ formulario.instrucciones_recepcion|default:'' }}</textarea>
+                             </div> 
+                             <div>
+                                 <label class="form-label text-red-600">ETA</label>
+                                 <div class="grid grid-cols-2 gap-4">
+                                     <input type="date" id="etaDate" class="form-input border-red-300" value="{{ formulario.eta_fecha|date:'Y-m-d' }}">
+                                     <input type="time" id="etaTime" class="form-input border-red-300" value="{{ formulario.eta_hora|default:'' }}">
+                                 </div>
+                             </div> 
+                         </div> 
+                     </div> 
+                 </div>
+
+                <div class="mt-8 flex justify-between items-center">
+                    <button type="button" id="prevButton" class="btn btn-secondary gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+                        Anterior
+                    </button>
+                    <div class="flex gap-4">
+                        <button type="button" id="nextButton" class="btn btn-primary">Siguiente</button>
+                        <button type="submit" id="submitBtn" class="btn btn-submit hidden">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                            </svg>
+                            Actualizar Formulario
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="modalContainer"> 
+        <div id="confirmationModal" class="modal fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center p-4 opacity-0 pointer-events-none z-50" style="transition: opacity 0.3s ease-in-out;"> 
+            <div class="bg-white rounded-lg shadow-xl p-6 max-w-sm w-full text-center" style="transform: scale(0.95); transition: transform 0.3s ease-in-out;"> 
+                <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100"><svg class="h-6 w-6 text-green-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg></div> 
+                <h3 class="text-lg font-medium text-gray-900 mt-4">¡Actualizado!</h3> 
+                <p class="text-sm text-gray-500 mt-2">El formulario ha sido modificado.</p> 
+                <div class="mt-6 space-y-3"> 
+                    <button id="closeModalButton" type="button" class="btn btn-secondary w-full">Cerrar</button> 
+                </div> 
+            </div> 
+        </div> 
+    </div>
+
+
+    <script>
+        /**
+         * Evento: 'DOMContentLoaded'
+         * Propósito: Punto de entrada principal. Se ejecuta cuando el HTML
+         * está completamente cargado y listo.
+         */
+        document.addEventListener('DOMContentLoaded', () => {
+            
+            // ========================================================================
+            // SECCIÓN 1: DATOS CLAVE Y REFERENCIAS AL DOM
+            // ========================================================================
+            
+            /**
+             * El ID único del formulario que se está editando.
+             * Inyectado por Django. Esencial para la URL de la API de actualización.
+             */
+            const FORM_ID = '{{ formulario.id }}';
+
+            // --- Referencias a Elementos del Asistente (Wizard) ---
+            const pasos = document.querySelectorAll('.step'); 
+            const botonAnterior = document.getElementById('prevButton'); 
+            const botonSiguiente = document.getElementById('nextButton'); 
+            const botonSubmit = document.getElementById('submitBtn'); // Botón verde "Actualizar"
+            const barraProgreso = document.getElementById('progressBar'); 
+            const textoProgreso = document.getElementById('progressText'); 
+            const messageBox = document.getElementById('messageBox'); // Para mostrar éxito/error
+            
+            // --- Referencias al Modal (Aunque la lógica actual usa messageBox) ---
+            const modalConfirmacion = document.getElementById('confirmationModal'); 
+            const botonCerrarModal = document.getElementById('closeModalButton'); 
+
+            // --- Referencias a TODOS los campos (inputs) del Formulario ---
+            const inputNombre = document.getElementById('patientName'); 
+            const inputRut = document.getElementById('patientId'); 
+            const inputEdad = document.getElementById('patientAge'); 
+            const inputPa = document.getElementById('bloodPressure'); 
+            const inputFc = document.getElementById('heartRate'); 
+            const inputFr = document.getElementById('respiratoryRate'); 
+            const inputTemp = document.getElementById('temperature'); 
+            const inputSat = document.getElementById('oxygenSaturation'); 
+            const inputGlasgow = document.getElementById('glasgow'); 
+            const inputMotivo = document.getElementById('incidentReason'); 
+            const inputAntecedentes = document.getElementById('medicalHistory'); 
+            const inputTratamiento = document.getElementById('treatment'); 
+            const inputSolicitudes = document.getElementById('patientRequests'); 
+            const inputTriage = document.getElementById('triageCode'); 
+            const inputInstrucciones = document.getElementById('instructions'); 
+            const inputEtaDate = document.getElementById('etaDate'); 
+            const inputEtaTime = document.getElementById('etaTime'); 
+            
+            // --- Referencias a Botones de Opción (Manejan su propio estado) ---
+            const botonesGenero = document.querySelectorAll('#genderButtons .option-button'); 
+            const botonesUnidadEdad = document.querySelectorAll('#ageUnitButtons .option-button'); 
+            
+            // ========================================================================
+            // SECCIÓN 2: ESTADO INTERNO DEL SCRIPT
+            // ========================================================================
+            
+            /** Variable que rastrea el paso actual del asistente (1, 2, 3 o 4) */
+            let pasoActual = 1; 
+            const totalPasos = 4; 
+            const titulosPasos = ["Identificación", "Signos Vitales", "Anamnesis", "Notificación"];
+            
+            /**
+             * Objeto para almacenar valores que no son inputs directos (como botones).
+             * Se inicializa con los valores cargados por Django.
+             */
+            let datosPaciente = { 
+                sexo: "{{ formulario.sexo_paciente|default_if_none:''|escapejs }}", 
+                unidadEdad: "{{ formulario.unidad_edad_paciente|default:'Años'|escapejs }}"
+            }; 
+            
+            // ========================================================================
+            // SECCIÓN 3: FUNCIONES AUXILIARES (UI)
+            // ========================================================================
+
+            /**
+             * Función: actualizarAsistente
+             * Propósito: Sincroniza la interfaz gráfica (UI) con el estado `pasoActual`.
+             * Explicación: Muestra/oculta los pasos, actualiza la barra de progreso
+             * y decide qué botón (Siguiente o Actualizar) debe mostrarse.
+             * * Cómo se comunica:
+             * - Es llamada por `DOMContentLoaded` (al inicio).
+             * - Es llamada por los event listeners de `botonSiguiente` y `botonAnterior`.
+             * - Modifica el DOM (CSS) de: `barraProgreso`, `textoProgreso`, `pasos`,
+             * `botonAnterior`, `botonSiguiente` y `botonSubmit`.
+             */
+            const actualizarAsistente = () => { 
+                if (!barraProgreso || !textoProgreso || !botonAnterior || !botonSiguiente || !botonSubmit) return; 
+                
+                // 1. Actualizar barra de progreso
+                const p = (pasoActual / totalPasos) * 100; 
+                barraProgreso.style.width = `${p}%`; 
+                if(pasoActual > 0 && pasoActual <= titulosPasos.length) { 
+                    textoProgreso.textContent = `Paso ${pasoActual}/${totalPasos}: ${titulosPasos[pasoActual - 1]}`; 
+                } 
+                
+                // 2. Ocultar todos los pasos y mostrar solo el activo
+                pasos.forEach(p => p.classList.remove('active')); 
+                const s = document.getElementById(`step-${pasoActual}`); 
+                if (s) s.classList.add('active'); 
+                
+                // 3. Ocultar "Anterior" en el paso 1
+                botonAnterior.style.visibility = pasoActual === 1 ? 'hidden' : 'visible'; 
+                
+                // 4. Mostrar "Siguiente" o "Actualizar"
+                // Oculta "Siguiente" si estamos en el último paso
+                botonSiguiente.classList.toggle('hidden', pasoActual === totalPasos);
+                // Muestra "Actualizar" solo si estamos en el último paso
+                botonSubmit.classList.toggle('hidden', pasoActual !== totalPasos);
+            };
+
+            /**
+             * Función: mostrarModal
+             * Propósito: Muestra un modal (diálogo emergente).
+             * (Nota: Actualmente no se usa, la lógica de submit usa `messageBox`).
+             */
+            const mostrarModal = (modal) => { 
+                if (modal) { 
+                    modal.classList.remove('opacity-0', 'pointer-events-none'); 
+                    const d = modal.querySelector('div:first-child'); 
+                    if (d) d.classList.remove('scale-95'); 
+                    document.body.classList.add('modal-active'); 
+                } 
+            };
+            
+            /**
+             * Función: ocultarModal
+             * Propósito: Oculta un modal.
+             */
+            const ocultarModal = (modal) => { 
+                if (modal) { 
+                    modal.classList.add('opacity-0'); 
+                    const d = modal.querySelector('div:first-child'); 
+                    if (d) d.classList.add('scale-95'); 
+                    setTimeout(() => modal.classList.add('pointer-events-none'), 300); 
+                    document.body.classList.remove('modal-active'); 
+                } 
+            };
+            
+            // ========================================================================
+            // SECCIÓN 4: MANEJADORES DE EVENTOS (Listeners)
+            // ========================================================================
+            
+            // --- NAVEGACIÓN DEL ASISTENTE (WIZARD) ---
+             if (botonSiguiente) { 
+                 botonSiguiente.addEventListener('click', () => { 
+                    if (pasoActual < totalPasos) { 
+                        pasoActual++; // Incrementa el estado
+                        actualizarAsistente(); // Actualiza la UI
+                    }
+                 }); 
+             }
+            if (botonAnterior) { 
+                botonAnterior.addEventListener('click', () => { 
+                    if (pasoActual > 1) { 
+                        pasoActual--; // Decrementa el estado
+                        actualizarAsistente(); // Actualiza la UI
+                    } 
+                }); 
+            }
+            
+            // --- MANEJO DE BOTONES DE OPCIÓN (SEXO, UNIDAD EDAD) ---
+            // Estos botones actualizan el objeto `datosPaciente`
+            botonesGenero.forEach(b => { 
+                b.addEventListener('click', () => { 
+                    botonesGenero.forEach(btn => btn.classList.remove('active')); // Limpia
+                    b.classList.add('active'); // Activa el clickeado
+                    datosPaciente.sexo = b.dataset.value; // Actualiza el estado
+                }); 
+            });
+            botonesUnidadEdad.forEach(b => { 
+                b.addEventListener('click', () => { 
+                    botonesUnidadEdad.forEach(btn => btn.classList.remove('active')); // Limpia
+                    b.classList.add('active'); // Activa el clickeado
+                    datosPaciente.unidadEdad = b.dataset.unit; // Actualiza el estado
+                }); 
+            });
+            
+            // --- CIERRE DEL MODAL DE CONFIRMACIÓN ---
+            // (Si se decidiera usar el Modal en vez del messageBox)
+            if (botonCerrarModal) {
+                botonCerrarModal.addEventListener('click', () => {
+                    ocultarModal(modalConfirmacion);
+                    // Redirige al menú principal después de actualizar
+                    window.location.href = "{% url 'menu_ambulancia' %}";
+                });
+            }
+            
+            // ========================================================================
+            // SECCIÓN 5: LÓGICA PRINCIPAL (ACTUALIZACIÓN DE DATOS - SUBMIT)
+            // ========================================================================
+            
+            const form = document.getElementById('editForm');
+            if (form) {
+                /**
+                 * Evento: 'submit' en el formulario.
+                 * Propósito: Maneja el envío final del formulario (botón "Actualizar").
+                 * * Cómo se comunica:
+                 * 1. Previene el envío HTML normal (`e.preventDefault()`).
+                 * 2. Recolecta TODOS los datos de los `inputs` y del estado `datosPaciente`.
+                 * 3. Llama a la API (`fetch`) usando POST a `/api/formulario/actualizar/${FORM_ID}/`.
+                 * 4. Envía el token CSRF (`getCookie`) y los datos en formato JSON.
+                 * 5. Recibe la respuesta de la API (éxito o error).
+                 * 6. Muestra el resultado en `messageBox`.
+                 * 7. Redirige al menú si hay éxito.
+                 */
+                form.addEventListener('submit', async (e) => {
+                    e.preventDefault(); // Evita que la página se recargue
+                    if (!botonSubmit) return;
+
+                    // Deshabilitar botón para evitar doble envío
+                    botonSubmit.disabled = true;
+                    botonSubmit.textContent = 'Actualizando...';
+
+                    // 1. Recolectar todos los datos del formulario
+                    const formData = { 
+                        nombre: inputNombre?.value || null, 
+                        rut: inputRut?.value || null, 
+                        edad: inputEdad?.value || null, 
+                        sexo: datosPaciente.sexo, // Del estado interno
+                        unidadEdad: datosPaciente.unidadEdad, // Del estado interno
+                        presionArterial: inputPa?.value || null, 
+                        frecuenciaCardiaca: inputFc?.value || null, 
+                        frecuenciaRespiratoria: inputFr?.value || null, 
+                        temperatura: inputTemp?.value || null, 
+                        saturacionOxigeno: inputSat?.value || null, 
+                        glasgow: inputGlasgow?.value || null, 
+                        motivoConsulta: inputMotivo?.value || null, 
+                        antecedentes: inputAntecedentes?.value || null, 
+                        tratamiento: inputTratamiento?.value || null, 
+                        solicitudesPaciente: inputSolicitudes?.value || null, 
+                        triage: inputTriage?.value || 'Verde', 
+                        instrucciones: inputInstrucciones?.value || null, 
+                        etaDate: inputEtaDate?.value || null, 
+                        etaTime: inputEtaTime?.value || null, 
+                    }; 
+
+                    try {
+                        // 2. Enviar datos a la API de actualización
+                        const response = await fetch(`/api/formulario/actualizar/${FORM_ID}/`, {
+                            method: 'POST', // O 'PUT'/'PATCH' si la API lo prefiere
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRFToken': getCookie('csrftoken') // Token de seguridad
+                            },
+                            body: JSON.stringify(formData) // Envía los datos como JSON
+                        });
+
+                        const data = await response.json(); // Lee la respuesta de la API
+
+                        // 3. Manejar respuesta de ÉXITO
+                        if (response.ok && data.status === 'exito') {
+                            // Mostrar mensaje de éxito en la caja de mensajes
+                            messageBox.textContent = '¡Formulario actualizado con éxito! Redirigiendo al menú...';
+                            messageBox.className = 'message-box message-success';
+                            messageBox.style.display = 'block'; // Hacer visible
+                            window.scrollTo(0, 0); // Subir al inicio para ver el mensaje
+
+                            // 4. Redirigir al menú después de 2 segundos
+                            setTimeout(() => {
+                                window.location.href = '{% url "menu_ambulancia" %}';
+                            }, 2000);
+
+                        } else {
+                            // 3.b. Manejar respuesta de ERROR (controlado por la API)
+                            throw new Error(data.message || 'Error desconocido al actualizar');
+                        }
+
+                    } catch (error) {
+                        // 3.c. Manejar ERROR de RED (fetch falló)
+                        messageBox.textContent = `Error: ${error.message}`;
+                        messageBox.className = 'message-box message-error';
+                        messageBox.style.display = 'block'; // Hacer visible
+                        window.scrollTo(0, 0); // Subir para ver el error
+                        
+                        // Rehabilitar el botón si falló
+                        botonSubmit.disabled = false;
+                        botonSubmit.textContent = 'Actualizar Formulario';
+                    }
+                });
+            }
+
+            // ========================================================================
+            // SECCIÓN 6: INICIALIZACIÓN
+            // ========================================================================
+            
+            /**
+             * Llamada inicial al cargar la página para configurar el asistente
+             * en el "Paso 1" y mostrar la UI correctamente.
+             */
+            actualizarAsistente(); 
+        });
+    </script>
+    </body>
+</html>
