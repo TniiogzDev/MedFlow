@@ -124,6 +124,72 @@ class FormularioAtencion(models.Model):
     eta_fecha = models.DateField(blank=True, null=True)
     eta_hora = models.TimeField(blank=True, null=True)
 
+    # ==================================
+    # INICIO CAMPOS NUEVOS (PASO 1)
+    # ==================================
+    PREVISION_CHOICES = [
+        ('FONASA', 'Fonasa'),
+        ('ISAPRE', 'Isapre'),
+        ('DIPRECA', 'Dipreca'),
+        ('PARTICULAR', 'Particular'),
+        ('OTRO', 'Otro'),
+    ]
+    prevision = models.CharField(
+        max_length=20, 
+        choices=PREVISION_CHOICES, 
+        blank=True, 
+        null=True, 
+        verbose_name="Previsión"
+    )
+    accidente_laboral = models.BooleanField(
+        default=False, 
+        verbose_name="Accidente Laboral"
+    )
+
+    # ==================================
+    # INICIO CAMPOS NUEVOS (PASO 2)
+    # ==================================
+    llene_capilar = models.CharField(
+        max_length=100, 
+        blank=True, 
+        null=True, 
+        verbose_name="Llene Capilar"
+    )
+    score_mottling = models.CharField(
+        max_length=100, 
+        blank=True, 
+        null=True, 
+        verbose_name="Score Mottling"
+    )
+    musculatura_accesoria = models.BooleanField(
+        default=False, 
+        verbose_name="Uso Musculatura Accesoria"
+    )
+    fio2 = models.IntegerField(
+        blank=True, 
+        null=True, 
+        verbose_name="FiO2 (%)"
+    )
+
+    # ==================================
+    # INICIO CAMPOS NUEVOS (PASO 3)
+    # ==================================
+    funcionalidad = models.CharField(
+        max_length=255, 
+        blank=True, 
+        null=True, 
+        verbose_name="Funcionalidad (VGI + EVF)"
+    )
+    prestacion_requerida = models.TextField(
+        blank=True, 
+        null=True, 
+        verbose_name="Prestación Requerida"
+    )
+    
+    # ==================================
+    # FIN CAMPOS NUEVOS
+    # ==================================
+
     def __str__(self):
         return f"Caso {self.id.hex[:8]} - {self.nombre_paciente or 'N/N'}"
     

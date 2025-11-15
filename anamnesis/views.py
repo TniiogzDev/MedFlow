@@ -25,6 +25,15 @@ from reportlab.pdfgen import canvas                                           # 
 from reportlab.lib.pagesizes import letter                                    # Para definir tamaños de página en PDF
 from reportlab.lib.units import inch                                          # Para manejar unidades de medida en PDF  
 
+# ================== -->
+# INICIO CAMBIOS 4.1 -->
+# (Importar textwrap para la corrección del PDF)
+# ================== -->
+import textwrap
+# ================== -->
+# FIN CAMBIOS 4.1    -->
+# ================== -->
+
 # |========================================================================|
 # |                   VISTAS DE AUTENTICACIÓN Y MENÚS                      |
 # |========================================================================|
@@ -98,28 +107,46 @@ def enviar_formulario_ambulancia(request):
     if request.method == 'POST':
         try:
             data = json.loads(request.body)
+            
             nuevo_formulario = FormularioAtencion(
                 creado_por=request.user,
+                
+                # --- Campos Paso 1 ---
                 nombre_paciente=data.get('nombre'),
                 rut_paciente=data.get('rut'),
                 edad_paciente=data.get('edad') or None, 
                 unidad_edad_paciente=data.get('unidadEdad'),
                 sexo_paciente=data.get('sexo'),
+                prevision=data.get('prevision'),
+                accidente_laboral=data.get('accidenteLaboral', False),
+                
+                # --- Campos Paso 2 ---
                 presion_arterial=data.get('presionArterial'),
                 frecuencia_cardiaca=data.get('frecuenciaCardiaca') or None,
                 frecuencia_respiratoria=data.get('frecuenciaRespiratoria') or None,
                 temperatura=data.get('temperatura') or None,
                 saturacion_oxigeno=data.get('saturacionOxigeno') or None,
                 glasgow=data.get('glasgow') or None,
+                llene_capilar=data.get('lleneCapilar'),
+                score_mottling=data.get('scoreMottling'),
+                musculatura_accesoria=data.get('musculaturaAccesoria', False),
+                fio2=data.get('fio2') or None,
+                
+                # --- Campos Paso 3 ---
                 motivo_consulta=data.get('motivoConsulta'),
                 antecedentes=data.get('antecedentes'),
                 tratamiento_administrado=data.get('tratamiento'),
                 solicitudes_paciente=data.get('solicitudesPaciente'),
+                funcionalidad=data.get('funcionalidad'),
+                prestacion_requerida=data.get('prestacionRequerida'),
+
+                # --- Campos Paso 4 ---
                 triage=data.get('triage'),
                 instrucciones_recepcion=data.get('instrucciones'),
                 eta_fecha=data.get('etaDate') or None, 
                 eta_hora=data.get('etaTime') or None, 
             )
+            
             nuevo_formulario.save()
             return JsonResponse({'status': 'exito', 'case_id': nuevo_formulario.id}, status=201)
         except Exception as e:
@@ -152,21 +179,36 @@ def actualizar_formulario_view(request, form_id):
 
             data = json.loads(request.body)
             
+            # --- Campos Paso 1 ---
             formulario.nombre_paciente = data.get('nombre', formulario.nombre_paciente)
             formulario.rut_paciente = data.get('rut', formulario.rut_paciente)
             formulario.edad_paciente = data.get('edad') or formulario.edad_paciente
             formulario.unidad_edad_paciente = data.get('unidadEdad', formulario.unidad_edad_paciente)
             formulario.sexo_paciente = data.get('sexo', formulario.sexo_paciente)
+            formulario.prevision = data.get('prevision', formulario.prevision)
+            formulario.accidente_laboral = data.get('accidenteLaboral', formulario.accidente_laboral)
+
+            # --- Campos Paso 2 ---
             formulario.presion_arterial = data.get('presionArterial', formulario.presion_arterial)
             formulario.frecuencia_cardiaca = data.get('frecuenciaCardiaca') or formulario.frecuencia_cardiaca
             formulario.frecuencia_respiratoria = data.get('frecuenciaRespiratoria') or formulario.frecuencia_respiratoria
             formulario.temperatura = data.get('temperatura') or formulario.temperatura
             formulario.saturacion_oxigeno = data.get('saturacionOxigeno') or formulario.saturacion_oxigeno
             formulario.glasgow = data.get('glasgow') or formulario.glasgow
+            formulario.llene_capilar = data.get('lleneCapilar', formulario.llene_capilar)
+            formulario.score_mottling = data.get('scoreMottling', formulario.score_mottling)
+            formulario.musculatura_accesoria = data.get('musculaturaAccesoria', formulario.musculatura_accesoria)
+            formulario.fio2 = data.get('fio2') or formulario.fio2
+            
+            # --- Campos Paso 3 ---
             formulario.motivo_consulta = data.get('motivoConsulta', formulario.motivo_consulta)
             formulario.antecedentes = data.get('antecedentes', formulario.antecedentes)
             formulario.tratamiento_administrado = data.get('tratamiento', formulario.tratamiento_administrado)
             formulario.solicitudes_paciente = data.get('solicitudesPaciente', formulario.solicitudes_paciente)
+            formulario.funcionalidad = data.get('funcionalidad', formulario.funcionalidad)
+            formulario.prestacion_requerida = data.get('prestacionRequerida', formulario.prestacion_requerida)
+            
+            # --- Campos Paso 4 ---
             formulario.triage = data.get('triage', formulario.triage)
             formulario.instrucciones_recepcion = data.get('instrucciones', formulario.instrucciones_recepcion)
             formulario.eta_fecha = data.get('etaDate') or formulario.eta_fecha
@@ -194,9 +236,6 @@ def actualizar_formulario_view(request, form_id):
 # Vista para que Recepción obtenga formularios pendientes
 @login_required
 def obtener_formularios_pendientes(request):
-    """
-    API para que Recepción obtenga la lista de formularios activos.
-    """
     try:
         if not (request.user.groups.filter(name='Recepcion').exists() or request.user.is_superuser):
             return JsonResponse({'status': 'error', 'message': 'Acceso no autorizado'}, status=403)
@@ -252,10 +291,6 @@ def obtener_formularios_aprobados(request):
 # Vista para que Ambulancia obtenga sus propios formularios
 @login_required
 def obtener_formularios_ambulancia(request):
-    """
-    API para que el menú de Ambulancia obtenga sus propios formularios
-    y pueda actualizarse con Polling.
-    """
     if not request.user.groups.filter(name='Ambulancia').exists():
         return JsonResponse({'status': 'error', 'message': 'Acceso no autorizado'}, status=403)
 
@@ -299,7 +334,51 @@ def obtener_detalle_formulario(request, form_id):
         return JsonResponse({'status': 'error', 'message': 'Acceso no autorizado'}, status=403)
     try:
         form = FormularioAtencion.objects.get(id=form_id)
-        detalles = { 'id': str(form.id), 'nombre_paciente': form.nombre_paciente or "N/N", 'rut_paciente': form.rut_paciente or "S/R", 'edad_paciente': form.edad_paciente, 'unidad_edad': form.unidad_edad_paciente, 'sexo': form.sexo_paciente or "No esp.", 'motivo_consulta': form.motivo_consulta or "No esp.", 'antecedentes': form.antecedentes or "No esp.", 'estado': form.estado, 'triage': form.triage, 'presion_arterial': form.presion_arterial or "--/--", 'frecuencia_cardiaca': form.frecuencia_cardiaca or "--", 'saturacion_oxigeno': form.saturacion_oxigeno or "--", 'creado_por_nombre': form.creado_por.get_full_name() if form.creado_por else "Desconocido", 'creado_en_fecha': timezone.localtime(form.creado_en).strftime('%d/%m/%Y %H:%M'), }
+        
+        detalles = { 
+            'id': str(form.id), 
+            'estado': form.estado, 
+            'triage': form.triage,
+            
+            # --- Paciente ---
+            'nombre_paciente': form.nombre_paciente or "N/N", 
+            'rut_paciente': form.rut_paciente or "S/R", 
+            'edad_paciente': form.edad_paciente, 
+            'unidad_edad': form.unidad_edad_paciente, 
+            'sexo': form.sexo_paciente or "No esp.", 
+            'prevision': form.prevision or "No esp.",
+            'accidente_laboral': "Sí" if form.accidente_laboral else "No",
+            
+            # --- Signos Vitales ---
+            'presion_arterial': form.presion_arterial or "--/--", 
+            'frecuencia_cardiaca': form.frecuencia_cardiaca or "--", 
+            'frecuencia_respiratoria': form.frecuencia_respiratoria or "--",
+            'temperatura': form.temperatura or "--",
+            'saturacion_oxigeno': form.saturacion_oxigeno or "--", 
+            'fio2': form.fio2 or "--",
+            'glasgow': form.glasgow or "--",
+            'llene_capilar': form.llene_capilar or "No esp.",
+            'score_mottling': form.score_mottling or "No esp.",
+            'musculatura_accesoria': "Sí" if form.musculatura_accesoria else "No",
+
+            # --- Anamnesis ---
+            'motivo_consulta': form.motivo_consulta or "No esp.", 
+            'antecedentes': form.antecedentes or "No esp.", 
+            'prestacion_requerida': form.prestacion_requerida or "No esp.",
+            'funcionalidad': form.funcionalidad or "No esp.",
+            'tratamiento_administrado': form.tratamiento_administrado or "No esp.",
+            'solicitudes_paciente': form.solicitudes_paciente or "No esp.",
+
+            # --- Notificación ---
+            'instrucciones_recepcion': form.instrucciones_recepcion or "No esp.",
+            'eta_fecha': form.eta_fecha.strftime('%Y-%m-%d') if form.eta_fecha else None,
+            'eta_hora': form.eta_hora.strftime('%H:%M') if form.eta_hora else None,
+
+            # --- Personal ---
+            'creado_por_nombre': form.creado_por.get_full_name() if form.creado_por else "Desconocido", 
+            'creado_en_fecha': timezone.localtime(form.creado_en).strftime('%d/%m/%Y %H:%M'), 
+        }
+        
         return JsonResponse({'status': 'exito', 'detalles': detalles})
     except FormularioAtencion.DoesNotExist:
         return JsonResponse({'status': 'error', 'message': 'Formulario no encontrado'}, status=404)
@@ -419,9 +498,6 @@ def bloquear_formulario_view(request, form_id):
 # Vista para liberar un formulario
 @login_required
 def liberar_formulario_view(request, form_id):
-    """
-    API para LIBERAR un formulario (sin cambiar su estado principal).
-    """
     if not (request.user.groups.filter(name='Recepcion').exists() or request.user.is_superuser):
         return JsonResponse({'status': 'error', 'message': 'Acceso no autorizado'}, status=403)
 
@@ -597,9 +673,6 @@ def obtener_registros_auditoria(request, user_id):
 
 @login_required
 def api_obtener_todos_los_formularios(request):
-    """
-    API para que el Supervisor obtenga TODOS los formularios del sistema.
-    """
     if not (request.user.is_superuser or request.user.groups.filter(name='Supervisor').exists()):
         return JsonResponse({'status': 'error', 'message': 'Acceso no autorizado'}, status=403)
         
@@ -611,10 +684,7 @@ def api_obtener_todos_los_formularios(request):
                 'id': str(form.id),
                 'nombre_paciente': form.nombre_paciente or "N/N",
                 'creado_en': form.creado_en.strftime("%d-%m-%Y"),
-                
-                # --- CAMPO AÑADIDO PARA STATS ---
                 'aprobado_en': form.aprobado_en.strftime("%Y-%m-%d") if form.aprobado_en else None,
-
                 'estado': form.estado,
                 'estado_display': form.get_estado_display(),
                 'creado_por_nombre': form.creado_por.username if form.creado_por else "Desconocido",
@@ -628,9 +698,6 @@ def api_obtener_todos_los_formularios(request):
 # ==================================
 @login_required
 def api_crear_usuario_view(request):
-    """
-    API para que el Supervisor cree nuevos usuarios desde un modal.
-    """
     if not (request.user.is_superuser or request.user.groups.filter(name='Supervisor').exists()):
         return JsonResponse({'status': 'error', 'message': 'Acceso no autorizado'}, status=403)
 
@@ -686,13 +753,7 @@ def api_crear_usuario_view(request):
 # ==================================
 @login_required
 def api_editar_usuario_view(request, user_id):
-    # ==================================
-    # INICIO DE LA MODIFICACIÓN
-    # ==================================
     if not (request.user.is_superuser or request.user.groups.filter(name='Supervisor').exists()):
-    # ==================================
-    # FIN DE LA MODIFICACIÓN
-    # ==================================
         return JsonResponse({'status': 'error', 'message': 'Acceso no autorizado'}, status=403)
     
     User = get_user_model()
@@ -745,13 +806,7 @@ def api_editar_usuario_view(request, user_id):
 # ==================================
 @login_required
 def api_eliminar_usuario_view(request, user_id):
-    # ==================================
-    # INICIO DE LA MODIFICACIÓN
-    # ==================================
     if not (request.user.is_superuser or request.user.groups.filter(name='Supervisor').exists()):
-    # ==================================
-    # FIN DE LA MODIFICACIÓN
-    # ==================================
         return JsonResponse({'status': 'error', 'message': 'Acceso no autorizado'}, status=403)
     
     User = get_user_model()
@@ -775,13 +830,7 @@ def api_eliminar_usuario_view(request, user_id):
 # ==================================
 @login_required
 def api_obtener_logs_del_sistema(request):
-    # ==================================
-    # INICIO DE LA MODIFICACIÓN
-    # ==================================
     if not (request.user.is_superuser or request.user.groups.filter(name='Supervisor').exists()):
-    # ==================================
-    # FIN DE LA MODIFICACIÓN
-    # ==================================
         return JsonResponse({'status': 'error', 'message': 'Acceso no autorizado'}, status=403)
     
     try:
@@ -803,7 +852,7 @@ def api_obtener_logs_del_sistema(request):
 
 
 # ==================================
-# API DE EXPORTACIÓN (Sin cambios)
+# API DE EXPORTACIÓN (MODIFICADA)
 # ==================================
 @login_required
 def exportar_formulario_view(request, form_id, formato):
@@ -815,34 +864,55 @@ def exportar_formulario_view(request, form_id, formato):
         filename = f"caso_{formulario.nombre_paciente or 'NN'}_{form_id[:8]}.pdf"
         response = HttpResponse(content_type='application/pdf')
         response['Content-Disposition'] = f'attachment; filename="{filename}"'
-        generar_pdf(response, formulario)
+        generar_pdf(response, formulario) # <-- Llamada a la función PDF actualizada
         return response
     elif formato == 'xlsx' or formato == 'excel': 
         filename = f"caso_{formulario.nombre_paciente or 'NN'}_{form_id[:8]}.xlsx"
         response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
         response['Content-Disposition'] = f'attachment; filename="{filename}"'
-        generar_excel_actualizado(response, formulario) 
+        generar_excel_actualizado(response, formulario) # <-- Llamada a la función Excel actualizada
         return response
     else:
         return HttpResponse(f"Formato no válido. Se recibió '{formato}'", status=400)
 
-# Función para generar un archivo Excel actualizado
+# ================== -->
+# INICIO CAMBIOS 3.4 -->
+# (Función de Excel - Sin cambios esta vez, ya estaba bien)
+# ================== -->
 def generar_excel_actualizado(response, formulario):
     wb = Workbook()
     ws = wb.active
     ws.title = f"Caso {formulario.id.hex[:8]}"
+    
+    # --- Estilos Visuales ---
     title_font = Font(size=16, bold=True)
     header_font = Font(size=12, bold=True, color="FFFFFF") 
-    header_fill = PatternFill(start_color="4F81BD", end_color="4F81BD", fill_type="solid") 
+    header_fill = PatternFill(start_color="EF4444", end_color="EF4444", fill_type="solid") # Rojo
     label_font = Font(bold=True)
-    label_align = Alignment(horizontal='right', vertical='center')
+    label_align = Alignment(horizontal='right', vertical='top')
+    value_align = Alignment(vertical='top', wrap_text=True)
+
+    # --- Funciones de ayuda ---
     def add_row(label, value, row_num):
         ws[f'A{row_num}'] = label
         ws[f'A{row_num}'].font = label_font
         ws[f'A{row_num}'].alignment = label_align
         ws[f'B{row_num}'] = value
-        ws.column_dimensions['A'].width = 25
-        ws.column_dimensions['B'].width = 50
+        ws[f'B{row_num}'].alignment = value_align
+        # Ajuste dinámico de altura de fila
+        if value:
+            lines = str(value).split('\n')
+            max_line_len = 0
+            for line in lines:
+                max_line_len = max(max_line_len, len(line))
+            
+            num_lines = len(lines)
+            # Aumentar líneas basado en el ancho
+            num_lines += (max_line_len // 50) * len(lines)
+            ws.row_dimensions[row_num].height = max(15, num_lines * 15)
+        else:
+            ws.row_dimensions[row_num].height = 15
+        
     def add_header(text, row_num):
         ws.merge_cells(f'A{row_num}:B{row_num}')
         cell = ws[f'A{row_num}']
@@ -850,92 +920,203 @@ def generar_excel_actualizado(response, formulario):
         cell.font = header_font
         cell.fill = header_fill
         cell.alignment = Alignment(horizontal='left', vertical='center')
+        ws.row_dimensions[row_num].height = 20
+
+    # --- Título ---
     ws.merge_cells('A1:B1')
     ws['A1'] = f"Reporte de Atención - Caso #{formulario.id.hex[:8]}"
     ws['A1'].font = title_font
     ws['A1'].alignment = Alignment(horizontal='center')
+    ws.row_dimensions[1].height = 25
+
+    # --- Configuración de Columnas ---
+    ws.column_dimensions['A'].width = 25
+    ws.column_dimensions['B'].width = 50
+
     row = 3
+    
+    # --- Datos del Paciente ---
     add_header("1. Datos del Paciente", row); row += 1
     add_row("Paciente:", formulario.nombre_paciente or "N/A", row); row += 1
     add_row("RUT:", formulario.rut_paciente or "N/A", row); row += 1
     add_row("Edad:", f"{formulario.edad_paciente or '?'} {formulario.unidad_edad_paciente}", row); row += 1
-    add_row("Sexo:", formulario.sexo_paciente or "N/A", row); row += 2 
-    add_header("2. Signos Vitales y Triage", row); row += 1
+    add_row("Sexo:", formulario.sexo_paciente or "N/A", row); row += 1
+    add_row("Previsión:", formulario.get_prevision_display() or "N/A", row); row += 1
+    add_row("Accidente Laboral:", "Sí" if formulario.accidente_laboral else "No", row); row += 2 
+    
+    # --- Signos Vitales y Triage ---
+    add_header("2. Evaluación Clínica y Signos Vitales", row); row += 1
     add_row("Triage:", formulario.triage or "N/A", row); row += 1
     add_row("Presión Arterial:", formulario.presion_arterial or "N/A", row); row += 1
     add_row("Frec. Cardiaca:", f"{formulario.frecuencia_cardiaca} lpm" if formulario.frecuencia_cardiaca else "N/A", row); row += 1
     add_row("Frec. Respiratoria:", f"{formulario.frecuencia_respiratoria} rpm" if formulario.frecuencia_respiratoria else "N/A", row); row += 1
     add_row("Temperatura:", f"{formulario.temperatura} °C" if formulario.temperatura else "N/A", row); row += 1
     add_row("Saturación O₂:", f"{formulario.saturacion_oxigeno} %" if formulario.saturacion_oxigeno else "N/A", row); row += 1
-    add_row("Glasgow:", formulario.glasgow or "N/A", row); row += 2 
-    add_header("3. Anamnesis y Notificación", row); row += 1
+    add_row("FiO2:", f"{formulario.fio2} %" if formulario.fio2 else "N/A", row); row += 1
+    add_row("Glasgow:", formulario.glasgow or "N/A", row); row += 1
+    add_row("Llene Capilar:", formulario.llene_capilar or "N/A", row); row += 1
+    add_row("Score Mottling:", formulario.score_mottling or "N/A", row); row += 1
+    add_row("Uso Musculatura:", "Sí" if formulario.musculatura_accesoria else "No", row); row += 2
+    
+    # --- Anamnesis y Notificación ---
+    add_header("3. Anamnesis y Motivo de Traslado", row); row += 1
     add_row("Motivo Consulta:", formulario.motivo_consulta or "N/A", row); row += 1
+    add_row("Prestación Requerida:", formulario.prestacion_requerida or "N/A", row); row += 1
     add_row("Antecedentes:", formulario.antecedentes or "N/A", row); row += 1
+    add_row("Funcionalidad:", formulario.funcionalidad or "N/A", row); row += 1
     add_row("Tratamiento Admin.:", formulario.tratamiento_administrado or "N/A", row); row += 1
-    add_row("Instrucciones Recepción:", formulario.instrucciones_recepcion or "N/A", row); row += 2 
-    add_header("4. Personal", row); row += 1
+    add_row("Solicitudes Paciente:", formulario.solicitudes_paciente or "N/A", row); row += 2
+    
+    # --- Notificación ---
+    add_header("4. Notificación", row); row += 1
+    add_row("Instrucciones Recepción:", formulario.instrucciones_recepcion or "N/A", row); row += 1
+    eta_fecha_str = formulario.eta_fecha.strftime('%d-%m-%Y') if formulario.eta_fecha else "N/A"
+    eta_hora_str = formulario.eta_hora.strftime('%H:%M') if formulario.eta_hora else "N/A"
+    add_row("ETA:", f"{eta_fecha_str} a las {eta_hora_str}", row); row += 2
+
+    # --- Personal ---
+    add_header("5. Personal", row); row += 1
     add_row("Personal Ambulancia:", formulario.creado_por.get_full_name() if formulario.creado_por else "N/A", row); row += 1
     add_row("Fecha Creación:", timezone.localtime(formulario.creado_en).strftime('%d-%m-%Y %H:%M'), row); row += 1
     if formulario.aprobado_por:
         add_row("Aprobado Por:", formulario.aprobado_por.get_full_name(), row); row += 1
+        add_row("Fecha Aprobación:", timezone.localtime(formulario.aprobado_en).strftime('%d-%m-%Y %H:%M'), row); row += 1
+    
     wb.save(response)
 
-# Función para generar un archivo PDF
+# ================== -->
+# INICIO CAMBIOS 4.2 -->
+# (Función de PDF corregida y robustecida)
+# ================== -->
 def generar_pdf(response, formulario):
     p = canvas.Canvas(response, pagesize=letter)
     width, height = letter 
     margin = 0.75 * inch
+    
     class PDFCursor:
         def __init__(self, x, y_start):
             self.x = x
+            self.y_start = y_start
             self.y = y_start
             self.line_height = 16 
-        def write_line(self, text, bold=False):
-            if self.y < margin: 
+            self.field_indent = 1.5 * inch
+
+        def check_page_break(self, needed_space=40):
+            # Comprueba si se necesita espacio, si no, salta de página
+            if self.y < margin + needed_space: 
                 p.showPage()
-                self.y = height - margin
-            font = "Helvetica-Bold" if bold else "Helvetica"
-            p.setFont(font, 10)
-            p.drawString(self.x, self.y, text)
-            self.y -= self.line_height
+                self.y = self.y_start
+                
+        def write_header(self, text):
+            # Escribe un cabecera de sección
+            self.check_page_break(60) # Espacio para cabecera + 1 campo
+            p.setFont("Helvetica-Bold", 12)
+            p.setFillColorRGB(0.93, 0.26, 0.26) # Rojo (EF4444)
+            p.drawString(self.x, self.y + 10, text)
+            self.y -= self.line_height * 0.5
+            p.line(self.x, self.y + 8, width - margin, self.y + 8)
+            self.y -= self.line_height * 1.5
+            p.setFillColorRGB(0, 0, 0) # Reset color a negro
+
         def write_field(self, label, value):
-            if self.y < margin:
-                p.showPage()
-                self.y = height - margin
+            # Escribe un campo simple (Etiqueta: Valor)
+            self.check_page_break(20)
             p.setFont("Helvetica-Bold", 10)
             p.drawString(self.x, self.y, label)
             p.setFont("Helvetica", 10)
-            p.drawString(self.x + 1.5 * inch, self.y, str(value or "N/A")) 
+            p.drawString(self.x + self.field_indent, self.y, str(value or "N/A")) 
             self.y -= self.line_height * 1.5 
+
+        def write_multiline_field(self, label, value):
+            # Escribe un campo largo, dividiendo el texto en múltiples líneas
+            self.check_page_break(60) # Mínimo 60 de espacio
+            p.setFont("Helvetica-Bold", 10)
+            p.drawString(self.x, self.y, label)
+            p.setFont("Helvetica", 10)
+
+            text_obj = p.beginText(self.x + self.field_indent, self.y)
+            
+            val = str(value or "N/A")
+            max_width_chars = 75 # Caracteres aproximados por línea
+            
+            lines_drawn = 0
+            # Divide por saltos de línea manuales primero
+            for line in val.split('\n'):
+                # Envuelve líneas largas
+                wrapped_lines = textwrap.wrap(line, width=max_width_chars)
+                if not wrapped_lines: # Si es una línea vacía
+                    text_obj.textLine(" ") 
+                    lines_drawn += 1
+                for wrapped_line in wrapped_lines:
+                    text_obj.textLine(wrapped_line)
+                    lines_drawn += 1
+            
+            p.drawText(text_obj)
+            
+            # Mover el cursor 'y' hacia abajo basado en líneas dibujadas
+            self.y -= (lines_drawn * 12) # 12 es la altura de línea
+            self.y -= self.line_height * 0.5 # Espacio extra post-campo
+    
     c = PDFCursor(margin, height - margin)
+    
+    # --- Título ---
     p.setFont("Helvetica-Bold", 16)
     p.drawCentredString(width / 2.0, c.y, f"Reporte de Atención - Caso #{formulario.id.hex[:8]}")
     c.y -= 40 
-    c.write_line("1. Datos del Paciente", bold=True)
+    
+    # --- Datos del Paciente ---
+    c.write_header("1. Datos del Paciente")
     c.write_field("Paciente:", formulario.nombre_paciente)
     c.write_field("RUT:", formulario.rut_paciente)
     c.write_field("Edad:", f"{formulario.edad_paciente or '?'} {formulario.unidad_edad_paciente}")
     c.write_field("Sexo:", formulario.sexo_paciente)
-    c.y -= 10 
-    c.write_line("2. Signos Vitales y Triage", bold=True)
+    c.write_field("Previsión:", formulario.get_prevision_display() or "N/A")
+    c.write_field("Accidente Laboral:", "Sí" if formulario.accidente_laboral else "No")
+    
+    # --- Evaluación Clínica ---
+    c.write_header("2. Evaluación Clínica y Signos Vitales")
     c.write_field("Triage:", formulario.triage)
     c.write_field("Presión Arterial:", formulario.presion_arterial)
     c.write_field("Frec. Cardiaca:", f"{formulario.frecuencia_cardiaca} lpm" if formulario.frecuencia_cardiaca else "N/A")
     c.write_field("Frec. Respiratoria:", f"{formulario.frecuencia_respiratoria} rpm" if formulario.frecuencia_respiratoria else "N/A")
     c.write_field("Temperatura:", f"{formulario.temperatura} °C" if formulario.temperatura else "N/A")
     c.write_field("Saturación O₂:", f"{formulario.saturacion_oxigeno} %" if formulario.saturacion_oxigeno else "N/A")
+    c.write_field("FiO2:", f"{formulario.fio2} %" if formulario.fio2 else "N/A")
     c.write_field("Glasgow:", formulario.glasgow)
-    c.y -= 10
-    c.write_line("3. Anamnesis y Notificación", bold=True)
-    c.write_field("Motivo Consulta:", formulario.motivo_consulta)
-    c.write_field("Antecedentes:", formulario.antecedentes)
-    c.write_field("Tratamiento Admin.:", formulario.tratamiento_administrado)
-    c.write_field("Instrucciones Recepción:", formulario.instrucciones_recepcion) 
-    c.y -= 10
-    c.write_line("4. Personal", bold=True)
+    c.write_field("Llene Capilar:", formulario.llene_capilar)
+    c.write_field("Score Mottling:", formulario.score_mottling)
+    c.write_field("Uso Musculatura:", "Sí" if formulario.musculatura_accesoria else "No")
+    
+    c.check_page_break(200) # Comprobar si hay espacio para la siguiente sección
+    
+    # --- Anamnesis ---
+    c.write_header("3. Anamnesis y Motivo de Traslado")
+    c.write_multiline_field("Motivo Consulta:", formulario.motivo_consulta)
+    c.write_multiline_field("Prestación Requerida:", formulario.prestacion_requerida)
+    c.write_multiline_field("Antecedentes:", formulario.antecedentes)
+    c.write_field("Funcionalidad:", formulario.funcionalidad)
+    c.write_multiline_field("Tratamiento Admin.:", formulario.tratamiento_administrado)
+    c.write_multiline_field("Solicitudes Paciente:", formulario.solicitudes_paciente)
+    
+    c.check_page_break(150) # Comprobar si hay espacio para la siguiente sección
+
+    # --- Notificación ---
+    c.write_header("4. Notificación")
+    c.write_multiline_field("Instrucciones Recepción:", formulario.instrucciones_recepcion) 
+    eta_fecha_str = formulario.eta_fecha.strftime('%d-%m-%Y') if formulario.eta_fecha else "N/A"
+    eta_hora_str = formulario.eta_hora.strftime('%H:%M') if formulario.eta_hora else "N/A"
+    c.write_field("ETA:", f"{eta_fecha_str} a las {eta_hora_str}")
+    
+    # --- Personal ---
+    c.write_header("5. Personal")
     c.write_field("Personal Ambulancia:", formulario.creado_por.get_full_name() if formulario.creado_por else "N/A")
     c.write_field("Fecha Creación:", timezone.localtime(formulario.creado_en).strftime('%d-%m-%Y %H:%M'))
     if formulario.aprobado_por:
         c.write_field("Aprobado Por:", formulario.aprobado_por.get_full_name())
+        c.write_field("Fecha Aprobación:", timezone.localtime(formulario.aprobado_en).strftime('%d-%m-%Y %H:%M'))
+    
     p.showPage()
     p.save()
+# ================== -->
+# FIN CAMBIOS 4.2    -->
+# ================== -->
