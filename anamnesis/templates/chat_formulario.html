@@ -16,7 +16,8 @@
         .chat-meta { font-size: 0.75rem; color: #6B7280; }
     </style>
 </head>
-<body class="flex flex-col h-screen">
+
+<body class="flex flex-col min-h-screen">
 
     <header class="bg-white shadow-md p-4 sticky top-0 z-10">
         <div class="container mx-auto max-w-3xl flex justify-between items-center">
@@ -34,7 +35,7 @@
         </div>
     </main>
 
-    <footer class="bg-white border-t border-gray-200 p-4 sticky bottom-0">
+    <footer class="bg-white border-t border-gray-200 p-4">
         <div class="container mx-auto max-w-3xl">
             <form id="chat-form" class="flex items-center space-x-3">
                 <input type="text" id="message-input" placeholder="Escribe tu mensaje..." autocomplete="off"
@@ -164,17 +165,33 @@
 
                 // 4. Procesamiento de datos (si la API responde status: "exito")
                 if (data.status === 'exito') {
-                    chatMessages.innerHTML = ''; // Limpiamos el "Cargando..."
+                    // Solo actualiza si hay cambios, para evitar saltos
+                    const currentMessagesHtml = chatMessages.innerHTML;
                     
+                    let newMessagesHtml = '';
                     if (data.mensajes.length === 0) {
-                        chatMessages.innerHTML = '<div class="text-center text-gray-500">No hay mensajes. ¡Inicia la conversación!</div>';
+                        newMessagesHtml = '<div class="text-center text-gray-500">No hay mensajes. ¡Inicia la conversación!</div>';
                     } else {
-                        // Si hay mensajes, llamamos a appendMessage por CADA uno.
-                        data.mensajes.forEach(appendMessage);
+                        // Genera el HTML nuevo
+                        data.mensajes.forEach(msg => {
+                            const isUser = msg.autor_rol === CURRENT_USER_ROLE;
+                            const bubbleClass = isUser ? 'chat-bubble-user' : 'chat-bubble-other';
+                            newMessagesHtml += `
+                                <div class="chat-bubble ${bubbleClass}">
+                                    <div class="chat-meta font-semibold">${msg.autor_nombre} (${msg.autor_rol || 'N/A'})</div>
+                                    <p>${msg.mensaje}</p> <div class="chat-meta text-right mt-1">${msg.timestamp}</div>
+                                </div>
+                            `;
+                        });
+                    }
+
+                    // Compara el HTML simple (ignora espacios en blanco)
+                    if (currentMessagesHtml.replace(/\s/g, '') !== newMessagesHtml.replace(/\s/g, '')) {
+                        chatMessages.innerHTML = newMessagesHtml;
+                        // 5. Scroll al final (con un pequeño retraso para que se renderice)
+                        setTimeout(scrollToBottom, 100); 
                     }
                     
-                    // 5. Scroll al final (con un pequeño retraso para que se renderice)
-                    setTimeout(scrollToBottom, 100); 
                 } else {
                     // Si la API dijo que hubo un error (ej: data.status = 'error')
                     chatMessages.innerHTML = `<div class="text-center text-red-500">Error al cargar mensajes: ${data.message}</div>`;
@@ -246,6 +263,7 @@
             } finally {
                  // 10. Rehabilitar UI: Pase lo que pase, volvemos a activar el botón.
                  submitButton.disabled = false; 
+                 messageInput.focus(); // Re-enfocar el input
             }
         }
 
@@ -269,7 +287,32 @@
                 chatForm.addEventListener('submit', enviarMensaje);
             }
             
-            // 3. Configura una recarga automática de mensajes cada 5 segundos.
+            // |========================================================================|
+            // |         INICIO DE LA CORRECCIÓN: MANEJO DE TECLADO VIRTUAL (v2)        |
+            // |========================================================================|
+            
+            // 3. Añadir listener para cuando el usuario toca el input (abre el teclado)
+            if (messageInput) {
+                messageInput.addEventListener('focus', () => {
+                    // Damos un pequeño retraso (100ms) para esperar que
+                    // el navegador empiece a re-dibujar la vista.
+                    setTimeout(() => {
+                        
+                        // 1. Mueve el scroll interno de <main> hasta el último mensaje.
+                        scrollToBottom();
+                        
+                        // 2. Mueve el scroll de la VENTANA para que el INPUT
+                        // (que ahora no es 'sticky') sea visible.
+                        messageInput.scrollIntoView({ behavior: "smooth", block: "center" });
+                        
+                    }, 100);
+                });
+            }
+            // |========================================================================|
+            // |                  FIN DE LA CORRECCIÓN (v2)                             |
+            // |========================================================================|
+
+            // 4. Configura una recarga automática de mensajes cada 5 segundos.
             setInterval(cargarMensajes, 5000); // Cada 5 segundos
         });
 
