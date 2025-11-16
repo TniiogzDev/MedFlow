@@ -58,6 +58,8 @@
 </head>
 <body class="p-6">
 
+    <audio id="notificacionSonido" src="{% static 'sounds/notificacion.mp3' %}" preload="auto"></audio>
+
     <div class="container mx-auto max-w-7xl">
         <header class="mb-6 flex justify-between items-center">
             <div class="flex items-center gap-3">
@@ -164,10 +166,17 @@
         const chatInput = document.getElementById('chatInput');
         const approveBtn = document.getElementById('approveBtn');
         const modifyBtn = document.getElementById('modifyBtn');
-        const deleteBtn = document.getElementById('deleteBtn'); // ¡Botón de eliminar!
+        const deleteBtn = document.getElementById('deleteBtn');
         
         const currentUsername = '{{ user.username }}'; 
         const csrftoken = getCookie('csrftoken'); 
+
+        // ====================================================
+        // MODIFICACIÓN 2: Nuevas variables para notificación
+        // ====================================================
+        let idsFormulariosConocidos = new Set();
+        let esPrimeraCarga = true;
+
 
         // === FUNCIONES AUXILIARES ===
         function getCookie(name) {
@@ -185,8 +194,24 @@
             return cookieValue;
         }
 
+        // ====================================================
+        // MODIFICACIÓN 3: Función para reproducir el sonido
+        // ====================================================
+        function reproducirSonidoNotificacion() {
+            const sonido = document.getElementById('notificacionSonido');
+            if (sonido) {
+                // El .catch() es para evitar errores si el navegador bloquea el audio
+                sonido.play().catch(error => {
+                    console.log("El navegador bloqueó la reproducción automática. Se requiere interacción del usuario.");
+                });
+            }
+        }
+
         // === FUNCIONES PRINCIPALES (Carga de datos) ===
 
+        // ================================================================
+        // MODIFICACIÓN 4: Lógica actualizada en 'cargarListaFormularios'
+        // ================================================================
         async function cargarListaFormularios() {
             try {
                 const response = await fetch("{% url 'obtener_formularios_pendientes' %}");
@@ -194,8 +219,33 @@
                 
                 const data = await response.json();
                 
-                formListDiv.innerHTML = ''; 
+                // --- INICIO DE LÓGICA DE NOTIFICACIÓN ---
+                if (data.status === 'exito' && data.formularios) {
+                    const nuevosIds = new Set(data.formularios.map(f => f.id));
+
+                    if (esPrimeraCarga) {
+                        idsFormulariosConocidos = nuevosIds;
+                        esPrimeraCarga = false;
+                    } else {
+                        let hayFormularioNuevo = false;
+                        for (const id of nuevosIds) {
+                            if (!idsFormulariosConocidos.has(id)) {
+                                hayFormularioNuevo = true;
+                                break;
+                            }
+                        }
+                        
+                        if (hayFormularioNuevo) {
+                            console.log("¡Nuevo formulario detectado!");
+                            reproducirSonidoNotificacion();
+                        }
+                        
+                        idsFormulariosConocidos = nuevosIds;
+                    }
+                }
+                // --- FIN DE LÓGICA DE NOTIFICACIÓN ---
                 
+                formListDiv.innerHTML = ''; 
                 if (data.status === 'exito' && data.formularios && data.formularios.length > 0) {
                     data.formularios.forEach(form => {
                         const div = document.createElement('div');
@@ -222,7 +272,6 @@
 
                         div.onclick = () => loadFormDetails(form.id); 
                         
-                        // --- ¡¡LÓGICA DE BADGES CORREGIDA!! ---
                         const estadoClass = form.estado.toLowerCase().replace(/_/g, '_');
                         let badgeHtml = `<span class="badge badge-${estadoClass}">${form.estado_display}</span>`;
                         
@@ -278,13 +327,32 @@
             }
         }
 
+        // ==============================================================
+        // MODIFICACIÓN 5: Lógica de "desbloqueo" en 'loadFormDetails'
+        // ==============================================================
         async function loadFormDetails(formId) {
+            
+            // --- ¡INICIO DE MODIFICACIÓN (Solución 2)! ---
+            // Intenta reproducir y pausar el sonido la primera vez que se hace clic.
+            // Esto le da permiso al navegador para futuros sonidos.
+            const sonido = document.getElementById('notificacionSonido');
+            if (sonido && sonido.paused) { // Solo si está pausado
+                sonido.play().then(() => {
+                    // Lo pausamos de inmediato, solo queríamos el "permiso"
+                    sonido.pause(); 
+                    sonido.currentTime = 0; // Lo reiniciamos
+                }).catch(e => {
+                    // Ignora errores si el navegador es muy estricto
+                    console.log("Interacción de usuario registrada para desbloquear audio."); 
+                });
+            }
+            // --- FIN DE LA MODIFICACIÓN ---
+
             if (currentFormId === formId) return; 
             
             const oldFormId = currentFormId; 
             currentFormId = formId; 
 
-            // --- 1. LIBERAR EL BLOQUEO ANTERIOR (si había uno) ---
             if (oldFormId) {
                 try {
                     await fetch(`{% url 'liberar_formulario' form_id=0 %}`.replace('0', oldFormId), {
@@ -312,7 +380,6 @@
             chatHistory.innerHTML = '<p class="text-center text-gray-500" id="chatPlaceholder">Cargando chat...</p>';
             document.getElementById('currentChatId').textContent = formId.substring(0, 8);
             
-            // --- 2. ADQUIRIR EL NUEVO BLOQUEO ---
             try {
                 const lockResponse = await fetch(`{% url 'bloquear_formulario' form_id=0 %}`.replace('0', formId), {
                     method: 'POST',
@@ -325,7 +392,6 @@
                     throw new Error(lockData.message || 'Error al bloquear formulario');
                 }
 
-                // --- 3. SI EL BLOQUEO ES EXITOSO, CARGAR DATOS ---
                 await cargarListaFormularios(); 
 
                 const detailResponse = await fetch(`/api/formulario_detalle/${formId}/`);
@@ -348,7 +414,7 @@
                     `;
                     approveBtn.disabled = false;
                     modifyBtn.disabled = false;
-                    if (deleteBtn) deleteBtn.disabled = false; // ¡Activa el botón de eliminar!
+                    if (deleteBtn) deleteBtn.disabled = false;
                     chatInput.disabled = false;
                 } else {
                     formDetails.innerHTML = `<p class="text-red-500 text-center pt-10">${detailData.message}</p>`;
@@ -468,7 +534,6 @@
             }
         }
 
-        // --- ¡¡NUEVA FUNCIÓN DE ELIMINACIÓN!! ---
         async function eliminarFormulario() {
             if (!currentFormId) return;
             
@@ -488,7 +553,7 @@
 
                 if (data.status === 'exito') {
                     alert('Formulario eliminado permanentemente.');
-                    resetearVista(); // Recarga las listas
+                    resetearVista(); 
                 } else {
                     alert('Error al eliminar: ' + data.message);
                 }
@@ -510,7 +575,7 @@
             cargarListaAprobados();
         }
 
-        // --- FUNCIONES DE EXPORTACIÓN (Sin cambios) ---
+        // --- FUNCIONES DE EXPORTACIÓN ---
         function mostrarOpcionesDescarga() {
             document.getElementById('menuDescarga').classList.toggle('hidden');
         }
@@ -566,7 +631,6 @@
             chatForm.addEventListener('submit', enviarMensaje);
             approveBtn.addEventListener('click', aprobarFormulario);
             modifyBtn.addEventListener('click', solicitarModificacion);
-            // ¡¡ASIGNA EL EVENTO AL BOTÓN DE ELIMINAR!!
             if (deleteBtn) deleteBtn.addEventListener('click', eliminarFormulario); 
 
             setInterval(() => {
