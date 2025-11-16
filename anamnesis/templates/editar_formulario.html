@@ -113,8 +113,8 @@
                          <div class="grid grid-cols-1 md:grid-cols-2 gap-6"> 
                              
                              <div>
-                                 <label for="patientName" class="form-label">Nombre</label>
-                                 <input type="text" id="patientName" class="form-input w-full" placeholder="Ej: Juan Pérez" 
+                                 <label for="patientName" class="form-label">Nombre y Apellido</label>
+                                 <input type="text" id="patientName" maxlength="28" class="form-input w-full" placeholder="Ej: Juan Pérez" 
                                         value="{{ formulario.nombre_paciente|default_if_none:'' }}"
                                         oninput="this.value = this.value.replace(/[^a-zA-Z\sñÑáéíóúÁÉÍÓÚ]/g, '')">
                              </div> 
@@ -134,10 +134,11 @@
                                  <label for="patientAge" class="form-label">Edad</label>
                                  <div class="flex gap-2 items-center">
                                      <input type="number" id="patientAge" class="form-input w-1/2" placeholder="Ej: 45" min="0" max="150" 
-                                            value="{{ formulario.edad_paciente|default_if_none:'' }}">
+                                            value="{{ formulario.edad_paciente|default_if_none:'' }}"
+                                            oninput="if (this.value.length > 3) this.value = this.value.slice(0, 3)">
                                      <div id="ageUnitButtons" class="w-1/2 grid grid-cols-2 gap-2">
-                                         <button type="button" class="btn text-sm option-button {% if formulario.unidad_edad_paciente == 'Años' %}active{% endif %}" data-unit="Años">A</button>
-                                         <button type="button" class="btn text-sm option-button {% if formulario.unidad_edad_paciente == 'Meses' %}active{% endif %}" data-unit="Meses">M</button>
+                                         <button type="button" class="btn text-sm option-button {% if formulario.unidad_edad_paciente == 'Años' %}active{% endif %}" data-unit="Años">Años</button>
+                                         <button type="button" class="btn text-sm option-button {% if formulario.unidad_edad_paciente == 'Meses' %}active{% endif %}" data-unit="Meses">Meses</button>
                                      </div>
                                  </div>
                              </div> 
@@ -215,26 +216,30 @@
                              </div> 
                              <div>
                                  <label for="glasgow" class="form-label">Glasgow</label>
-                                 <input type="number" id="glasgow" class="form-input w-full" placeholder="15" 
-                                        value="{{ formulario.glasgow|default_if_none:'' }}">
+                                 <input type="number" id="glasgow" class="form-input w-full" placeholder="15" min="3" max="15"
+                                        value="{{ formulario.glasgow|default_if_none:'' }}"
+                                        oninput="if (this.value.length > 2) this.value = this.value.slice(0,2)">
                              </div> 
                              
                              <div>
                                  <label for="fio2" class="form-label">FiO2 (%)</label>
                                  <input type="number" id="fio2" class="form-input w-full" placeholder="Ej: 21" min="21" max="100"
-                                        value="{{ formulario.fio2|default_if_none:'' }}">
+                                        value="{{ formulario.fio2|default_if_none:'' }}"
+                                        oninput="if (this.value.length > 3) this.value = this.value.slice(0,3)">
                              </div>
                              
                              <div>
                                  <label for="lleneCapilar" class="form-label">Llene Capilar</label>
                                  <input type="text" id="lleneCapilar" class="form-input w-full" placeholder="Ej: < 2 seg"
-                                        value="{{ formulario.llene_capilar|default_if_none:'' }}">
+                                        value="{{ formulario.llene_capilar|default_if_none:'' }}"
+                                        maxlength ="18" oninput="if (this.value.length > 18) this.value = this.value.slice(0,18)">
                              </div>
 
                              <div>
                                  <label for="scoreMottling" class="form-label">Score Mottling</label>
                                  <input type="text" id="scoreMottling" class="form-input w-full" placeholder="Ej: 0-5"
-                                        value="{{ formulario.score_mottling|default_if_none:'' }}">
+                                        value="{{ formulario.score_mottling|default_if_none:'' }}"
+                                        maxlength ="1" oninput="if (this.value.length > 1) this.value = this.value.slice(0,1)">
                              </div>
 
                              <div class="col-span-2 md:col-span-3"> <label class="form-label">Uso Musculatura Accesoria</label>
@@ -255,32 +260,33 @@
 
                              <div>
                                  <label for="incidentReason" class="form-label">Motivo de Derivación / Consulta</label>
-                                 <textarea id="incidentReason" class="form-input w-full" rows="3" placeholder="Describa...">{{ formulario.motivo_consulta|default_if_none:'' }}</textarea>
+                                 <textarea id="incidentReason" class="form-input w-full" rows="3" placeholder="Describa..." maxlength="400">{{ formulario.motivo_consulta|default_if_none:'' }}</textarea>
                              </div> 
 
                              <div>
                                  <label for="prestacionRequerida" class="form-label">Prestación Requerida</label>
-                                 <textarea id="prestacionRequerida" class="form-input w-full" rows="2" placeholder="Describa...">{{ formulario.prestacion_requerida|default_if_none:'' }}</textarea>
+                                 <textarea id="prestacionRequerida" class="form-input w-full" rows="2" placeholder="Describa..." maxlength="400">{{ formulario.prestacion_requerida|default_if_none:'' }}</textarea>
                              </div>
                              
                              <div>
                                  <label for="medicalHistory" class="form-label">Comorbilidades / Antecedentes</label>
-                                 <textarea id="medicalHistory" class="form-input w-full" rows="3" placeholder="Ej: hipertensión arterial (HTA) ...">{{ formulario.antecedentes|default_if_none:'' }}</textarea>
+                                 <textarea id="medicalHistory" class="form-input w-full" rows="3" placeholder="Ej: hipertensión arterial (HTA) ..." maxlength="400">{{ formulario.antecedentes|default_if_none:'' }}</textarea>
                              </div> 
 
                              <div>
                                  <label for="funcionalidad" class="form-label">Funcionalidad (VGI + EVF)</label>
                                  <input type="text" id="funcionalidad" class="form-input w-full" placeholder="Ej: VGI A, EVF 1"
-                                        value="{{ formulario.funcionalidad|default_if_none:'' }}">
+                                        value="{{ formulario.funcionalidad|default_if_none:'' }}"
+                                        maxlength ="20" oninput="if (this.value.length > 20) this.value = this.value.slice(0,20)">
                              </div>
                              
                              <div>
                                  <label for="treatment" class="form-label">Tratamiento</label>
-                                 <textarea id="treatment" class="form-input w-full" rows="3" placeholder="Ej: Paracetamol...">{{ formulario.tratamiento_administrado|default_if_none:'' }}</textarea>
+                                 <textarea id="treatment" class="form-input w-full" rows="3" placeholder="Ej: Paracetamol..." maxlength="200">{{ formulario.tratamiento_administrado|default_if_none:'' }}</textarea>
                              </div> 
                              <div>
-                                 <label for="patientRequests" class="form-label text-amber-700">Solicitudes</label>
-                                 <textarea id="patientRequests" class="form-input border-amber-300 w-full" rows="2" placeholder="Ej: no reanimar...">{{ formulario.solicitudes_paciente|default_if_none:'' }}</textarea>
+                                 <label for="patientRequests" class="form-label text-amber-700">Solicitudes del Paciente</label>
+                                 <textarea id="patientRequests" class="form-input border-amber-300 w-full" rows="2" placeholder="Ej: no reanimar..." maxlength="200">{{ formulario.solicitudes_paciente|default_if_none:'' }}</textarea>
                              </div> 
                          </div> 
                      </div> 
@@ -293,9 +299,9 @@
                              <div>
                                  <label for="triageCode" class="form-label text-red-600">Triage | Urgencia de la atención</label>
                                  <select id="triageCode" class="form-input border-red-300 w-full">
-                                     <option value="Rojo" {% if formulario.triage == 'Rojo' %}selected{% endif %}>🔴 - Codigo Rojo</option>
-                                     <option value="Amarillo" {% if formulario.triage == 'Amarillo' %}selected{% endif %}>🟡 - Codigo Amarillo</option>
-                                     <option value="Verde" {% if formulario.triage == 'Verde' %}selected{% endif %}>🟢 - Codigo Verde</option>
+                                     <option value="Rojo" {% if formulario.triage == 'Rojo' %}selected{% endif %}>🔴 Urgencia Inmediata | Código Rojo</option>
+                                     <option value="Amarillo" {% if formulario.triage == 'Amarillo' %}selected{% endif %}>🟡 Atención Prioritaria | Código Amarillo</option>
+                                     <option value="Verde" {% if formulario.triage == 'Verde' %}selected{% endif %}>🟢 Atención Menor | Código Verde</option>
                                  </select>
                              </div> 
                              <div>
