@@ -12,8 +12,8 @@ from django.views.decorators.csrf import csrf_exempt, ensure_csrf_cookie      # 
 from django.core.serializers import serialize                                 # Para serializar datos
 from django.utils import timezone                                             # Para manejar zonas horarias    
 from django.conf import settings                                              # Para acceder a configuraciones del proyecto
-from django.contrib.auth.models import Group                            
-from django.contrib.auth import get_user_model                          
+from django.contrib.auth.models import Group                                  # Para manejar grupos de usuarios
+from django.contrib.auth import get_user_model                                # Para obtener el modelo de usuario activo
 from django.contrib.admin.models import LogEntry                              # Para registrar acciones en el admin
 from django.db.models import Q                                                # Para consultas complejas en la base de datos
 import json                                                                   # Para manejar datos en formato JSON   
@@ -23,16 +23,9 @@ from openpyxl import Workbook                                                 # 
 from openpyxl.styles import Font, Alignment, PatternFill                      # Para dar estilo a celdas en Excel
 from reportlab.pdfgen import canvas                                           # Para generar archivos PDF 
 from reportlab.lib.pagesizes import letter                                    # Para definir tamaños de página en PDF
-from reportlab.lib.units import inch                                          # Para manejar unidades de medida en PDF  
+from reportlab.lib.units import inch                                          # Para manejar unidades de medida en PDF 
+import textwrap                                                               # Para formatear texto en PDF
 
-# ================== -->
-# INICIO CAMBIOS 4.1 -->
-# (Importar textwrap para la corrección del PDF)
-# ================== -->
-import textwrap
-# ================== -->
-# FIN CAMBIOS 4.1    -->
-# ================== -->
 
 # |========================================================================|
 # |                   VISTAS DE AUTENTICACIÓN Y MENÚS                      |
@@ -98,6 +91,7 @@ def menu_supervisor(request):
 
 # Vista del formulario de ambulancia
 @login_required
+@ensure_csrf_cookie
 def formulario_ambulancia(request):
     return render(request, 'formulario_ambulancia.html')
 
