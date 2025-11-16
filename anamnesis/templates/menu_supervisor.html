@@ -966,10 +966,16 @@
                 });
             }
 
-            // ==================================
-            // PESTAÑA 1: LÓGICA VISIÓN GENERAL
-            // ==================================
+
+
+
+
+
+            // |=============================================|
+            // |   PESTAÑA 1: LÓGICA VISIÓN GENERAL          |
+            // |=============================================|
             
+
             if (statMenuBtn) {
                 statMenuBtn.addEventListener('click', (e) => {
                     e.stopPropagation();
@@ -1079,9 +1085,16 @@
                 });
             }
 
-            // ==================================
-            // PESTAÑA 2: LÓGICA GESTIÓN DE FORMULARIOS
-            // ==================================
+
+
+
+
+
+            // |=============================================|
+            // |   PESTAÑA 2: LÓGICA GESTIÓN DE FORMULARIOS  |
+            // |=============================================|  
+
+
             
             if (formDetailTabs_P2.length > 0) {
                 formDetailTabs_P2.forEach(tab => {
@@ -1290,7 +1303,6 @@
             }
             
             async function loadAllForms(callback) {
-                // No mostrar "cargando" si los datos ya están
                 if(allFormsData.length === 0) {
                     allFormsTableBody.innerHTML = '<tr><td colspan="5" class="p-4 text-center text-gray-500">Cargando formularios...</td></tr>';
                 }
@@ -1420,7 +1432,6 @@
                 } catch(e) { /* No es crítico */ }
             }
             
-            // --- NUEVA FUNCIÓN DE TIMELINE (Formato HH:MM — Título (Detalle)) ---
             async function buildUnifiedTimeline(timelineBody, formId, formData) {
                 timelineBody.innerHTML = '<p>Cargando historial...</p>';
                 let events = [];
@@ -1466,7 +1477,6 @@
                     }
                 } catch(e) { console.warn("Error cargando chat:", e); }
                 
-                // Simular eventos de estado (ya que no tenemos timestamps)
                 if (formData.estado === 'REQUIERE_MODIFICACION') {
                     lastDate = new Date(lastDate.getTime() + 1000);
                     events.push({
@@ -1611,11 +1621,17 @@
                     document.body.removeChild(loadingDiv);
                 }
             }
-            
-            // ==================================
-            // PESTAÑA 3: LÓGICA GESTIÓN DE USUARIOS
-            // ==================================
-            
+
+
+
+
+
+
+            // |=======================================|
+            // | PESTAÑA 3: LÓGICA GESTIÓN DE USUARIOS |
+            // |=======================================|
+
+
             function filterUserTable() {
                 const searchTerm = userSearchName.value.toLowerCase();
                 const role = userFilterRole.value;
@@ -1809,10 +1825,16 @@
                 });
             }
             
-            // ==================================
-            // PESTAÑA 4: LÓGICA AUDITORÍA POR USUARIO
-            // ==================================
+
+
+
+
+
+            // |=============================================|
+            // |    PESTAÑA 4: LÓGICA AUDITORÍA POR USUARIO. |
+            // |=============================================|
             
+
             if (userAuditTabs.length > 0) {
                 userAuditTabs.forEach(tab => {
                     tab.addEventListener('click', () => {
@@ -2172,10 +2194,7 @@
                 });
             }
 
-
-            // ==================================
-            // CARGA INICIAL
-            // ==================================
+            // Inicialización
             loadAllForms(updateDashboardStats); 
             
         });

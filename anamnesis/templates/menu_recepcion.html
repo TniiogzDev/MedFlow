@@ -171,9 +171,16 @@
         const currentUsername = '{{ user.username }}'; 
         const csrftoken = getCookie('csrftoken'); 
 
-        // ====================================================
-        // MODIFICACIÓN 2: Nuevas variables para notificación
-        // ====================================================
+
+
+
+
+        
+        // |================================================================|
+        // |        2: Nuevas variables para notificación                   |
+        // |================================================================|
+
+
         let idsFormulariosConocidos = new Set();
         let esPrimeraCarga = true;
 
@@ -194,9 +201,16 @@
             return cookieValue;
         }
 
-        // ====================================================
-        // MODIFICACIÓN 3: Función para reproducir el sonido
-        // ====================================================
+
+
+
+
+
+        // |================================================================|
+        // |        3: Función para reproducir el sonido                    |
+        // |================================================================|
+
+
         function reproducirSonidoNotificacion() {
             const sonido = document.getElementById('notificacionSonido');
             if (sonido) {
@@ -207,11 +221,16 @@
             }
         }
 
-        // === FUNCIONES PRINCIPALES (Carga de datos) ===
 
-        // ================================================================
-        // MODIFICACIÓN 4: Lógica actualizada en 'cargarListaFormularios'
-        // ================================================================
+
+
+
+
+        // |================================================================|
+        // |        4: Lógica actualizada en 'cargarListaFormularios'       |
+        // |================================================================|
+
+
         async function cargarListaFormularios() {
             try {
                 const response = await fetch("{% url 'obtener_formularios_pendientes' %}");
@@ -242,8 +261,7 @@
                         
                         idsFormulariosConocidos = nuevosIds;
                     }
-                }
-                // --- FIN DE LÓGICA DE NOTIFICACIÓN ---
+                } // --- FIN DE LÓGICA DE NOTIFICACIÓN ---
                 
                 formListDiv.innerHTML = ''; 
                 if (data.status === 'exito' && data.formularios && data.formularios.length > 0) {
@@ -327,14 +345,17 @@
             }
         }
 
-        // ==============================================================
-        // MODIFICACIÓN 5: Lógica de "desbloqueo" en 'loadFormDetails'
-        // ==============================================================
+
+
+
+    
+        // |==============================================================|
+        // |       5 . Lógica actualizada en 'loadFormDetails'            |
+        // |==============================================================|
+
+
         async function loadFormDetails(formId) {
-            
-            // --- ¡INICIO DE MODIFICACIÓN (Solución 2)! ---
-            // Intenta reproducir y pausar el sonido la primera vez que se hace clic.
-            // Esto le da permiso al navegador para futuros sonidos.
+
             const sonido = document.getElementById('notificacionSonido');
             if (sonido && sonido.paused) { // Solo si está pausado
                 sonido.play().then(() => {
@@ -346,7 +367,6 @@
                     console.log("Interacción de usuario registrada para desbloquear audio."); 
                 });
             }
-            // --- FIN DE LA MODIFICACIÓN ---
 
             if (currentFormId === formId) return; 
             

@@ -381,10 +381,6 @@
             rutInput.value = vFormateado;
         }
 
-        // ================== -->
-        // INICIO CAMBIOS 2.1 -->
-        // (Función para dividir el RUT al cargar)
-        // ================== -->
         function splitRut(fullRut, bodyInput, dvInput) {
             if (!fullRut) return;
             const rutParts = fullRut.split('-');
@@ -397,72 +393,69 @@
                 dvInput.value = fullRut.slice(-1);
             }
         }
-        // ================== -->
-        // FIN CAMBIOS 2.1    -->
-        // ================== -->
 
         document.addEventListener('DOMContentLoaded', () => {
             
-            // ========================================================================
-            // SECCIÓN 1: REFERENCIAS AL DOM
-            // ========================================================================
+            // |========================================================================|
+            // |                SECCIÓN 1: REFERENCIAS AL DOM                           |
+            // |========================================================================|   
             
-            const form = document.getElementById('createForm');
-            const pasos = document.querySelectorAll('.step'); 
-            const botonAnterior = document.getElementById('prevButton'); 
-            const botonSiguiente = document.getElementById('nextButton'); 
-            const botonSubmit = document.getElementById('submitBtn'); 
-            const barraProgreso = document.getElementById('progressBar'); 
-            const textoProgreso = document.getElementById('progressText'); 
-            const messageBox = document.getElementById('messageBox'); 
+            // Formulario y Elementos Principales
+            const form = document.getElementById('createForm');                 // Formulario Principal
+            const pasos = document.querySelectorAll('.step');                   // Pasos del Asistente
+            const botonAnterior = document.getElementById('prevButton');        // Botón Anterior
+            const botonSiguiente = document.getElementById('nextButton');       // Botón Siguiente
+            const botonSubmit = document.getElementById('submitBtn');           // Botón Enviar
+            const barraProgreso = document.getElementById('progressBar');       // Barra de Progreso
+            const textoProgreso = document.getElementById('progressText');      // Texto de Progreso
+            const messageBox = document.getElementById('messageBox');           // Caja de Mensajes
             
-            // Modal y sus botones
-            const modalConfirmacion = document.getElementById('confirmationModal'); 
-            const modalContentNormal = document.getElementById('modal-content-normal');
-            const modalContentLoading = document.getElementById('modal-content-loading');
-            const confirmSendButton = document.getElementById('confirmSendButton');
-            const cancelSendButton = document.getElementById('cancelSendButton');
+            // Modal de Confirmación
+            const modalConfirmacion = document.getElementById('confirmationModal');         // Modal
+            const modalContentNormal = document.getElementById('modal-content-normal');     // Contenido Normal
+            const modalContentLoading = document.getElementById('modal-content-loading');   // Contenido de Carga
+            const confirmSendButton = document.getElementById('confirmSendButton');         // Botón Confirmar Envío
+            const cancelSendButton = document.getElementById('cancelSendButton');           // Botón Cancelar Envío
 
             // Inputs (Existentes)
-            const inputNombre = document.getElementById('patientName'); 
-            const inputRutBody = document.getElementById('patientId');
-            const inputRutDv = document.getElementById('patientDv');
-            const inputEdad = document.getElementById('patientAge'); 
-            const inputPa = document.getElementById('bloodPressure'); 
-            const inputFc = document.getElementById('heartRate'); 
-            const inputFr = document.getElementById('respiratoryRate'); 
-            const inputTemp = document.getElementById('temperature'); 
-            const inputSat = document.getElementById('oxygenSaturation'); 
-            const inputGlasgow = document.getElementById('glasgow'); 
-            const inputMotivo = document.getElementById('incidentReason'); 
-            const inputAntecedentes = document.getElementById('medicalHistory'); 
-            const inputTratamiento = document.getElementById('treatment'); 
-            const inputSolicitudes = document.getElementById('patientRequests'); 
-            const inputTriage = document.getElementById('triageCode'); 
-            const inputInstrucciones = document.getElementById('instructions'); 
-            const inputEtaDate = document.getElementById('etaDate'); 
-            const inputEtaTime = document.getElementById('etaTime'); 
+            const inputNombre = document.getElementById('patientName');                               // Nombre Paciente
+            const inputRutBody = document.getElementById('patientId');                                // Cuerpo RUT
+            const inputRutDv = document.getElementById('patientDv');                                 // Dígito Verificador RUT
+            const inputEdad = document.getElementById('patientAge');                                 // Edad Paciente
+            const inputPa = document.getElementById('bloodPressure');                                // Presión Arterial
+            const inputFc = document.getElementById('heartRate');                                    // Frecuencia Cardíaca
+            const inputFr = document.getElementById('respiratoryRate');                               // Frecuencia Respiratoria
+            const inputTemp = document.getElementById('temperature');                                  // Temperatura
+            const inputSat = document.getElementById('oxygenSaturation');                             // Saturación de Oxígeno
+            const inputGlasgow = document.getElementById('glasgow');                                   // Escala de Glasgow
+            const inputMotivo = document.getElementById('incidentReason');                             // Motivo del Incidente
+            const inputAntecedentes = document.getElementById('medicalHistory');                       // Antecedentes Médicos
+            const inputTratamiento = document.getElementById('treatment');                             // Tratamiento
+            const inputSolicitudes = document.getElementById('patientRequests');                       // Solicitudes del Paciente
+            const inputTriage = document.getElementById('triageCode');                                 // Código de Triage
+            const inputInstrucciones = document.getElementById('instructions');                        // Instrucciones
+            const inputEtaDate = document.getElementById('etaDate');                                   // Fecha ETA
+            const inputEtaTime = document.getElementById('etaTime');                                    // Hora ETA
+            const botonesGenero = document.querySelectorAll('#genderButtons .option-button');           // Botones de Género
+            const botonesUnidadEdad = document.querySelectorAll('#ageUnitButtons .option-button');      // Botones de Unidad de Edad
+            const inputPrevision = document.getElementById('prevision');                                // Previsión
+            const inputLleneCapilar = document.getElementById('lleneCapilar');                         // Llene Capilar
+            const inputScoreMottling = document.getElementById('scoreMottling');                        // Score Mottling
+            const inputFio2 = document.getElementById('fio2');                                          // FiO2
+            const inputFuncionalidad = document.getElementById('funcionalidad');                         // Funcionalidad
+            const inputPrestacion = document.getElementById('prestacionRequerida');                      // Prestación Requerida
+            const botonesAccidente = document.querySelectorAll('#accidenteButtons .option-button');         // Botones de Accidente Laboral
+            const botonesMusculatura = document.querySelectorAll('#musculaturaButtons .option-button');        // Botones de Musculatura Accesoria
             
-            const botonesGenero = document.querySelectorAll('#genderButtons .option-button'); 
-            const botonesUnidadEdad = document.querySelectorAll('#ageUnitButtons .option-button'); 
-            
-            // Inputs (Nuevos)
-            const inputPrevision = document.getElementById('prevision');
-            const inputLleneCapilar = document.getElementById('lleneCapilar');
-            const inputScoreMottling = document.getElementById('scoreMottling');
-            const inputFio2 = document.getElementById('fio2');
-            const inputFuncionalidad = document.getElementById('funcionalidad');
-            const inputPrestacion = document.getElementById('prestacionRequerida');
 
-            // Botones (Nuevos)
-            const botonesAccidente = document.querySelectorAll('#accidenteButtons .option-button');
-            const botonesMusculatura = document.querySelectorAll('#musculaturaButtons .option-button');
+
+
             
+            // |========================================================================|
+            // |                SECCIÓN 2: ESTADO INTERNO DEL SCRIPT                    |
+            // |========================================================================|
             
-            // ========================================================================
-            // SECCIÓN 2: ESTADO INTERNO DEL SCRIPT
-            // ========================================================================
-            
+
             let pasoActual = 1; 
             const totalPasos = 4;
             const titulosPasos = [
@@ -472,24 +465,23 @@
                 "Notificación y Triage"
             ];
             
-            // ================== -->
-            // INICIO CAMBIOS 2.2 -->
-            // (Inicializar estado con datos del formulario)
-            // ================== -->
+
             let datosPaciente = { 
                 sexo: "{{ formulario.sexo_paciente|default_if_none:''|escapejs }}", 
                 unidadEdad: "{{ formulario.unidad_edad_paciente|default_if_none:'Años'|escapejs }}",
                 accidenteLaboral: {{ formulario.accidente_laboral|yesno:"true,false" }},
                 musculaturaAccesoria: {{ formulario.musculatura_accesoria|yesno:"true,false" }}
             };
-            // ================== -->
-            // FIN CAMBIOS 2.2    -->
-            // ================== -->
             
-            // ========================================================================
-            // SECCIÓN 3: FUNCIONES AUXILIARES (UI)
-            // ========================================================================
 
+
+
+
+            // |========================================================================|
+            // |                SECCIÓN 3: FUNCIONES AUXILIARES (UI)                    |
+            // |========================================================================|
+
+            
             const actualizarAsistente = () => { 
                 // ... (Esta función no necesita cambios)
                 if (!barraProgreso || !textoProgreso || !botonAnterior || !botonSiguiente || !botonSubmit) return; 
@@ -527,9 +519,15 @@
                 window.scrollTo(0, 0); 
             };
             
-            // ========================================================================
-            // SECCIÓN 4: LÓGICA PRINCIPAL (API)
-            // ========================================================================
+
+
+
+
+
+            // |========================================================================|
+            // |                SECCIÓN 4: LÓGICA PRINCIPAL (API)                       |
+            // |========================================================================|
+
 
             const enviarFormularioAPI = async () => {
                 modalContentNormal.classList.add('hidden');
@@ -540,7 +538,6 @@
                                 : null;
 
                 const formData = { 
-                    // Campos Existentes
                     nombre: inputNombre?.value || null, 
                     rut: fullRut,
                     edad: inputEdad?.value || null, 
@@ -560,8 +557,6 @@
                     instrucciones: inputInstrucciones?.value || null, 
                     etaDate: inputEtaDate?.value || null, 
                     etaTime: inputEtaTime?.value || null, 
-
-                    // --- NUEVOS CAMPOS ---
                     prevision: inputPrevision?.value || null,
                     accidenteLaboral: datosPaciente.accidenteLaboral,
                     lleneCapilar: inputLleneCapilar?.value || null,
@@ -573,13 +568,8 @@
                 }; 
 
                 try {
-                    // ================== -->
-                    // INICIO CAMBIOS 2.3 -->
-                    // (Cambiar URL de fetch a la de 'actualizar')
-                    // ================== -->
                     const response = await fetch(`{% url 'api_actualizar_formulario' formulario.id %}`, {                    // ================== -->
-                    // FIN CAMBIOS 2.3    -->
-                    // ================== -->
+
                         method: 'POST', 
                         headers: {
                             'Content-Type': 'application/json',
@@ -592,18 +582,12 @@
 
                     if (response.ok && data.status === 'exito') {
                         ocultarModal(modalConfirmacion);
-                        // ================== -->
-                        // INICIO CAMBIOS 2.4 -->
-                        // (Mensaje y redirección)
-                        // ================== -->
+
                         mostrarMensaje('exito', '¡Formulario actualizado con éxito! Redirigiendo al menú...');
                         
                         setTimeout(() => {
                             window.location.href = '{% url "menu_ambulancia" %}';
                         }, 2000);
-                        // ================== -->
-                        // FIN CAMBIOS 2.4    -->
-                        // ================== -->
 
                     } else {
                         throw new Error(data.message || 'Error desconocido al actualizar');
@@ -618,10 +602,15 @@
                 }
             };
 
-            // ========================================================================
-            // SECCIÓN 5: MANEJADORES DE EVENTOS (Listeners)
-            // ========================================================================
+
+
+
+
+            // |========================================================================|
+            // |                SECCIÓN 5: MANEJADORES DE EVENTOS (Listeners)            |
+            // |========================================================================|
             
+
              if (botonSiguiente) { 
                  botonSiguiente.addEventListener('click', () => { 
                     if (pasoActual < totalPasos) { 
@@ -639,7 +628,6 @@
                 }); 
             }
             
-            // Listeners Existentes
             botonesGenero.forEach(b => { 
                 b.addEventListener('click', () => { 
                     botonesGenero.forEach(btn => btn.classList.remove('active')); 
@@ -655,7 +643,6 @@
                 }); 
             });
             
-            // Listeners Nuevos
             botonesAccidente.forEach(b => { 
                 b.addEventListener('click', () => { 
                     botonesAccidente.forEach(btn => btn.classList.remove('active')); 
@@ -689,21 +676,15 @@
                 });
             }
             
-            // ========================================================================
-            // SECCIÓN 6: INICIALIZACIÓN
-            // ========================================================================
+            // |========================================================================|
+            // |                SECCIÓN 6: INICIALIZACIÓN                               |
+            // |========================================================================|
             
             ocultarModal(modalConfirmacion);
             actualizarAsistente(); 
 
-            // ================== -->
-            // INICIO CAMBIOS 2.5 -->
-            // (Inicializar RUT)
-            // ================== -->
             splitRut("{{ formulario.rut_paciente|default_if_none:''|escapejs }}", inputRutBody, inputRutDv);
-            // ================== -->
-            // FIN CAMBIOS 2.5    -->
-            // ================== -->
+
         });
     </script>
     </body>

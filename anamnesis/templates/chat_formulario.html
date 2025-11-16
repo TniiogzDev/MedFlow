@@ -50,78 +50,64 @@
     </footer>
 
     <script>
-        // ========================================================================
-        // SECCIÓN 1: INICIALIZACIÓN DE DATOS DESDE DJANGO
-        // ========================================================================
-        // Estas constantes "inyectan" datos desde el backend (Django) al 
-        // frontend (JavaScript) cuando la página se renderiza por primera vez.
 
-        /**
-         * El ID único del formulario (caso) para el cual es este chat.
-         * Se usa para saber qué mensajes pedir a la API.
-         */
+        // |========================================================================|
+        // |            SECCIÓN 1: INICIALIZACIÓN DE DATOS DESDE DJANGO             | 
+        // |========================================================================|
+
+
+        // Obtener el ID del formulario (caso) desde Django.
         const FORM_ID = '{{ form_id_str }}';
         
-        /**
-         * El "Rol" (grupo) del usuario que está viendo la página (ej: "Ambulancia", "Recepcion").
-         * Se usa en `appendMessage` para decidir si el globo de chat
-         * va a la derecha (propio) o a la izquierda (de otro).
-         */
+        // Obtener el rol del usuario actual desde Django.
         const CURRENT_USER_ROLE = '{% firstof user.groups.first.name "Usuario" %}'; 
         
-        // ========================================================================
-        // SECCIÓN 2: REFERENCIAS A ELEMENTOS DEL DOM (HTML)
-        // ========================================================================
-        // Guardamos en variables los elementos HTML con los que vamos a
-        // interactuar, para que JavaScript los encuentre rápidamente.
 
-        /** El <div> que contendrá todos los globos de mensajes. */
+
+
+
+
+        // |========================================================================|
+        // |            SECCIÓN 2: REFERENCIAS A ELEMENTOS DEL DOM (HTML)           |
+        // |========================================================================|
+
+
+        // El contenedor donde se muestran todos los mensajes del chat.
         const chatMessages = document.getElementById('chat-messages');
         
-        /** El <form> que contiene el input y el botón de enviar. */
+        // El <form> que contiene el input y el botón de enviar.
         const chatForm = document.getElementById('chat-form');
         
-        /** El <input> de texto donde el usuario escribe. */
+        // El <input> de texto donde el usuario escribe.
         const messageInput = document.getElementById('message-input');
         
-        /** El <main> contenedor principal que tiene la barra de scroll. */
+        // El <main> contenedor principal que tiene la barra de scroll.
         const chatContainer = document.getElementById('chat-container');
 
-        // ========================================================================
-        // SECCIÓN 3: FUNCIONES AUXILIARES
-        // ========================================================================
 
-        /**
-         * Función: getCsrfToken
-         * Propósito: Obtener el Token CSRF (Seguridad de Django).
-         * Explicación: Django requiere un token "CSRF" para todas las solicitudes POST
-         * (como enviar un mensaje) para prevenir ataques. Esta función lee ese
-         * token de las cookies del navegador para enviarlo luego en la petición POST.
-         * @returns {string} El valor del token CSRF.
-         */
+
+
+
+
+        // |========================================================================|
+        // |             SECCIÓN 3: FUNCIONES AUXILIARES                            |
+        // |========================================================================|
+
+
+        // Función: getCsrfToken : Obtiene el token CSRF desde las cookies del navegador.
         function getCsrfToken() {
             return document.cookie.split('; ')
                 .find(row => row.startsWith('csrftoken='))
                 ?.split('=')[1];
         }
 
-        /**
-         * Función: appendMessage
-         * Propósito: Renderizar (dibujar) un único mensaje en pantalla.
-         * @param {object} msg - Un objeto de mensaje (ej: {autor_rol: "Ambulancia", mensaje: "Hola", ...})
-         * * Cómo se comunica:
-         * - Es llamada por `cargarMensajes` (para cada mensaje del historial).
-         * - Es llamada por `enviarMensaje` (para el nuevo mensaje enviado).
-         */
+        // Función: appendMessage : Dibuja un mensaje en el contenedor del chat.
         function appendMessage(msg) {
-            // 1. Determinar si el mensaje es del usuario actual.
-            // Compara el rol del autor del mensaje (msg.autor_rol) con el rol
-            // del usuario que cargó la página (CURRENT_USER_ROLE).
+
+            // 1. Determinar si el mensaje es del usuario actual o de otro.
             const isUser = msg.autor_rol === CURRENT_USER_ROLE;
             
-            // 2. Asignar la clase CSS correcta según el autor.
-            // 'chat-bubble-user' (azul, derecha) si es propio.
-            // 'chat-bubble-other' (gris, izquierda) si es de otro.
+            // 2. Elegir la clase CSS según el autor del mensaje.
             const bubbleClass = isUser ? 'chat-bubble-user' : 'chat-bubble-other';
             
             // 3. Crear el elemento HTML (un <div>) para el globo.
@@ -138,40 +124,33 @@
             chatMessages.appendChild(messageEl);
         }
 
-        /**
-         * Función: scrollToBottom
-         * Propósito: Mover automáticamente la barra de scroll al último mensaje.
-         * * Cómo se comunica:
-         * - Es llamada por `cargarMensajes` después de dibujar el historial.
-         * - Es llamada por `enviarMensaje` después de dibujar el nuevo mensaje.
-         */
+        // Función: scrollToBottom : Hace scroll suave hasta el último mensaje.
         function scrollToBottom() {
              const lastMessage = chatMessages.lastElementChild;
              if (lastMessage) {
-                 // Si existe un último mensaje, le dice al navegador que haga scroll
-                 // suavemente hasta que ese elemento sea visible.
+
+                // Si hay mensajes, hacer scroll al último.
                  lastMessage.scrollIntoView({ behavior: "smooth", block: "end" });
              } else {
-                // Si no hay mensajes, solo se asegura de estar al fondo.
+                // De lo contrario, si no hay mensajes, solo se asegura de estar al fondo.
                 chatContainer.scrollTop = chatContainer.scrollHeight;
              }
         }
 
-        // ========================================================================
-        // SECCIÓN 4: FUNCIONES DE COMUNICACIÓN CON API (BACKEND)
-        // ========================================================================
 
-        /**
-         * Función: cargarMensajes (asíncrona)
-         * Propósito: Pedir a la API (backend) todo el historial de mensajes de este caso.
-         * * Cómo se comunica:
-         * 1. Hace una petición GET a la API (`/api/chat_mensajes/${FORM_ID}/`).
-         * 2. Recibe un JSON con `{"status": "exito", "mensajes": [...]}`.
-         * 3. Llama a `appendMessage()` por cada mensaje recibido.
-         * 4. Llama a `scrollToBottom()` al finalizar.
-         */
+
+
+
+
+        // |========================================================================|
+        // |             SECCIÓN 4: FUNCIONES DE COMUNICACIÓN CON API (BACKEND)     |
+        // |========================================================================|
+
+
+        // Función: cargarMensajes (asíncrona) : su proposito es obtener los mensajes de
         async function cargarMensajes() {
             try {
+                
                 // 1. Petición (Request) GET a la API
                 const response = await fetch(`/api/chat_mensajes/${FORM_ID}/`); 
                 
@@ -207,18 +186,7 @@
             }
         }
 
-        /**
-         * Función: enviarMensaje (asíncrona)
-         * Propósito: Enviar un nuevo mensaje escrito por el usuario a la API (backend).
-         * @param {Event} e - El evento 'submit' del formulario.
-         * * Cómo se comunica:
-         * 1. Obtiene el texto del `messageInput`.
-         * 2. Hace una petición POST a la API (`/api/chat_enviar/`).
-         * 3. Envía un JSON con `{form_id: ..., message: ...}` y el Token CSRF.
-         * 4. Recibe un JSON con el mensaje recién creado `{"status": "exito", "nuevo_mensaje": {...}}`.
-         * 5. Llama a `appendMessage()` con ese nuevo mensaje.
-         * 6. Llama a `scrollToBottom()`.
-         */
+        // Función: enviarMensaje (asíncrona) : su propósito es enviar un nuevo mensaje a la API.
         async function enviarMensaje(e) {
             // 1. Evita que el formulario recargue la página (comportamiento HTML normal).
             e.preventDefault(); 
@@ -261,8 +229,7 @@
                         chatMessages.innerHTML = '';
                     }
                     
-                    // Usamos la misma función `appendMessage` para dibujar
-                    // el nuevo mensaje que la API nos devolvió.
+                    // Añadimos el nuevo mensaje al chat. 
                     appendMessage(data.nuevo_mensaje); 
                     
                     messageInput.value = ''; // Limpiamos el input
@@ -282,37 +249,16 @@
             }
         }
 
-        // ========================================================================
-        // SECCIÓN 5: PUNTO DE ENTRADA (INICIALIZACIÓN DE LA PÁGINA)
-        // ========================================================================
+
+
+
+
+
+        // |========================================================================|
+        // |        SECCIÓN 5: PUNTO DE ENTRADA (INICIALIZACIÓN DE LA PÁGINA)       |
+        // |========================================================================|
         
-        /**
-         * Event Listener: 'DOMContentLoaded'
-         * Propósito: Es el punto de partida. Se ejecuta cuando el navegador
-         * ha terminado de cargar y analizar todo el HTML.
-         *
-         * --- FLUJO DE COMUNICACIÓN (RESUMEN) ---
-         *
-         * A. Carga de Página:
-         * 1. 'DOMContentLoaded' (se carga el HTML).
-         * 2. Se llama a `cargarMensajes()`.
-         * 3. `cargarMensajes()` pide (GET) los mensajes a `/api/chat_mensajes/`.
-         * 4. La API responde con un JSON de todos los mensajes.
-         * 5. `cargarMensajes()` usa `forEach` para llamar a `appendMessage()` 
-         * por cada mensaje, dibujándolos en pantalla.
-         * 6. `scrollToBottom()` es llamado.
-         *
-         * B. Envío de Mensaje:
-         * 1. El usuario escribe y presiona "Enviar".
-         * 2. El evento 'submit' del `chatForm` se activa.
-         * 3. Se llama a `enviarMensaje()`.
-         * 4. `enviarMensaje()` pide (POST) guardar el mensaje a `/api/chat_enviar/`,
-         * enviando el texto, form_id y token CSRF.
-         * 5. La API guarda en la BD y responde con un JSON del mensaje recién creado.
-         * 6. `enviarMensaje()` recibe la respuesta y llama a `appendMessage()`
-         * con ese único mensaje nuevo.
-         * 7. `scrollToBottom()` es llamado.
-         */
+        // Espera a que el DOM esté completamente cargado.
         document.addEventListener('DOMContentLoaded', () => {
             
             // 1. Carga el historial de chat en cuanto la página esté lista.
@@ -323,9 +269,7 @@
                 chatForm.addEventListener('submit', enviarMensaje);
             }
             
-            // Opcional: Recargar mensajes cada X segundos (Polling).
-            // Esto es útil si no se usa WebSockets, para ver mensajes
-            // de la otra persona sin tener que recargar la página.
+            // 3. Configura una recarga automática de mensajes cada 5 segundos.
             setInterval(cargarMensajes, 5000); // Cada 5 segundos
         });
 

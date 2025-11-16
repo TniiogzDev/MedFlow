@@ -363,9 +363,9 @@
 
         document.addEventListener('DOMContentLoaded', () => {
             
-            // ========================================================================
-            // SECCIÓN 1: REFERENCIAS AL DOM
-            // ========================================================================
+            // |========================================================================|
+            // |                SECCIÓN 1: REFERENCIAS AL DOM                           |
+            // |========================================================================|
             
             const form = document.getElementById('createForm');
             const pasos = document.querySelectorAll('.step'); 
@@ -401,38 +401,28 @@
             const inputTriage = document.getElementById('triageCode'); 
             const inputInstrucciones = document.getElementById('instructions'); 
             const inputEtaDate = document.getElementById('etaDate'); 
-            const inputEtaTime = document.getElementById('etaTime'); 
-            
+            const inputEtaTime = document.getElementById('etaTime');   
             const botonesGenero = document.querySelectorAll('#genderButtons .option-button'); 
             const botonesUnidadEdad = document.querySelectorAll('#ageUnitButtons .option-button'); 
-            
-            // ================== -->
-            // INICIO CAMBIOS 2.1 -->
-            // ================== -->
-            
-            // Inputs (Nuevos)
             const inputPrevision = document.getElementById('prevision');
             const inputLleneCapilar = document.getElementById('lleneCapilar');
             const inputScoreMottling = document.getElementById('scoreMottling');
             const inputFio2 = document.getElementById('fio2');
             const inputFuncionalidad = document.getElementById('funcionalidad');
             const inputPrestacion = document.getElementById('prestacionRequerida');
-
-            // Botones (Nuevos)
             const botonesAccidente = document.querySelectorAll('#accidenteButtons .option-button');
             const botonesMusculatura = document.querySelectorAll('#musculaturaButtons .option-button');
             
-            // ================== -->
-            // FIN CAMBIOS 2.1    -->
-            // ================== -->
+
+
+            
             
             // ========================================================================
-            // SECCIÓN 2: ESTADO INTERNO DEL SCRIPT
-            // ========================================================================
+            // |                SECCIÓN 2: ESTADO INTERNO DEL SCRIPT                   |
+            // |========================================================================
             
             let pasoActual = 1; 
             const totalPasos = 4;
-            // Títulos de pasos modificados para coincidir con el HTML
             const titulosPasos = [
                 "Identificación del Paciente", 
                 "Evaluación Clínica y Signos Vitales", 
@@ -440,22 +430,21 @@
                 "Notificación y Triage"
             ];
             
-            // ================== -->
-            // INICIO CAMBIOS 2.2 -->
-            // ================== -->
             let datosPaciente = { 
                 sexo: "", 
                 unidadEdad: "Años",
                 accidenteLaboral: false,      // <-- NUEVO
                 musculaturaAccesoria: false   // <-- NUEVO
             };
-            // ================== -->
-            // FIN CAMBIOS 2.2    -->
-            // ================== -->
             
-            // ========================================================================
-            // SECCIÓN 3: FUNCIONES AUXILIARES (UI)
-            // ========================================================================
+
+
+
+
+
+            // |========================================================================|
+            // |                SECCIÓN 3: FUNCIONES AUXILIARES (UI)                    |
+            // |========================================================================|
 
             const actualizarAsistente = () => { 
                 if (!barraProgreso || !textoProgreso || !botonAnterior || !botonSiguiente || !botonSubmit) return; 
@@ -496,9 +485,9 @@
                 window.scrollTo(0, 0); 
             };
             
-            // ========================================================================
-            // SECCIÓN 4: LÓGICA PRINCIPAL (API)
-            // ========================================================================
+            // |========================================================================|   
+            // |                SECCIÓN 4: LÓGICA PRINCIPAL (API)                       |
+            // |========================================================================|
 
             const enviarFormularioAPI = async () => {
                 modalContentNormal.classList.add('hidden');
@@ -508,10 +497,7 @@
                                 ? `${inputRutBody.value}-${inputRutDv.value}` 
                                 : null;
 
-                // ================== -->
-                // INICIO CAMBIOS 2.3 -->
-                // (Actualizar formData)
-                // ================== -->
+
                 const formData = { 
                     // Campos Existentes
                     nombre: inputNombre?.value || null, 
@@ -533,8 +519,6 @@
                     instrucciones: inputInstrucciones?.value || null, 
                     etaDate: inputEtaDate?.value || null, 
                     etaTime: inputEtaTime?.value || null, 
-
-                    // --- NUEVOS CAMPOS ---
                     prevision: inputPrevision?.value || null,
                     accidenteLaboral: datosPaciente.accidenteLaboral,
                     lleneCapilar: inputLleneCapilar?.value || null,
@@ -544,9 +528,6 @@
                     funcionalidad: inputFuncionalidad?.value || null,
                     prestacionRequerida: inputPrestacion?.value || null
                 }; 
-                // ================== -->
-                // FIN CAMBIOS 2.3    -->
-                // ================== -->
 
                 try {
                     const response = await fetch(`{% url 'enviar_formulario' %}`, {
@@ -581,9 +562,9 @@
                 }
             };
 
-            // ========================================================================
-            // SECCIÓN 5: MANEJADORES DE EVENTOS (Listeners)
-            // ========================================================================
+            // |========================================================================|
+            // |                SECCIÓN 5: MANEJADORES DE EVENTOS (Listeners)           |
+            // |========================================================================|
             
              if (botonSiguiente) { 
                  botonSiguiente.addEventListener('click', () => { 
@@ -617,12 +598,7 @@
                     datosPaciente.unidadEdad = b.dataset.unit;
                 }); 
             });
-            
-            // ================== -->
-            // INICIO CAMBIOS 2.4 -->
-            // (Nuevos Listeners)
-            // ================== -->
-            
+             
             botonesAccidente.forEach(b => { 
                 b.addEventListener('click', () => { 
                     botonesAccidente.forEach(btn => btn.classList.remove('active')); 
@@ -639,9 +615,6 @@
                 }); 
             });
             
-            // ================== -->
-            // FIN CAMBIOS 2.4    -->
-            // ================== -->
 
             if (form) {
                 form.addEventListener('submit', (e) => {
@@ -660,9 +633,9 @@
                 });
             }
             
-            // ========================================================================
-            // SECCIÓN 6: INICIALIZACIÓN
-            // ========================================================================
+            // |========================================================================|
+            // |                SECCIÓN 6: INICIALIZACIÓN                               |
+            // |========================================================================|
             
             ocultarModal(modalConfirmacion);
             actualizarAsistente(); 

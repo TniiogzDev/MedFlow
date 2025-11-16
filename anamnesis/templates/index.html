@@ -126,9 +126,8 @@
     
     {% if no_role_error %}
         <script>
-            // Espera a que el DOM esté cargado
+
             document.addEventListener('DOMContentLoaded', function() {
-                // Dispara el SweetAlert que pediste
                 Swal.fire({
                 icon: "info", // "info" es mejor que "error" para este caso
                 title: "Acceso Pendiente",
