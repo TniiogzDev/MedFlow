@@ -1,0 +1,768 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head> 
+    <meta charset="UTF-8"> 
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
+    <title id="pageTitle">Portal Ambulancia</title> 
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"> 
+    <link rel="icon" href="{% static 'images/logo.png' %}" type="image/png">
+    
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f0f2f5; }
+        .btn { 
+            font-weight: 600; padding: 0.75rem 1.5rem; border-radius: 0.5rem; 
+            text-align: center; transition: all 0.3s; border: 1px solid transparent; 
+            cursor: pointer; display: inline-flex; align-items: center; justify-content: center;
+        }
+        .btn-role { 
+            padding: 1rem 1rem; font-size: 1.125rem; font-weight: 700;
+            width: 100%; border: 1px solid; margin-bottom: 0.5rem; 
+        }
+        .btn-form-role { 
+            background-color: #FEE2E2; color: #EF4444; border-color: #FCA5A5;
+        }
+        .btn-form-role:hover {
+            background-color: #FCA5A5; color: white; box-shadow: 0 5px 15px rgba(239, 68, 68, 0.1);
+        }
+        .role-description {
+            font-size: 0.875rem; color: #6B7280; padding: 0 0.5rem;
+            margin-bottom: 1rem; display: block; 
+        }
+        .data-item {
+            padding: 0.75rem; border-radius: 0.5rem; background-color: #F9FAFB;
+            border: 1px solid #E5E7EB;
+        }
+        .data-item-label {
+             font-weight: 600; color: #4B5563; font-size: 0.875rem; 
+        }
+        .data-item-value {
+             color: #1F2937; font-size: 1rem;
+        }
+        .form-list-item {
+            display: block; padding: 1rem; border-radius: 0.5rem; background-color: white;
+            border: 1px solid #E5E7EB; transition: all 0.2s;
+            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            cursor: pointer;
+            position: relative; /* Necesario para el punto rojo */
+        }
+        .form-list-item:hover {
+            border-color: #93C5FD;
+            background-color: #EFF6FF;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.04);
+        }
+        
+        /* --- ESTILOS DEL PUNTO ROJO (CHAT NO LEÍDO) --- */
+        .unread-dot {
+            position: absolute;
+            top: 8px; /* Ajuste la posición vertical */
+            right: 8px; /* Ajuste la posición horizontal */
+            height: 10px;
+            width: 10px;
+            background-color: #EF4444; /* Rojo */
+            border-radius: 50%;
+            z-index: 10;
+        }
+        
+        /* --- ESTILOS DE BADGES CORREGIDOS!! --- */
+        .status-badge {
+            padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.75rem;
+            font-weight: 600; text-transform: capitalize;
+        }
+        .status-pendiente { background-color: #FEF3C7; color: #92400E; } /* Amarillo */
+        .status-en_revision { background-color: #FCE7F3; color: #BE185D; } /* Rosado */
+        
+        /* ¡¡CORRECCIÓN!! El nombre de la clase debe coincidir con el estado */
+        .status-requiere_modificacion { background-color: #FEE2E2; color: #B91C1C; } /* Rojo */
+        
+        .status-modificado { background-color: #CCFBF1; color: #0F766E; } /* Teal */
+        .status-aprobado { background-color: #D1FAE5; color: #065F46; } /* Verde */
+
+        .form-label {
+            font-weight: 500;
+            color: #4B5563;
+        }
+        
+        /* --- ESTILOS DEL MODAL --- */
+        .modal-overlay {
+            position: fixed; inset: 0;
+            background-color: rgba(0, 0, 0, 0.6); 
+            display: flex; align-items: center; justify-content: center;
+            z-index: 50; transition: opacity 0.3s ease;
+        }
+        .modal-content {
+            background-color: white; padding: 2rem; border-radius: 1rem;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            width: 90%; max-width: 400px; position: relative;
+        }
+        .btn-modal {
+            width: 100%; font-size: 1rem; padding: 0.75rem;
+            margin-bottom: 0.75rem; border: 1px solid transparent;
+        }
+        .btn-edit-modal { 
+            background-color: #FEF3C7; color: #92400E; border-color: #FDE68A;
+        }
+        .btn-edit-modal:hover { background-color: #FDE68A; color: #92400E; }
+        
+        .btn-chat-modal { 
+            background-color: #DBEAFE; color: #2563EB; border-color: #93C5FD;
+        }
+        .btn-chat-modal:hover { background-color: #93C5FD; color: white; }
+
+        .modal-close-btn {
+            position: absolute; top: 0.75rem; right: 0.75rem;
+            color: #9CA3AF; cursor: pointer;
+        }
+        .modal-close-btn:hover { color: #1F2937; }
+
+        /* --- ESTILOS PARA BOTONES DE FILTRO --- */
+        .filter-btn {
+            /* MODIFICACIÓN RESPONSIVE: 
+              Los botones ahora son flexibles pero tienen un ancho base 
+            */
+            flex-grow: 1; 
+            flex-basis: 80px; /* Ancho base para cada botón */
+            padding: 0.5rem 0.25rem; 
+            font-size: 0.8rem; 
+            font-weight: 600; 
+            background-color: #E5E7EB; 
+            color: #4B5563;
+            border: 1px solid #D1D5DB; 
+            transition: all 0.2s ease;
+        }
+        .filter-btn:hover { background-color: #D1D5DB; }
+        .filter-btn.active-filter {
+            background-color: #3B82F6; color: white; border-color: #2563EB;
+        }
+        
+        /* --- ESTILOS PARA BOTÓN DE DATOS (de la vez pasada) --- */
+        .btn-toggle-data {
+            background-color: #F9FAFB;
+            border: 1px solid #E5E7EB;
+            color: #4B5563;
+            font-weight: 600;
+        }
+        .btn-toggle-data:hover {
+            background-color: #F3F4F6;
+        }
+        
+        /* Nuevo estilo para el botón de sonido */
+        .btn-sound {
+            background-color: #E0F2F1; /* Verde/Teal muy claro */
+            color: #0D9488; /* Verde/Teal oscuro */
+            padding: 0.75rem; 
+            border-radius: 0.5rem;
+            transition: all 0.2s;
+            line-height: 1;
+        }
+        .btn-sound:hover {
+            background-color: #CCFBF1;
+        }
+    </style> 
+</head> 
+
+<body class="min-h-screen p-4 md:p-6 flex items-center justify-center"> 
+
+    <audio id="notificacionModificacion" src="{% static 'images/sounds/requieremodificacion_notificacion.mp3' %}" preload="auto"></audio>
+    <audio id="notificacionAprobado" src="{% static 'images/sounds/aprobado_notificacion.mp3' %}" preload="auto"></audio>
+    <audio id="notificacionChat" src="{% static 'images/sounds/chat_notificacion.mp3' %}" preload="auto"></audio>
+
+    <div id="profileView" class="container mx-auto max-w-lg w-full"> 
+        
+        <div class="bg-white p-4 md:p-8 rounded-2xl shadow-xl"> 
+
+            <div class="flex items-center justify-center mb-6 pb-4 border-b">
+                 <img src="{% static 'images/icon_perfil.png' %}" alt="Logo Medflow" class="h-8 w-8 mr-3">
+                <h1 class="text-3xl font-bold text-gray-800">Menú Personal Ambulancia</h1>
+            </div>
+            
+            
+            <button type="button" id="togglePersonalDataBtn" class="btn btn-toggle-data w-full">
+                Ver Datos del Personal
+            </button>
+            
+            <div id="personalDataContainer" class="hidden transition-all duration-300">
+                <div class="mt-6 pt-6 border-t">
+                    <h2 class="text-xl font-semibold text-gray-700 mb-4 border-l-4 border-gray-400 pl-3">Datos del Personal</h2>
+                    <div class="space-y-4">
+                        <div class="data-item"><span class="data-item-label">Nombre de Usuario:</span> <p class="data-item-value">{{ user.username }}</p></div>
+                        <div class="data-item"><span class="data-item-label">Nombre Personal:</span> <p class="data-item-value">{{ user.get_full_name|default:"No disponible" }}</p> </div>
+                        <div class="data-item"><span class="data-item-label">RUT:</span> <p class="data-item-value">{{ user.rut|default:"No disponible" }}</p></div>
+                        <div class="data-item"><span class="data-item-label">Correo:</span> <p class="data-item-value">{{ user.email|default:"No disponible" }}</p> </div>
+                        <div class="data-item"><span class="data-item-label">Teléfono:</span> <p class="data-item-value">{{ user.telefono|default:"No disponible" }}</p></div>
+                    </div>
+                </div>
+            </div>
+            
+            <button type="button" id="toggleConfiguracionBtn" class="btn btn-toggle-data w-full mt-2">
+                Configuración
+            </button>
+            
+            <div id="configuracionContainer" class="hidden transition-all duration-300">
+                <div class="mt-4 p-4 bg-gray-50 rounded-lg border">
+                    <h3 class="text-lg font-semibold text-gray-700 mb-3">Ajustes de Notificación</h3>
+                    <button id="toggleSoundBtn" class="btn-sound flex items-center justify-between w-full p-3">
+                        <div class="flex items-center gap-3">
+                            <svg id="soundIcon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+                            </svg>
+                            <span class="text-sm font-semibold text-gray-700">Sonido de Alerta</span>
+                        </div>
+                        <span id="soundText" class="font-bold text-green-600">Activado</span>
+                    </button>
+                </div>
+            </div>
+            <div class="mt-6 pt-6 border-t border-gray-200">
+                <h2 class="text-2xl font-bold text-gray-700 mb-6 text-center">Acciones Principales</h2>
+                
+                <a href="{% url 'formulario_ambulancia' %}" class="btn btn-role btn-form-role transition duration-300">
+                    Crear Nuevo Formulario
+                </a>
+                <span class="role-description text-center">Registrar una nueva atención de paciente.</span>
+
+                <div class="w-full mt-6">
+                    <h3 class="text-xl font-semibold text-gray-700 mb-4 text-center">Mis Formularios Enviados</h3>
+                    
+                    <div class="flex flex-wrap gap-2 mb-4">
+                        <button type="button" id="filter-todos" class="btn filter-btn active-filter">Todos</button>
+                        <button type="button" id="filter-pendiente" class="btn filter-btn">Pendiente</button>
+                        <button type="button" id="filter-modificacion" class="btn filter-btn">Req. Modif.</button>
+                        <button type="button" id="filter-modificado" class="btn filter-btn">Modificado</button>
+                        <button type="button" id="filter-aprobado" class="btn filter-btn">Aprobados</button>
+                    </div>
+
+                    <div id="formListContainer" class="space-y-3 max-h-80 overflow-y-auto p-2 bg-gray-50 rounded-lg border">
+                        
+                        <div id="loadingMessage" class="data-item text-center">
+                            <p class="data-item-value text-gray-500">Cargando formularios...</p>
+                        </div>
+                        
+                        <div id="noResultsMessage" class="data-item text-center hidden">
+                             <p class="data-item-value text-gray-500">No se encontraron formularios.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mt-8 pt-6 border-t border-gray-200">
+                <a href="{% url 'logout' %}" class="btn bg-gray-600 hover:bg-gray-700 text-white w-full">Cerrar Sesión</a>
+            </div>
+        </div>
+    </div>
+    
+    <div id="actionModal" class="modal-overlay hidden">
+        <div class="modal-content">
+            <button id="closeModalBtn" class="modal-close-btn">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+            <h2 class="text-xl font-bold text-gray-800 mb-2">¿Qué quiere hacer?</h2>
+            <p id="modalFormName" class="text-gray-600 mb-6"></p>
+            <div class="flex flex-col">
+                <a href="#" id="modalEditLink" class="btn btn-modal btn-edit-modal">
+                    Editar Formulario
+                </a>
+                <a href="#" id="modalChatLink" class="btn btn-modal btn-chat-modal">
+                    Ir al Chat
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- 1. REFERENCIAS A ELEMENTOS DEL DOM ---
+        const modal = document.getElementById('actionModal');
+        const closeModalBtn = document.getElementById('closeModalBtn');
+        const modalOverlay = document.querySelector('.modal-overlay');
+        const modalEditLink = document.getElementById('modalEditLink');
+        const modalChatLink = document.getElementById('modalChatLink');
+        const modalFormName = document.getElementById('modalFormName');
+        
+        const formListContainer = document.getElementById('formListContainer');
+        const loadingMessage = document.getElementById('loadingMessage');
+        const noResultsMessage = document.getElementById('noResultsMessage');
+
+        const filterBtnTodos = document.getElementById('filter-todos');
+        const filterBtnPendiente = document.getElementById('filter-pendiente');
+        const filterBtnModificacion = document.getElementById('filter-modificacion'); 
+        const filterBtnModificado = document.getElementById('filter-modificado');
+        const filterBtnAprobado = document.getElementById('filter-aprobado'); 
+        const allFilterBtns = document.querySelectorAll('.filter-btn');
+
+        const toggleBtn = document.getElementById('togglePersonalDataBtn');
+        const dataContainer = document.getElementById('personalDataContainer');
+        
+        // --- NUEVAS REFERENCIAS PARA CONFIGURACIÓN ---
+        const toggleConfiguracionBtn = document.getElementById('toggleConfiguracionBtn');
+        const configuracionContainer = document.getElementById('configuracionContainer');
+        const toggleSoundBtn = document.getElementById('toggleSoundBtn');
+        
+        // --- Referencias de Audio ---
+        const audioModificacion = document.getElementById('notificacionModificacion');
+        const audioAprobado = document.getElementById('notificacionAprobado');
+        const audioChat = document.getElementById('notificacionChat');
+
+        // --- 2. ESTADO GLOBAL Y NOTIFICACIONES ---
+        let allFetchedForms = []; 
+        let currentFilter = 'TODOS'; 
+        
+        let statusFormulariosConocidos = {}; // Map: {formId: status}
+        let chatStatusConocidos = {}; // Map: {formId: has_unread_message}
+        let esPrimeraCarga = true;
+        
+        const pageTitle = document.getElementById('pageTitle');
+        const originalTitle = pageTitle.textContent;
+        let titleInterval = null;
+        
+        let isSoundEnabled = true; 
+
+        // --- FUNCIONES AUXILIARES ---
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        function startTitleAlert(count) {
+            if (titleInterval) return;
+            const alertText = `(${count}) Requiere Acción!`;
+            let isAlert = false;
+            titleInterval = setInterval(() => {
+                pageTitle.textContent = isAlert ? alertText : originalTitle;
+                isAlert = !isAlert;
+            }, 1000); 
+        }
+
+        function stopTitleAlert() {
+            if (titleInterval) {
+                clearInterval(titleInterval);
+                titleInterval = null;
+                pageTitle.textContent = originalTitle;
+            }
+        }
+        
+        // Función 1: Sonido para REQUIERE_MODIFICACION (Alerta Crítica)
+        function reproducirSonidoModificacion() {
+            if (!isSoundEnabled) return;
+            if (audioModificacion) {
+                audioModificacion.currentTime = 0; 
+                audioModificacion.playbackRate = 1.0; 
+                audioModificacion.play().catch(error => { console.log("Audio de Modificación bloqueado."); });
+            }
+        }
+        
+        // Función 2: Sonido para APROBADO (Alerta Informativa)
+        function reproducirSonidoAprobado() {
+            if (!isSoundEnabled) return;
+            if (audioAprobado) {
+                audioAprobado.currentTime = 0; 
+                audioAprobado.playbackRate = 1.0; 
+                audioAprobado.play().catch(error => { console.log("Audio de Aprobación bloqueado."); });
+            }
+        }
+        
+        // Función 3: Sonido para CHAT
+        function reproducirSonidoChat() {
+            if (!isSoundEnabled) return;
+            if (audioChat) {
+                audioChat.currentTime = 0; 
+                audioChat.playbackRate = 1.0; 
+                audioChat.play().catch(error => { console.log("Audio de Chat bloqueado."); });
+            }
+        }
+        
+        function showBrowserNotificationAmbulancia(form, status = 'REQUIERE_MODIFICACION') {
+            if (!("Notification" in window)) return;
+            
+            let title = "";
+            let body = "";
+            let icon = "{% static 'images/logo.png' %}";
+            let vibrate = [];
+            
+            if (status === 'REQUIERE_MODIFICACIÓN') {
+                title = "🔴 REQUIERE MODIFICACIÓN";
+                body = `Recepción ha devuelto el caso ${form.nombre_paciente} para corrección.`;
+                vibrate = [200, 100, 200, 100, 200];
+            } else if (status === 'APROBADO') {
+                title = "🟢 FORMULARIO APROBADO";
+                body = `El caso ${form.nombre_paciente} ha sido aprobado por Recepción.`;
+                vibrate = [200]; // Vibración más corta
+            } else if (status === 'CHAT') {
+                title = "💬 NUEVO MENSAJE DE CHAT";
+                body = `Ha recibido un nuevo mensaje en el caso ${form.nombre_paciente}.`;
+                vibrate = [100];
+            }
+            
+            if (Notification.permission === "granted") {
+                const options = {
+                    body: body,
+                    icon: icon,
+                    vibrate: vibrate 
+                };
+                const n = new Notification(title, options);
+                
+                n.onclick = function(event) {
+                    event.preventDefault(); 
+                    window.focus(); 
+                };
+
+            } else if (Notification.permission !== "denied") {
+                Notification.requestPermission();
+            }
+        }
+        
+        function updateSoundButtonUI() {
+            const icon = document.getElementById('soundIcon');
+            const text = document.getElementById('soundText');
+            
+            if (isSoundEnabled) {
+                icon.innerHTML = '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>';
+                text.textContent = 'Activado';
+                text.classList.remove('text-red-600');
+                text.classList.add('text-green-600');
+            } else {
+                icon.innerHTML = '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><line x1="22" y1="12" x2="16" y2="12"></line><line x1="2" y1="2" x2="22" y2="22"></line>';
+                text.textContent = 'Desactivado';
+                text.classList.remove('text-green-600');
+                text.classList.add('text-red-600');
+            }
+        }
+        
+        function toggleSound() {
+            isSoundEnabled = !isSoundEnabled;
+            localStorage.setItem('medflowSoundEnabled', isSoundEnabled);
+            updateSoundButtonUI();
+            
+            if (isSoundEnabled) {
+                reproducirSonidoModificacion(); // Usamos la alerta crítica para el permiso
+            }
+        }
+
+        // --- 3. FUNCIONES DE RENDERIZADO Y LÓGICA ---
+
+        function renderFormList() {
+            const formsToRender = allFetchedForms.filter(form => {
+                if (currentFilter === 'TODOS') return true;
+                if (currentFilter === 'PENDIENTE') {
+                    // Muestra PENDIENTE
+                    return form.estado === 'PENDIENTE';
+                }
+                return form.estado === currentFilter;
+            });
+
+            formListContainer.innerHTML = ''; 
+
+            if (formsToRender.length === 0) {
+                noResultsMessage.style.display = 'block'; 
+                formListContainer.appendChild(noResultsMessage);
+            } else {
+                noResultsMessage.style.display = 'none'; 
+                formsToRender.forEach(form => {
+                    
+                    const estadoClass = form.estado.toLowerCase();
+                    let badgeHtml = `<span class="status-badge status-${estadoClass}">
+                                       ${form.estado_display}
+                                     </span>`;
+                    
+                    if (form.revisado_por_nombre) {
+                        badgeHtml += `<span class="status-badge status-en_revision mt-1">
+                                        En Revisión
+                                      </span>
+                                      <p class="text-xs font-semibold mt-1" style="color: #BE185D;">Por: ${form.revisado_por_nombre}</p>`;
+                    }
+                    
+                    // --- LÓGICA DEL PUNTO ROJO ---
+                    const showUnreadDot = form.has_unread_message;
+                    let dotHtml = '';
+                    if (showUnreadDot) {
+                        // El punto se coloca justo arriba de la etiqueta de estado
+                        dotHtml = `<div class="unread-dot" title="Mensajes sin leer"></div>`;
+                    }
+                    
+                    const formHtml = `
+                        <div class="form-list-item open-modal-link" 
+                             data-form-id="${form.id}"
+                             data-chat-url="${form.chat_url}" 
+                             data-edit-url="${form.edit_url}"
+                             data-form-name="${form.nombre_paciente}">
+                             
+                            ${dotHtml} <div class="flex justify-between items-start">
+                                <div>
+                                    <p class="font-bold text-gray-800">
+                                        <span class="form-label font-normal">Formulario:</span> ${form.nombre_paciente}
+                                    </p>
+                                    <p class="text-sm text-gray-700 mt-1">
+                                        <span class="form-label">ID:</span> #${form.id.substring(0, 8)}
+                                    </p>
+                                    <p class="text-sm text-gray-500 mt-1">
+                                        <span class="form-label">Fecha:</span> ${form.creado_en}
+                                    </p>
+                                </div>
+                                <div class="flex-shrink-0 flex flex-col items-end space-y-1">
+                                    ${badgeHtml}
+                                </div>
+                            </div> 
+                        </div>`;
+                    formListContainer.innerHTML += formHtml;
+                });
+            }
+            attachModalListeners();
+        }
+
+        async function cargarFormulariosAmbulancia() {
+            try {
+                const response = await fetch("{% url 'obtener_formularios_ambulancia' %}");
+                if (!response.ok) throw new Error('Error de red');
+                
+                const data = await response.json();
+                
+                if (data.status === 'exito') {
+                    loadingMessage.style.display = 'none'; 
+                    allFetchedForms = data.formularios; 
+                    
+                    // --- LÓGICA DE NOTIFICACIÓN ---
+                    let necesitaAlertaTitulo = false;
+                    let statusMapaActualizado = {};
+                    let chatStatusMapaActualizado = {};
+
+                    allFetchedForms.forEach(form => {
+                        const formId = form.id;
+                        const nuevoEstado = form.estado;
+                        const hasNewChat = form.has_unread_message;
+                        
+                        const estadoAnterior = statusFormulariosConocidos[formId];
+                        const chatStatusAnterior = chatStatusConocidos[formId];
+
+                        // 1. Detección de cambio crítico a REQUIERE_MODIFICACION
+                        if (!esPrimeraCarga && 
+                            estadoAnterior && 
+                            estadoAnterior !== 'REQUIERE_MODIFICACION' && 
+                            nuevoEstado === 'REQUIERE_MODIFICACION'
+                        ) {
+                            reproducirSonidoModificacion();
+                            showBrowserNotificationAmbulancia(form, 'REQUIERE_MODIFICACION'); 
+                        }
+                        
+                        // 2. Detección de cambio a APROBADO 
+                        if (!esPrimeraCarga && 
+                            estadoAnterior && 
+                            estadoAnterior !== 'APROBADO' && 
+                            nuevoEstado === 'APROBADO'
+                        ) {
+                            reproducirSonidoAprobado();
+                            showBrowserNotificationAmbulancia(form, 'APROBADO'); 
+                        }
+                        
+                        // 3. Detección de NUEVO MENSAJE DE CHAT
+                        // Notificamos si antes no había mensaje no leído y ahora sí.
+                        // Solo notificamos si el estado es conocido (no es la primera carga)
+                        if (!esPrimeraCarga && hasNewChat && chatStatusAnterior === false) {
+                            reproducirSonidoChat();
+                            showBrowserNotificationAmbulancia(form, 'CHAT');
+                        }
+
+                        // 4. Necesidad de alerta de título (cualquier estado que requiera acción)
+                        if (nuevoEstado === 'REQUIERE_MODIFICACION' || nuevoEstado === 'PENDIENTE' || nuevoEstado === 'MODIFICADO') {
+                            necesitaAlertaTitulo = true;
+                        }
+
+                        // 5. Cache el estado actual
+                        statusMapaActualizado[formId] = nuevoEstado;
+                        chatStatusMapaActualizado[formId] = hasNewChat;
+                    });
+                    
+                    // 6. Actualizar estado y UI de notificaciones
+                    statusFormulariosConocidos = statusMapaActualizado;
+                    chatStatusConocidos = chatStatusMapaActualizado;
+                    if(esPrimeraCarga) esPrimeraCarga = false;
+
+                    // 7. Control de la alerta de título
+                    if (necesitaAlertaTitulo && document.visibilityState !== 'visible') {
+                        // Contar solo los que requieren acción: MODIFICACION, PENDIENTE, MODIFICADO
+                        const count = allFetchedForms.filter(f => f.estado === 'REQUIERE_MODIFICACION' || f.estado === 'PENDIENTE' || f.estado === 'MODIFICADO').length;
+                        if(count > 0) {
+                           startTitleAlert(count);
+                        } else {
+                           stopTitleAlert();
+                        }
+                    } else if (document.visibilityState === 'visible') {
+                         stopTitleAlert();
+                    }
+
+                    renderFormList(); 
+                } else {
+                    throw new Error(data.message || 'Error al cargar datos');
+                }
+            } catch (error) {
+                console.error("Error cargando formularios:", error);
+                loadingMessage.textContent = "Error al cargar formularios.";
+            }
+        }
+
+        function attachModalListeners() {
+            document.querySelectorAll('.open-modal-link').forEach(link => {
+                link.addEventListener('mousedown', (e) => { 
+                    e.preventDefault(); 
+                    const formId = link.dataset.formId;
+                    
+                    modalChatLink.href = link.dataset.chatUrl; 
+                    modalEditLink.href = link.dataset.editUrl; 
+                    modalFormName.textContent = 'Formulario: ' + link.dataset.formName; 
+                    
+                    const form = allFetchedForms.find(f => f.id === formId);
+                    const isEditable = ['REQUIERE_MODIFICACION', 'PENDIENTE', 'MODIFICADO'].includes(form.estado);
+                    
+                    // Lógica para deshabilitar la edición si no es editable
+                    modalEditLink.classList.toggle('bg-gray-400', !isEditable);
+                    modalEditLink.classList.toggle('hover:bg-gray-500', !isEditable);
+                    modalEditLink.classList.toggle('btn-edit-modal', isEditable);
+                    modalEditLink.classList.toggle('hover:bg-amber-300', isEditable);
+                    modalEditLink.classList.toggle('pointer-events-none', !isEditable);
+                    
+                    if (!isEditable) {
+                       modalEditLink.textContent = 'No Editable (Aprobado)';
+                    } else {
+                       modalEditLink.textContent = 'Editar Formulario';
+                    }
+                    
+                    modal.classList.remove('hidden');
+                    
+                    // --- ACCIÓN: MARCAR CHAT COMO LEÍDO AL ABRIR EL MODAL ---
+                    if (form.has_unread_message) {
+                        // FIX: Usamos la construcción de URL con el prefijo API + ID
+                        const urlMarcarLeido = `/api/chat/marcar_leido/${formId}/`; 
+                        
+                        fetch(urlMarcarLeido, {
+                            method: 'POST',
+                            headers: { 'X-CSRFToken': getCookie('csrftoken') }
+                        }).then(() => {
+                            // Una vez marcado como leído, actualizamos el estado localmente
+                            form.has_unread_message = false; 
+                            chatStatusConocidos[formId] = false; 
+                            renderFormList(); 
+                        });
+                    }
+                });
+            });
+        }
+
+        function updateActiveButton(clickedButton) {
+            allFilterBtns.forEach(btn => btn.classList.remove('active-filter'));
+            clickedButton.classList.add('active-filter');
+        }
+
+        const closeModal = () => {
+            modal.classList.add('hidden');
+        };
+
+        // --- 4. CONFIGURACIÓN DE LISTENERS ---
+
+        document.addEventListener('DOMContentLoaded', () => {
+            
+            // Cargar estado de sonido desde localStorage
+            const savedSoundState = localStorage.getItem('medflowSoundEnabled');
+            if (savedSoundState !== null) {
+                isSoundEnabled = (savedSoundState === 'true');
+            } else {
+                 isSoundEnabled = true;
+                 localStorage.setItem('medflowSoundEnabled', isSoundEnabled);
+            }
+            updateSoundButtonUI();
+            
+            // Listener del botón de sonido
+            if (toggleSoundBtn) {
+                toggleSoundBtn.addEventListener('click', toggleSound);
+            }
+            
+            // Listener del botón de Configuración
+            if (toggleConfiguracionBtn) {
+                toggleConfiguracionBtn.addEventListener('click', () => {
+                    const isHidden = configuracionContainer.classList.toggle('hidden');
+                    toggleConfiguracionBtn.textContent = isHidden ? 'Configuración' : 'Ocultar Configuración';
+                    
+                    // Asegurar que el otro contenedor de datos se cierre al abrir configuración
+                    if (!dataContainer.classList.contains('hidden')) {
+                         dataContainer.classList.add('hidden');
+                         toggleBtn.textContent = 'Ver Datos del Personal';
+                    }
+                });
+            }
+
+            // Solicitar permiso de notificación
+            if ("Notification" in window && Notification.permission !== "granted" && Notification.permission !== "denied") {
+                 Notification.requestPermission();
+            }
+
+            // Listener del botón de datos (para que cierre la configuración)
+            if (toggleBtn && dataContainer) {
+                toggleBtn.addEventListener('click', () => {
+                    const isHidden = dataContainer.classList.toggle('hidden');
+                    if (isHidden) {
+                        toggleBtn.textContent = 'Ver Datos del Personal';
+                    } else {
+                        toggleBtn.textContent = 'Ocultar Datos del Personal';
+                    }
+                    
+                    // Asegurar que Config container se cierre
+                    if (!configuracionContainer.classList.contains('hidden')) {
+                         configuracionContainer.classList.add('hidden');
+                         toggleConfiguracionBtn.textContent = 'Configuración';
+                    }
+                });
+            }
+
+            // Listeners de los filtros
+            filterBtnTodos.addEventListener('click', (e) => {
+                currentFilter = 'TODOS';
+                updateActiveButton(e.currentTarget); 
+                renderFormList(); 
+            });
+            
+            filterBtnPendiente.addEventListener('click', (e) => {
+                currentFilter = 'PENDIENTE';
+                updateActiveButton(e.currentTarget);
+                renderFormList();
+            });
+
+            filterBtnModificacion.addEventListener('click', (e) => {
+                currentFilter = 'REQUIERE_MODIFICACION';
+                updateActiveButton(e.currentTarget);
+                renderFormList();
+            });
+
+            filterBtnModificado.addEventListener('click', (e) => {
+                currentFilter = 'MODIFICADO';
+                updateActiveButton(e.currentTarget);
+                renderFormList();
+            });
+
+            filterBtnAprobado.addEventListener('click', (e) => {
+                currentFilter = 'APROBADO';
+                updateActiveButton(e.currentTarget);
+                renderFormList();
+            });
+
+            // Lógica del Modal
+            closeModalBtn.addEventListener('click', closeModal);
+            modalOverlay.addEventListener('click', (e) => {
+                if (e.target === modalOverlay) closeModal();
+            });
+
+            // --- 5. INICIALIZACIÓN ---
+            cargarFormulariosAmbulancia(); 
+            setInterval(cargarFormulariosAmbulancia, 5000); // Polling cada 5 segundos
+        });
+    </script>
+    </body> 
+</html>

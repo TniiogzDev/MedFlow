@@ -1,0 +1,241 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat - Caso #{{ formulario.id|stringformat:".8" }}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="icon" href="{% static 'images/logo.png' %}" type="image/png">
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f0f2f5; }
+        .chat-bubble { max-width: 75%; padding: 0.75rem 1rem; border-radius: 1rem; }
+        .chat-bubble-user { background-color: #DBEAFE; color: #1E40AF; border-bottom-right-radius: 0.25rem; align-self: flex-end; }
+        .chat-bubble-other { background-color: #F3F4F6; color: #1F2937; border-bottom-left-radius: 0.25rem; align-self: flex-start; }
+        .chat-meta { font-size: 0.75rem; color: #6B7280; }
+    </style>
+</head>
+
+<body class="flex flex-col min-h-screen">
+
+    <audio id="notificacionChat" src="{% static 'sounds/chat_notificacion.mp3' %}" preload="auto"></audio>
+
+    <header class="bg-white shadow-md p-4 sticky top-0 z-10">
+        <div class="container mx-auto max-w-3xl flex justify-between items-center">
+            <div>
+                <h1 class="text-xl font-bold text-gray-800">Chat: Caso {{ formulario.nombre_paciente|default:'N/A' }}</h1>
+                <p class="text-sm text-gray-600">Paciente: {{ formulario.rut_paciente|default:'S/R' }} | Triage: <span class="font-bold">{{ formulario.triage|default:'N/A' }}</span></p>
+            </div>
+            <a href="{% url 'menu_ambulancia' %}" class="text-blue-600 hover:text-blue-800 font-medium">Volver al Menú</a>
+        </div>
+    </header>
+
+    <main id="chat-container" class="flex-1 overflow-y-auto p-6">
+        <div id="chat-messages" class="container mx-auto max-w-3xl space-y-4 flex flex-col">
+            <div class="text-center text-gray-500">Cargando mensajes...</div>
+        </div>
+    </main>
+
+    <footer class="bg-white border-t border-gray-200 p-4">
+        <div class="container mx-auto max-w-3xl">
+            <form id="chat-form" class="flex items-center space-x-3">
+                <input type="text" id="message-input" placeholder="Escribe tu mensaje..." autocomplete="off"
+                       class="flex-1 border border-gray-300 rounded-full py-3 px-5 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                
+                <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white rounded-full p-3 flex items-center justify-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 transform rotate-90" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                    </svg>
+                </button>
+            </form>
+        </div>
+    </footer>
+
+    <script>
+        // |========================================================================|
+        // |            SECCIÓN 1: INICIALIZACIÓN DE DATOS DESDE DJANGO             | 
+        // |========================================================================|
+        const FORM_ID = '{{ form_id_str }}';
+        const CURRENT_USER_ROLE = '{% firstof user.groups.first.name "Usuario" %}'; 
+        let lastMessageCount = 0;
+
+
+        // |========================================================================|
+        // |            SECCIÓN 2: REFERENCIAS A ELEMENTOS DEL DOM (HTML)           |
+        // |========================================================================|
+        const chatMessages = document.getElementById('chat-messages');
+        const chatForm = document.getElementById('chat-form');
+        const messageInput = document.getElementById('message-input');
+        const chatContainer = document.getElementById('chat-container');
+        const audioChat = document.getElementById('notificacionChat');
+
+
+        // |========================================================================|
+        // |             SECCIÓN 3: FUNCIONES AUXILIARES                            |
+        // |========================================================================|
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        // Función de sonido de chat
+        function reproducirSonidoChat() {
+            if (audioChat) {
+                audioChat.currentTime = 0; 
+                audioChat.playbackRate = 1.0; 
+                audioChat.play().catch(error => { console.log("Audio de Chat bloqueado."); });
+            }
+        }
+
+        function scrollToBottom() {
+             const lastMessage = chatMessages.lastElementChild;
+             if (lastMessage) {
+                 lastMessage.scrollIntoView({ behavior: "smooth", block: "end" });
+             } else {
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+             }
+        }
+
+
+        // |========================================================================|
+        // |             SECCIÓN 4: FUNCIONES DE COMUNICACIÓN CON API (BACKEND)     |
+        // |========================================================================|
+        async function cargarMensajes() {
+            try {
+                const response = await fetch(`/api/chat_mensajes/${FORM_ID}/`); 
+                if (!response.ok) { 
+                    throw new Error(`Error ${response.status}: ${response.statusText}`);
+                }
+                const data = await response.json();
+
+                if (data.status === 'exito') {
+                    const newMessagesCount = data.mensajes.length;
+                    
+                    // Comprobar si llegaron nuevos mensajes y si no son del usuario actual
+                    if (newMessagesCount > lastMessageCount) {
+                        const lastRemoteMessage = data.mensajes[newMessagesCount - 1];
+                        if (lastRemoteMessage.autor_rol !== CURRENT_USER_ROLE) {
+                            reproducirSonidoChat();
+                        }
+                    }
+                    
+                    lastMessageCount = newMessagesCount;
+
+                    let newMessagesHtml = '';
+                    if (data.mensajes.length === 0) {
+                        newMessagesHtml = '<div class="text-center text-gray-500">No hay mensajes. ¡Inicia la conversación!</div>';
+                    } else {
+                        data.mensajes.forEach(msg => {
+                            const isUser = msg.autor_rol === CURRENT_USER_ROLE;
+                            const bubbleClass = isUser ? 'chat-bubble-user' : 'chat-bubble-other';
+                            newMessagesHtml += `
+                                <div class="chat-bubble ${bubbleClass}">
+                                    <div class="chat-meta font-semibold">${msg.autor_nombre} (${msg.autor_rol || 'N/A'})</div>
+                                    <p>${msg.mensaje}</p> <div class="chat-meta text-right mt-1">${msg.timestamp}</div>
+                                </div>
+                            `;
+                        });
+                    }
+
+                    chatMessages.innerHTML = newMessagesHtml;
+                    setTimeout(scrollToBottom, 100); 
+                    
+                } else {
+                    chatMessages.innerHTML = `<div class="text-center text-red-500">Error al cargar mensajes: ${data.message}</div>`;
+                }
+            } catch (error) {
+                console.error('Error fetch al cargar mensajes:', error);
+                chatMessages.innerHTML = `<div class="text-center text-red-500">Error de conexión: ${error.message}. Verifica la consola.</div>`;
+            }
+        }
+
+        async function enviarMensaje(e) {
+            e.preventDefault(); 
+            const mensajeTexto = messageInput.value.trim();
+            if (mensajeTexto === '') return; 
+            const submitButton = chatForm.querySelector('button[type="submit"]');
+            submitButton.disabled = true; 
+
+            try {
+                const response = await fetch(`/api/chat_enviar/`, { 
+                    method: 'POST', 
+                    headers: {
+                        'Content-Type': 'application/json', 
+                        'X-CSRFToken': getCookie('csrftoken')       
+                    },
+                    body: JSON.stringify({
+                        form_id: FORM_ID,       
+                        message: mensajeTexto   
+                    })
+                });
+                
+                if (!response.ok) {
+                     throw new Error(`Error ${response.status}: ${response.statusText}`);
+                }
+
+                messageInput.value = ''; 
+                await cargarMensajes(); 
+                
+            } catch (error) {
+                console.error('Error fetch POST al enviar mensaje:', error);
+                alert(`Error de conexión al enviar mensaje: ${error.message}`);
+            } finally {
+                 submitButton.disabled = false; 
+                 messageInput.focus(); 
+            }
+        }
+
+
+        // |========================================================================|
+        // |        SECCIÓN 5: PUNTO DE ENTRADA (INICIALIZACIÓN DE LA PÁGINA)       |
+        // |========================================================================|
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            
+            // CONSTRUCCIÓN DE URL EN JS PARA EVITAR NOREVERSEMATCH EN EL TEMPLATE
+            const urlMarcarLeido = `/api/chat/marcar_leido/${FORM_ID}/`;
+
+            // Intentar marcar el chat como leído al abrir la ventana (USANDO JS)
+            fetch(urlMarcarLeido, {
+                method: 'POST',
+                headers: { 'X-CSRFToken': getCookie('csrftoken') }
+            }).catch(e => console.warn("No se pudo marcar el chat como leído en la apertura.", e));
+            
+            // Carga inicial y polling
+            cargarMensajes(); 
+            if(chatForm) {
+                chatForm.addEventListener('submit', enviarMensaje);
+            }
+            
+            if (audioChat && audioChat.paused) { 
+                audioChat.play().then(() => {
+                    audioChat.pause(); 
+                    audioChat.currentTime = 0;
+                }).catch(e => {});
+            }
+            
+            if (messageInput) {
+                messageInput.addEventListener('focus', () => {
+                    setTimeout(() => {
+                        scrollToBottom();
+                        messageInput.scrollIntoView({ behavior: "smooth", block: "center" });
+                    }, 100);
+                });
+            }
+
+            setInterval(cargarMensajes, 5000); 
+        });
+    </script>
+</body>
+</html>

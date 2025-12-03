@@ -1,0 +1,1046 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title id="pageTitle">Panel de Recepción</title> 
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script> <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="icon" href="{% static 'images/logo.png' %}" type="image/png">
+    
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f0f2f5; }
+        .card { 
+            background-color: white; 
+            border-radius: 1rem; 
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.07), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+            padding: 1.5rem; /* p-6 */
+        }
+        
+        .notification-item { padding: 1rem; border-radius: 0.5rem; transition: transform 0.2s, box-shadow 0.2s; cursor: pointer; background-color: white; border: 1px solid #E5E7EB; border-left: 5px solid; position: relative;} /* Añadido position: relative */
+        .notification-item:hover { transform: translateY(-2px); box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+        .notification-item.emergency { border-left-color: #EF4444; background-color: #FEF2F2; }
+        .notification-item.normal { border-left-color: #3B82F6; background-color: #EFF6FF; }
+        .notification-item.warning { border-left-color: #F59E0B; background-color: #FFFBEB; }
+        .notification-item.active { box-shadow: 0 4px 10px rgba(0,0,0,0.1); transform: none; }
+        .notification-item.normal.active { background-color: #3B82F6; color: white; }
+        .notification-item.warning.active { background-color: #F59E0B; color: white; }
+        .notification-item.emergency.active { background-color: #EF4444; color: white; }
+        .notification-item.active p, .notification-item.active .text-gray-400 { color: #E5E7EB !important; }
+        .notification-item.approved { border-left-color: #10B981; background-color: #F0FDF4; }
+        .chat-message { max-width: 80%; padding: 0.65rem 1rem; border-radius: 1rem; margin-bottom: 0.5rem; line-height: 1.4; word-wrap: break-word; }
+        .chat-receptor { background-color: #EEF2FF; margin-left: auto; color: #1E3A8A; border-bottom-right-radius: 0.25rem; }
+        .chat-personal { background-color: #E5E7EB; margin-right: auto; border-bottom-left-radius: 0.25rem; color: #1F2937; }
+        .chat-message .meta { font-size: 0.75rem; color: #6B7280; }
+        .chat-message .meta-sender { font-weight: 600; margin-bottom: 0.1rem;}
+        .chat-message .meta-time { text-align: right; margin-top: 0.2rem;}
+        .btn { font-weight: 600; padding: 0.5rem 1rem; border-radius: 0.5rem; text-align: center; transition: all 0.3s; border: 1px solid transparent; cursor: pointer; }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .btn-primary { background-color: #16A34A; color: white; }
+        .btn-primary:hover:not(:disabled) { background-color: #15803D; }
+        .btn-secondary { background-color: #F59E0B; color: white; }
+        .btn-secondary:hover:not(:disabled) { background-color: #D97706; }
+        .btn-tertiary { background-color: #6B7280; color: white; }
+        .btn-tertiary:hover:not(:disabled) { background-color: #4B5563; }
+        .btn-danger { background-color: #EF4444; color: white; }
+        .btn-danger:hover:not(:disabled) { background-color: #DC2626; }
+        
+        /* --- ESTILOS DE BADGES ACTUALIZADOS!! --- */
+        .badge { display: inline-block; padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; text-transform: capitalize; }
+        .badge-pendiente { background-color: #FEF3C7; color: #92400E; }
+        .badge-requiere_modificacion { background-color: #FEF2F2; color: #B91C1C; }
+        .badge-modificado { background-color: #CCFBF1; color: #0F766E; }
+        .badge-en_revision { background-color: #FCE7F3; color: #BE185D; }
+
+        /* --- ESTILOS DEL PUNTO ROJO (CHAT NO LEÍDO) --- */
+        .unread-dot {
+            position: absolute;
+            top: 8px; /* Ajuste la posición vertical */
+            right: 8px; /* Ajuste la posición horizontal */
+            height: 10px;
+            width: 10px;
+            background-color: #EF4444; /* Rojo */
+            border-radius: 50%;
+            z-index: 10;
+        }
+        
+        /* Nuevo estilo para el botón de sonido */
+        .btn-sound {
+            background-color: #DBEAFE; /* Azul claro */
+            color: #2563EB; /* Azul oscuro */
+            padding: 0.5rem 0.75rem;
+            border-radius: 0.5rem;
+            transition: all 0.2s;
+            line-height: 1;
+        }
+        .btn-sound:hover {
+            background-color: #BFDBFE;
+        }
+    </style>
+</head>
+<body class="p-6">
+
+    <audio id="notificacionFormulario" src="{% static 'images/sounds/formularioentrando_notificacion.mp3' %}" preload="auto"></audio>
+    <audio id="notificacionChat" src="{% static 'images/sounds/chat_notificacion.mp3' %}" preload="auto"></audio>
+
+    <div class="container mx-auto max-w-7xl">
+        <header class="mb-6 flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-blue-600"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg>
+                <h1 class="text-3xl font-bold text-gray-800">Panel de Gestión de Formularios</h1>
+            </div>
+        </header>
+        <div class="max-w-7xl mx-auto p-3 mb-6 bg-white rounded-xl shadow-md flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                     <img src="{% static 'images/icon_usuario.png' %}" alt="Logo Usuario" class="h-8 w-8">  
+                     <span class="font-bold text-gray-800">Usuario:</span> 
+                     <span class="text-gray-900">{{ user.get_full_name|default:user.username }}</span>
+                     <span class="text-gray-300">|</span>
+                     <span class="font-bold text-gray-800">Rol:</span> 
+                     <span class="font-semibold text-indigo-600">
+                        {% if user.is_superuser %}
+                            Supervisor
+                        {% else %}
+                            {{ user.groups.first.name|default:"N/A" }}
+                        {% endif %}
+                     </span>
+                     <span class="text-gray-300">|</span>
+                     <button id="toggleSoundBtn" class="btn-sound flex items-center gap-1 text-sm">
+                         <svg id="soundIcon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path id="soundWave" d="M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
+                         <span id="soundText">Activado</span>
+                     </button>
+                     </div>
+             <div class="flex items-center gap-2"> 
+                 {% if user.is_superuser %}
+                 <a href="{% url 'menu_supervisor' %}" 
+                    class="btn text-white text-sm px-4 py-2 bg-indigo-600 hover:bg-indigo-700" 
+                    style="width: auto;">
+                    Auditar Usuarios
+                 </a> 
+                 {% endif %}
+                 <a href="{% url 'logout' %}" 
+                    class="btn text-white text-sm px-4 py-2 bg-gray-600 hover:bg-gray-700" 
+                    style="width: auto;">
+                    Cerrar Sesión
+                 </a> 
+             </div>
+         </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        <div class="lg:col-span-1 card flex flex-col min-h-0">
+                <h2 class="text-xl font-semibold text-gray-700 mb-4 border-b pb-2">Formularios Pendientes</h2>
+                <div id="formList" class="space-y-4 overflow-y-auto pr-2 flex-grow">
+                    <p class="text-gray-500 text-center py-4" id="pendientesPlaceholder">Cargando formularios...</p>
+                </div>
+                <div id="paginationPendientes" class="flex justify-center items-center gap-2 pt-4 flex-shrink-0">
+                    </div>
+                </div>
+
+            <div class="lg:col-span-2 flex flex-col gap-6 min-h-0">
+                <div class="card flex-shrink-0">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-xl font-semibold text-gray-700">Detalle y Aprobación del Formulario</h2>
+                        <div class="relative">
+                            <button onclick="mostrarOpcionesDescarga()" class="btn btn-tertiary btn-download">Ver/Descargar PDF</button>
+                            <div id="menuDescarga" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10 border">
+                                <a href="#" onclick="descargarArchivo('pdf')" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Descargar como PDF</a>
+                                <a href="#" onclick="descargarArchivo('xlsx')" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Descargar como Excel</a>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="formDetails" class="min-h-[150px] bg-gray-50 p-4 rounded-lg border">
+                        <p class="text-gray-500 text-center pt-10">Seleccione un formulario pendiente.</p>
+                    </div>
+                    
+                    <div class="flex gap-4 mt-4">
+                        <button id="approveBtn" class="btn btn-primary w-full" disabled>Aprobar Formulario</button>
+                        <button id="modifyBtn" class="btn btn-secondary w-full" disabled>Requiere Modificación</button>
+                        
+                        {% if user.is_superuser %}
+                        <button id="deleteBtn" class="btn btn-danger w-full" disabled>Eliminar (Sup.)</button>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="card flex-grow flex flex-col min-h-0">
+                    <h2 class="text-xl font-semibold text-gray-700 mb-4">Chat con Personal Ambulancia (Caso #<span id="currentChatId">...</span>)</h2>
+                    <div id="chatHistory" class="bg-gray-100 p-3 rounded-lg overflow-y-auto mb-4 flex-grow min-h-[300px]"> <p class="text-center text-gray-500 pt-20" id="chatPlaceholder">Seleccione un caso para ver el chat.</p>
+                    </div>
+                    <form id="chatForm">
+                        <input type="hidden" id="chat_form_id">
+                        <div class="flex gap-2">
+                            <input type="text" id="chatInput" class="flex-1 border border-gray-300 rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Escribir mensaje..." disabled>
+                            <button type="submit" class="btn btn-primary bg-blue-600 hover:bg-blue-700">Enviar</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="lg:col-span-1 card flex flex-col min-h-0">
+                <h2 class="text-xl font-semibold text-gray-700 mb-4 border-b pb-2">Formularios Aprobados</h2>
+                <div id="formListAprobados" class="space-y-4 overflow-y-auto pr-2 flex-grow">
+                    <p class="text-gray-500 text-center py-4" id="aprobadosPlaceholder">Cargando aprobados...</p>
+                </div>
+                <div id="paginationAprobados" class="flex justify-center items-center gap-2 pt-4 flex-shrink-0">
+                    </div>
+                </div>
+        </div>
+    </div>
+
+    <script>
+        // Inactivity Timeout Logic
+        const TIMEOUT_WARNING_MS = 15 * 60 * 1000; // 15 minutes (default)
+        const TIMEOUT_LOGOUT_MS = 5 * 60 * 1000;  // 5 minutes (default)
+        
+        let warningTimer;
+        let logoutTimer;
+        
+        function performLogout() {
+            // Redirecciona a la vista de logout de Django
+            window.location.href = "{% url 'logout' %}"; 
+        }
+        
+        function showWarning() {
+            // Si ya hay un modal de SweetAlert abierto, no lo abrimos de nuevo
+            if (Swal.isVisible()) return;
+
+            Swal.fire({
+                title: "¿Sigues allí?",
+                text: "Tu sesión expirará pronto por inactividad. Haz clic en 'Continuar' para mantenerte conectado.",
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonText: "Sí, Continuar",
+                cancelButtonText: "No, Cerrar Sesión",
+                timer: TIMEOUT_LOGOUT_MS, 
+                timerProgressBar: true,
+                allowOutsideClick: false,
+                allowEscapeKey: false,
+                reverseButtons: true,
+                willClose: () => {
+                    if (logoutTimer) {
+                         performLogout();
+                    }
+                }
+            }).then((result) => {
+                clearTimeout(logoutTimer);
+                logoutTimer = null;
+                
+                if (result.dismiss === Swal.DismissReason.cancel) {
+                    performLogout();
+                } else if (result.isConfirmed) {
+                    resetTimer();
+                }
+            });
+            
+            logoutTimer = setTimeout(performLogout, TIMEOUT_LOGOUT_MS);
+        }
+
+        function startWarningTimer() {
+            warningTimer = setTimeout(showWarning, TIMEOUT_WARNING_MS);
+        }
+
+        function resetTimer() {
+            clearTimeout(warningTimer);
+            clearTimeout(logoutTimer);
+            if (Swal.isVisible()) {
+                 Swal.close();
+            }
+            startWarningTimer();
+        }
+        
+        document.addEventListener("mousemove", resetTimer);
+        document.addEventListener("keypress", resetTimer);
+        document.addEventListener("click", resetTimer);
+        document.addEventListener("scroll", resetTimer);
+
+
+        // === VARIABLES GLOBALES ===
+        let currentFormId = null; 
+        const formListDiv = document.getElementById('formList');
+        const formListAprobadosDiv = document.getElementById('formListAprobados');
+        const formDetails = document.getElementById('formDetails');
+        const chatHistory = document.getElementById('chatHistory');
+        const chatForm = document.getElementById('chatForm');
+        const chatInput = document.getElementById('chatInput');
+        const approveBtn = document.getElementById('approveBtn');
+        const modifyBtn = document.getElementById('modifyBtn');
+        const deleteBtn = document.getElementById('deleteBtn');
+        
+        const currentUsername = '{{ user.username }}'; 
+        const csrftoken = getCookie('csrftoken'); 
+
+        // --- Nuevas variables para Notificación ---
+        const pageTitle = document.getElementById('pageTitle');
+        const originalTitle = pageTitle.textContent;
+        let titleInterval = null; 
+        
+        // --- Referencias de Audio ---
+        const audioFormulario = document.getElementById('notificacionFormulario');
+        const audioChat = document.getElementById('notificacionChat');
+        
+        // |================================================================|
+        // |        2: Nuevas variables para notificación                   |
+        // |================================================================|
+        let idsFormulariosConocidos = new Set();
+        let esPrimeraCarga = true;
+        // Estado de chat (para notificaciones)
+        let chatStatusConocidos = {}; 
+        // Estado de sonido (true por defecto, toma valor de localStorage al iniciar)
+        let isSoundEnabled = true; 
+        
+        // --- Variables de Paginación ---
+        let currentPagePendientes = 1;
+        let totalPagesPendientes = 1;
+        let currentPageAprobados = 1;
+        let totalPagesAprobados = 1;
+
+        // === FUNCIONES AUXILIARES ===
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        // --- Funciones para manejar el Título/Favicon ---
+        function startTitleAlert(count) {
+            if (titleInterval) return;
+            const alertText = `(${count}) Nuevo Formulario!`;
+            let isAlert = false;
+            titleInterval = setInterval(() => {
+                pageTitle.textContent = isAlert ? alertText : originalTitle;
+                isAlert = !isAlert;
+            }, 1000); 
+        }
+
+        function stopTitleAlert() {
+            if (titleInterval) {
+                clearInterval(titleInterval);
+                titleInterval = null;
+                pageTitle.textContent = originalTitle;
+            }
+        }
+
+        // --- Función de notificación del navegador ---
+        function showBrowserNotification(form, title = "¡Nuevo Formulario de Atención!", bodyPrefix = "") {
+            if (!("Notification" in window)) {
+                console.log("Este navegador no soporta notificaciones de escritorio.");
+                return;
+            }
+
+            if (Notification.permission === "granted") {
+                const triageColor = form.triage === 'Rojo' ? '🔴' : (form.triage === 'Amarillo' ? '🟡' : '🟢');
+                const options = {
+                    body: `${bodyPrefix} ${triageColor} Paciente: ${form.nombre_paciente || 'N/N'} | Triage: ${form.triage}`,
+                    icon: "{% static 'images/logo.png' %}",
+                    vibrate: [200, 100, 200]
+                };
+                const n = new Notification(title, options);
+                
+                n.onclick = function(event) {
+                    event.preventDefault(); 
+                    window.focus(); 
+                    loadFormDetails(form.id); 
+                };
+
+            } else if (Notification.permission !== "denied") {
+                Notification.requestPermission();
+            }
+        }
+        
+        // |================================================================|
+        // |        3: Funciones para reproducir el sonido (Específicas)    |
+        // |================================================================|
+        function reproducirSonidoFormulario() {
+            if (!isSoundEnabled) return;
+            if (audioFormulario) {
+                audioFormulario.currentTime = 0; 
+                audioFormulario.playbackRate = 1.0; 
+                audioFormulario.play().catch(error => { console.log("Audio de Formulario bloqueado."); });
+            }
+        }
+        
+        function reproducirSonidoChat() {
+            if (!isSoundEnabled) return;
+            if (audioChat) {
+                audioChat.currentTime = 0; 
+                audioChat.playbackRate = 1.0; 
+                audioChat.play().catch(error => { console.log("Audio de Chat bloqueado."); });
+            }
+        }
+        
+        // |================================================================|
+        // |        NUEVA LÓGICA: Botón de Sonido                           |
+        // |================================================================|
+        
+        function updateSoundButtonUI() {
+            const icon = document.getElementById('soundIcon');
+            const text = document.getElementById('soundText');
+            
+            if (isSoundEnabled) {
+                icon.innerHTML = '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>';
+                text.textContent = 'Activado';
+                text.classList.remove('text-red-600');
+                text.classList.add('text-green-600');
+            } else {
+                icon.innerHTML = '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><line x1="22" y1="12" x2="16" y2="12"></line><line x1="2" y1="2" x2="22" y2="22"></line>';
+                text.textContent = 'Desactivado';
+                text.classList.remove('text-green-600');
+                text.classList.add('text-red-600');
+            }
+        }
+
+        function toggleSound() {
+            isSoundEnabled = !isSoundEnabled;
+            localStorage.setItem('medflowSoundEnabled', isSoundEnabled);
+            updateSoundButtonUI();
+            
+            if (isSoundEnabled) {
+                reproducirSonidoFormulario(); // Usamos el sonido de formulario para el permiso
+            }
+        }
+
+        // |================================================================|
+        // |        NUEVA FUNCIÓN: Renderizar Controles de Paginación       |
+        // |================================================================|
+
+        function renderPaginationControls(containerId, currentPage, totalPages, loadFunction) {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+
+            container.innerHTML = '';
+            if (totalPages <= 1) {
+                container.innerHTML = ''; 
+                return;
+            }
+
+            // Botón Anterior
+            const prevBtn = document.createElement('button');
+            prevBtn.textContent = 'Anterior';
+            prevBtn.className = 'btn btn-tertiary btn-sm';
+            prevBtn.disabled = currentPage === 1;
+            prevBtn.onclick = () => {
+                if (currentPage > 1) {
+                    loadFunction(currentPage - 1);
+                    // Mover el scroll al inicio de la lista
+                    document.getElementById(containerId.replace('pagination', 'formList')).scrollTop = 0;
+                }
+            };
+            container.appendChild(prevBtn);
+
+            // Información de la página
+            const pageInfo = document.createElement('span');
+            pageInfo.textContent = `Página ${currentPage} de ${totalPages}`;
+            pageInfo.className = 'text-sm font-medium text-gray-700';
+            container.appendChild(pageInfo);
+
+            // Botón Siguiente
+            const nextBtn = document.createElement('button');
+            nextBtn.textContent = 'Siguiente';
+            nextBtn.className = 'btn btn-tertiary btn-sm';
+            nextBtn.disabled = currentPage === totalPages;
+            nextBtn.onclick = () => {
+                if (currentPage < totalPages) {
+                    loadFunction(currentPage + 1);
+                    // Mover el scroll al inicio de la lista
+                    document.getElementById(containerId.replace('pagination', 'formList')).scrollTop = 0;
+                }
+            };
+            container.appendChild(nextBtn);
+        }
+
+        
+        // |================================================================|
+        // |        4: Lógica actualizada en 'cargarListaFormularios'       |
+        // |================================================================|
+        // Ahora acepta el número de página
+        async function cargarListaFormularios(page = currentPagePendientes) {
+            try {
+                // Modificación: Enviar el número de página en la URL
+                const response = await fetch(`{% url 'obtener_formularios_pendientes' %}?page=${page}`);
+                if (!response.ok) throw new Error('Error en respuesta del servidor');
+                
+                const data = await response.json();
+                
+                // --- INICIO DE LÓGICA DE NOTIFICACIÓN Y TÍTULO ---
+                let totalPendientesEnApi = 0;
+                
+                if (data.status === 'exito' && data.formularios) {
+                    const idsRecibidos = new Set(data.formularios.map(f => f.id));
+                    totalPendientesEnApi = data.formularios.length;
+                    
+                    // --- CHAT NOTIFICATION LOGIC ---
+                    let nuevosMensajesDetectados = [];
+                    let chatStatusMapaActualizado = {};
+
+                    data.formularios.forEach(form => {
+                        const formId = form.id;
+                        const hasNewChat = form.has_unread_message; // <--- Traído del Backend
+                        const chatStatusAnterior = chatStatusConocidos[formId];
+
+                        // Detección de NUEVO MENSAJE DE CHAT
+                        // Notificamos si antes no había mensaje no leído y ahora sí.
+                        if (!esPrimeraCarga && hasNewChat && chatStatusAnterior === false) {
+                            nuevosMensajesDetectados.push(form);
+                        }
+                        chatStatusMapaActualizado[formId] = hasNewChat;
+                        
+                        // Lógica de formulario nuevo (notificación general)
+                        if (esPrimeraCarga) {
+                            idsFormulariosConocidos.add(formId);
+                        } else if (!idsFormulariosConocidos.has(formId)) {
+                             // Esto es para la notificación principal del formulario, que sigue funcionando
+                             reproducirSonidoFormulario();
+                             showBrowserNotification(form, "¡NUEVO FORMULARIO PENDIENTE!");
+                             idsFormulariosConocidos.add(formId);
+                        }
+                    });
+                    
+                    chatStatusConocidos = chatStatusMapaActualizado;
+
+                    if (nuevosMensajesDetectados.length > 0) {
+                        reproducirSonidoChat();
+                        showBrowserNotification(nuevosMensajesDetectados[nuevosMensajesDetectados.length - 1], "💬 Nuevo Mensaje de Ambulancia", "¡CHAT!");
+                    }
+                    
+                    if (esPrimeraCarga) esPrimeraCarga = false;
+                    // --- FIN CHAT NOTIFICATION LOGIC ---
+
+                    
+                    // Actualizar variables de paginación
+                    currentPagePendientes = data.pagina_actual;
+                    totalPagesPendientes = data.total_paginas;
+                }
+                
+                // Lógica de alerta de título...
+                if (document.visibilityState !== 'visible' && totalPagesPendientes > 0) {
+                    startTitleAlert(totalPagesPendientes);
+                } else if (document.visibilityState === 'visible' && totalPagesPendientes > 0 && !currentFormId) {
+                    pageTitle.textContent = `(${totalPagesPendientes}) ${originalTitle}`;
+                    stopTitleAlert(); 
+                }
+                else {
+                    stopTitleAlert(); 
+                }
+                // --- FIN DE LÓGICA DE NOTIFICACIÓN Y TÍTULO ---
+
+                
+                formListDiv.innerHTML = ''; 
+                if (data.status === 'exito' && data.formularios && data.formularios.length > 0) {
+                    data.formularios.forEach(form => {
+                        const div = document.createElement('div');
+                        let prioridadClass = 'normal';
+                        let prioridadTexto = 'NORMAL';
+                        let textColor = 'text-blue-700';
+
+                        if (form.triage === 'Rojo') {
+                            prioridadClass = 'emergency';
+                            prioridadTexto = 'EMERGENCIA';
+                            textColor = 'text-red-700';
+                        } else if (form.triage === 'Amarillo') {
+                            prioridadClass = 'warning';
+                            prioridadTexto = 'URGENTE';
+                            textColor = 'text-yellow-700';
+                        }
+                        
+                        // --- LÓGICA DEL PUNTO ROJO (CHAT NO LEÍDO) ---
+                        const showUnreadDot = form.has_unread_message;
+                        let dotHtml = '';
+                        if (showUnreadDot) {
+                           // El punto se coloca justo arriba de la etiqueta de estado
+                           dotHtml = `<div class="unread-dot" title="Mensajes sin leer"></div>`;
+                        }
+
+
+                        div.className = `notification-item ${prioridadClass} cursor-pointer`;
+                        div.dataset.formId = form.id;
+                        
+                        if (form.id === currentFormId) {
+                            div.classList.add('active');
+                        }
+
+                        div.onclick = () => loadFormDetails(form.id); 
+                        
+                        const estadoClass = form.estado.toLowerCase().replace(/_/g, '_');
+                        let badgeHtml = `<span class="badge badge-${estadoClass}">${form.estado_display}</span>`;
+                        
+                        if (form.revisado_por_nombre) {
+                            badgeHtml += `<span class="badge badge-en_revision mt-1">En Revisión</span>
+                                          <p class="text-xs text-pink-700 mt-1">Por: ${form.revisado_por_nombre}</p>`;
+                        }
+
+                        div.innerHTML = `
+                            ${dotHtml}
+                            <div class="flex justify-between items-start mb-2">
+                                <p class="font-bold ${textColor}">${prioridadTexto}: Caso #${form.id.substring(0, 8)}</p>
+                                <div class="text-right">${badgeHtml}</div>
+                            </div>
+                            <p class="text-sm text-gray-600">Paciente: ${form.nombre_paciente}</p>
+                            <p class="text-xs text-gray-400 mt-1">Enviado por: ${form.creado_por_nombre}</p>
+                        `;
+                        formListDiv.appendChild(div);
+                    });
+                } else {
+                    formListDiv.innerHTML = '<p class="text-gray-500 text-center py-4" id="pendientesPlaceholder">No hay formularios pendientes</p>';
+                }
+
+                // Renderizar controles de paginación
+                renderPaginationControls('paginationPendientes', currentPagePendientes, totalPagesPendientes, cargarListaFormularios);
+
+            } catch (error) {
+                console.error('Error cargando formularios pendientes:', error);
+                formListDiv.innerHTML = '<p class="text-red-500 text-center py-4">Error al cargar formularios</p>';
+                document.getElementById('paginationPendientes').innerHTML = '';
+            }
+        }
+        
+        // |================================================================|
+        // |        5: Lógica actualizada en 'cargarListaAprobados'         |
+        // |================================================================|
+        // Ahora acepta el número de página
+        async function cargarListaAprobados(page = currentPageAprobados) {
+            try {
+                // Modificación: Enviar el número de página en la URL
+                const response = await fetch(`{% url 'obtener_formularios_aprobados' %}?page=${page}`);
+                if (!response.ok) throw new Error('Error en respuesta del servidor');
+                
+                const data = await response.json();
+                
+                // Actualizar variables de paginación
+                if (data.status === 'exito') {
+                    currentPageAprobados = data.pagina_actual;
+                    totalPagesAprobados = data.total_paginas;
+                }
+                
+                // Renderizar la lista
+                formListAprobadosDiv.innerHTML = ''; 
+                if (data.status === 'exito' && data.formularios && data.formularios.length > 0) {
+                    data.formularios.forEach(form => {
+                        const div = document.createElement('div');
+                        
+                        // **********************************************
+                        // MODIFICACIÓN CRÍTICA: Habilitar click para descarga
+                        // **********************************************
+                        div.className = 'notification-item approved cursor-pointer'; 
+                        div.dataset.formId = form.id; 
+                        
+                        div.onclick = () => {
+                            // 1. Establecer el ID para la descarga
+                            currentFormId = form.id;
+                            
+                            // 2. Desactivar botones de acción y habilitar el panel de descarga
+                            formDetails.innerHTML = `
+                                <div class="space-y-2 text-sm">
+                                    <p class="text-green-600 font-bold">Caso #${form.id.substring(0, 8)} - APROBADO</p>
+                                    <p>Este formulario ya fue aprobado. Utilice el botón 'Ver/Descargar PDF' arriba para obtener el reporte.</p>
+                                </div>`;
+                            document.getElementById('currentChatId').textContent = form.id.substring(0, 8);
+                            chatHistory.innerHTML = '<p class="text-center text-gray-500 pt-20">Chat no disponible para casos cerrados/aprobados.</p>';
+                            chatInput.disabled = true;
+                            approveBtn.disabled = true;
+                            modifyBtn.disabled = true;
+                            if (deleteBtn) deleteBtn.disabled = false;
+                        };
+                        
+                        div.innerHTML = `
+                            <p class="font-bold text-green-700">APROBADO: Caso #${form.id.substring(0, 8)}</p>
+                            <p class="text-sm text-gray-600">Paciente: ${form.nombre_paciente}</p>
+                            <p class="text-xs text-gray-400 mt-1">Aprobado por: ${form.aprobado_por_nombre}</p>
+                        `;
+                        formListAprobadosDiv.appendChild(div);
+                    });
+                } else {
+                    formListAprobadosDiv.innerHTML = '<p class="text-gray-500 text-center py-4" id="aprobadosPlaceholder">No hay formularios aprobados</p>';
+                }
+
+                // Renderizar controles de paginación
+                renderPaginationControls('paginationAprobados', currentPageAprobados, totalPagesAprobados, cargarListaAprobados);
+                
+            } catch (error) {
+                console.error('Error cargando formularios aprobados:', error);
+                formListAprobadosDiv.innerHTML = '<p class="text-red-500 text-center py-4">Error al cargar aprobados</p>';
+                document.getElementById('paginationAprobados').innerHTML = '';
+            }
+        }
+        
+        async function loadFormDetails(formId) {
+            
+            stopTitleAlert();
+
+            // Pequeño hack para asegurar que el navegador permita la reproducción futura.
+            if (audioFormulario && audioFormulario.paused) { 
+                audioFormulario.play().then(() => {
+                    audioFormulario.pause(); 
+                    audioFormulario.currentTime = 0;
+                }).catch(e => {
+                    console.log("Interacción de usuario registrada para desbloquear audio."); 
+                });
+            }
+            
+            // ACCIÓN: Marcar el chat como leído al abrir los detalles del formulario.
+            const urlMarcarLeido = `/api/chat/marcar_leido/${formId}/`; 
+            fetch(urlMarcarLeido, {
+                method: 'POST',
+                headers: { 'X-CSRFToken': csrftoken }
+            }).then(() => {
+                // Una vez marcado como leído, forzar la actualización de la lista 
+                // para que el punto rojo desaparezca inmediatamente
+                cargarListaFormularios(currentPagePendientes); 
+            });
+
+
+            if (currentFormId === formId) return; 
+            
+            const oldFormId = currentFormId; 
+            currentFormId = formId; 
+
+            if (oldFormId) {
+                try {
+                    await fetch(`{% url 'liberar_formulario' form_id=0 %}`.replace('0', oldFormId), {
+                        method: 'POST',
+                        headers: { 'X-CSRFToken': csrftoken },
+                        keepalive: true 
+                    });
+                } catch (err) {
+                    console.error('Error al liberar formulario anterior:', err);
+                }
+            }
+
+            document.querySelectorAll('.notification-item').forEach(item => {
+                item.classList.remove('active');
+                if (item.dataset.formId === formId) {
+                    item.classList.add('active');
+                }
+            });
+
+            formDetails.innerHTML = '<p class="text-center pt-10">Cargando detalles...</p>';
+            approveBtn.disabled = true;
+            modifyBtn.disabled = true;
+            if (deleteBtn) deleteBtn.disabled = true; 
+            chatInput.disabled = true;
+            chatHistory.innerHTML = '<p class="text-center text-gray-500" id="chatPlaceholder">Cargando chat...</p>';
+            document.getElementById('currentChatId').textContent = formId.substring(0, 8);
+            
+            try {
+                const lockResponse = await fetch(`{% url 'bloquear_formulario' form_id=0 %}`.replace('0', formId), {
+                    method: 'POST',
+                    headers: { 'X-CSRFToken': csrftoken }
+                });
+                
+                const lockData = await lockResponse.json();
+
+                if (lockResponse.status !== 200 || lockData.status === 'error_bloqueado') {
+                    throw new Error(lockData.message || 'Error al bloquear formulario');
+                }
+
+                await cargarListaFormularios(currentPagePendientes); 
+
+                const detailResponse = await fetch(`/api/formulario_detalle/${formId}/`);
+                const detailData = await detailResponse.json();
+                
+                if (detailData.status === 'exito') {
+                    const d = detailData.detalles; 
+                    formDetails.innerHTML = `
+                        <div class="space-y-2 text-sm">
+                            <h3 class="font-bold text-lg text-gray-800">Detalle del Caso #${d.id.substring(0, 8)}</h3>
+                            <p><span class="font-semibold">Paciente:</span> ${d.nombre_paciente}</p>
+                            <p><span class="font-semibold">RUT:</span> ${d.rut_paciente}</p>
+                            <p><span class="font-semibold">Edad:</span> ${d.edad_paciente || '?'} ${d.unidad_edad || ''}</p>
+                            <p><span class="font-semibold">Sexo:</span> ${d.sexo}</p>
+                            <p class="font-bold"><span class="font-semibold">Triage:</span> ${d.triage}</p>
+                            <p><span class="font-semibold">Signos Vitales:</span> PA: ${d.presion_arterial} | FC: ${d.frecuencia_cardiaca} | Sat: ${d.saturacion_oxigeno}%</p>
+                            <p><span class="font-semibold">Motivo Consulta:</span> ${d.motivo_consulta}</p>
+                            <p class="text-xs text-gray-500 pt-2 border-t mt-2"><span class="font-semibold">Personal:</span> ${d.creado_por_nombre} (${d.creado_en_fecha})</p>
+                        </div>
+                    `;
+                    approveBtn.disabled = false;
+                    modifyBtn.disabled = false;
+                    if (deleteBtn) deleteBtn.disabled = false;
+                    chatInput.disabled = false;
+                } else {
+                    formDetails.innerHTML = `<p class="text-red-500 text-center pt-10">${detailData.message}</p>`;
+                }
+                
+                await cargarChat(formId);
+
+            } catch (error) {
+                console.error('Error en loadFormDetails:', error);
+                formDetails.innerHTML = `<p class="text-red-500 text-center pt-10">${error.message}</p>`;
+                currentFormId = oldFormId; 
+                document.querySelectorAll('.notification-item').forEach(item => {
+                    item.classList.remove('active');
+                    if (item.dataset.formId === oldFormId) {
+                        item.classList.add('active'); 
+                    }
+                });
+                await cargarListaFormularios(currentPagePendientes); 
+            }
+        }
+
+        async function cargarChat(formId) {
+            if (!formId) return;
+            const previousMessageCount = chatHistory.childElementCount;
+            try {
+                const response = await fetch(`/api/chat_mensajes/${formId}/`);
+                if (!response.ok) throw new Error('Error al cargar chat');
+                const data = await response.json();
+                
+                const newMessages = data.mensajes.length;
+                let chatWasEmpty = chatHistory.innerHTML.includes('Seleccione un caso') || chatHistory.innerHTML.includes('No hay mensajes');
+
+                chatHistory.innerHTML = ''; 
+                if (data.status === 'exito' && data.mensajes.length > 0) {
+                    data.mensajes.forEach(msg => {
+                        const esPropio = msg.autor_rol === 'Recepcion' || msg.autor_rol === 'Supervisor';
+                        const claseCss = esPropio ? 'chat-receptor' : 'chat-personal'; 
+                        const chatMsg = document.createElement('div');
+                        chatMsg.className = `chat-message ${claseCss}`;
+                        chatMsg.innerHTML = `
+                            <div class="meta meta-sender">${esPropio ? 'Tú' : msg.autor_nombre} (${msg.autor_rol})</div>
+                            ${msg.mensaje}
+                            <div class="meta meta-time">${msg.timestamp}</div>
+                        `;
+                        chatHistory.appendChild(chatMsg);
+                    });
+                    
+                    // Lógica de sonido de chat: si el número de mensajes ha aumentado, y no estaba vacío el chat antes.
+                    if (newMessages > previousMessageCount && !chatWasEmpty) {
+                         reproducirSonidoChat();
+                    }
+                    
+                } else {
+                    chatHistory.innerHTML = '<p class="text-center text-gray-500" id="chatPlaceholder">No hay mensajes en esta conversación.</p>';
+                }
+                chatHistory.scrollTop = chatHistory.scrollHeight;
+            } catch (error) {
+                console.error(error);
+                chatHistory.innerHTML = '<p class="text-red-500 text-center">Error al cargar el chat.</p>';
+            }
+        }
+        
+        async function aprobarFormulario() {
+            if (!currentFormId) return;
+            const formData = new FormData();
+            formData.append('form_id', currentFormId);
+            try {
+                const response = await fetch(`{% url 'aprobar_formulario' %}`, {
+                    method: 'POST',
+                    headers: { 'X-CSRFToken': csrftoken },
+                    body: formData
+                });
+                const data = await response.json();
+                if (data.status === 'exito') {
+                    alert('Formulario Aprobado');
+                    resetearVista();
+                } else {
+                    alert('Error al aprobar: ' + data.message);
+                }
+            } catch (error) {
+                alert('Error de red al aprobar.');
+            }
+        }
+
+        async function solicitarModificacion() {
+             if (!currentFormId) return;
+            const formData = new FormData();
+            formData.append('form_id', currentFormId);
+            try {
+                const response = await fetch(`{% url 'solicitar_modificacion' %}`, {
+                    method: 'POST',
+                    headers: { 'X-CSRFToken': csrftoken },
+                    body: formData
+                });
+                const data = await response.json();
+                if (data.status === 'exito') {
+                    alert('Solicitud de modificación enviada');
+                    resetearVista();
+                } else {
+                    alert('Error al solicitar: ' + data.message);
+                }
+            } catch (error) {
+                alert('Error de red al solicitar.');
+            }
+        }
+
+        async function eliminarFormulario() {
+            if (!currentFormId) return;
+            
+            const confirmacion = prompt("Esta acción es PERMANENTE.\n\nEscriba 'ELIMINAR' para confirmar la eliminación de este formulario.");
+            if (confirmacion !== 'ELIMINAR') {
+                alert('Eliminación cancelada.');
+                return;
+            }
+
+            try {
+                const response = await fetch(`{% url 'eliminar_formulario' form_id=0 %}`.replace('0', currentFormId), {
+                    method: 'POST',
+                    headers: { 'X-CSRFToken': csrftoken }
+                });
+                
+                const data = await response.json();
+
+                if (data.status === 'exito') {
+                    alert('Formulario eliminado permanentemente.');
+                    resetearVista(); 
+                } else {
+                    alert('Error al eliminar: ' + data.message);
+                }
+            } catch (error) {
+                alert('Error de red al eliminar.');
+            }
+        }
+
+
+        async function enviarMensaje(e) {
+            e.preventDefault(); 
+            const mensaje = chatInput.value.trim();
+            if (mensaje === '' || !currentFormId) return; 
+            try {
+                const response = await fetch(`{% url 'enviar_mensaje' %}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrftoken },
+                    body: JSON.stringify({ 'form_id': currentFormId, 'message': mensaje })
+                });
+                const data = await response.json();
+                if (data.status === 'exito') {
+                    chatInput.value = ''; 
+                    await cargarChat(currentFormId); 
+                } else {
+                    alert('No se pudo enviar el mensaje.');
+                }
+            } catch (error) {
+                alert('Error de red al enviar mensaje.');
+            }
+        }
+
+        function resetearVista() {
+            currentFormId = null;
+            formDetails.innerHTML = '<p class="text-gray-500 text-center pt-10">Seleccione un formulario pendiente.</p>';
+            chatHistory.innerHTML = '<p class="text-center text-gray-500 pt-20" id="chatPlaceholder">Seleccione un caso para ver el chat.</p>';
+            chatInput.disabled = true;
+            approveBtn.disabled = true;
+            modifyBtn.disabled = true;
+            if (deleteBtn) deleteBtn.disabled = true; 
+            document.getElementById('currentChatId').textContent = '...';
+            // Recargar la página 1 para el polling, ya que un formulario fue gestionado
+            cargarListaFormularios(1);
+            cargarListaAprobados(currentPageAprobados);
+        }
+
+        // --- FUNCIONES DE EXPORTACIÓN ---
+        function mostrarOpcionesDescarga() {
+            document.getElementById('menuDescarga').classList.toggle('hidden');
+        }
+        async function descargarArchivo(formato) {
+            if (!currentFormId) {
+                alert('Por favor, seleccione un formulario primero');
+                return;
+            }
+            document.getElementById('menuDescarga').classList.add('hidden');
+            const loadingDiv = document.createElement('div');
+            loadingDiv.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+            loadingDiv.innerHTML = '<div class="bg-white p-4 rounded-lg shadow-xl">Descargando archivo...</div>';
+            document.body.appendChild(loadingDiv);
+            try {
+                const response = await fetch(`/api/exportar_formulario/${currentFormId}/${formato}/`);
+                if (!response.ok) {
+                    const text = await response.text();
+                    throw new Error(`Error ${response.status}: ${text || 'Error del servidor'}`);
+                }
+                const header = response.headers.get('Content-Disposition');
+                const parts = header.split(';');
+                let filename = `formulario_${currentFormId}.${formato}`; 
+                parts.forEach(part => {
+                    if (part.trim().startsWith('filename=')) {
+                        filename = part.split('=')[1].trim().replaceAll('"', '');
+                    }
+                });
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.style.display = 'none';
+                a.href = url;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                a.remove();
+            } catch (error) {
+                console.error('Error al descargar:', error);
+                alert(`Error al descargar el archivo: ${error.message}. Por favor, intente nuevamente.`);
+            } finally {
+                document.body.removeChild(loadingDiv);
+            }
+        }
+
+        // === INICIALIZACIÓN ===
+        document.addEventListener('DOMContentLoaded', () => {
+            
+            // 1. Cargar estado de sonido desde localStorage
+            const savedSoundState = localStorage.getItem('medflowSoundEnabled');
+            if (savedSoundState !== null) {
+                isSoundEnabled = (savedSoundState === 'true');
+            } else {
+                 isSoundEnabled = true;
+                 localStorage.setItem('medflowSoundEnabled', isSoundEnabled);
+            }
+            updateSoundButtonUI();
+
+            // 2. Asignar listeners
+            const toggleBtn = document.getElementById('toggleSoundBtn');
+            if (toggleBtn) {
+                toggleBtn.addEventListener('click', toggleSound);
+            }
+            
+            // 3. Solicitar permiso de notificación
+            if ("Notification" in window && Notification.permission !== "granted" && Notification.permission !== "denied") {
+                 Notification.requestPermission();
+            }
+            
+            // Carga inicial
+            cargarListaFormularios();
+            cargarListaAprobados();
+
+            chatForm.addEventListener('submit', enviarMensaje);
+            approveBtn.addEventListener('click', aprobarFormulario);
+            modifyBtn.addEventListener('click', solicitarModificacion);
+
+            // Polling para formularios pendientes y aprobados (15 segundos)
+            setInterval(() => {
+                // Forzamos a cargar la página 1 para el polling de notificaciones
+                cargarListaFormularios(1); 
+                // Mantenemos la página actual para los aprobados
+                cargarListaAprobados(currentPageAprobados); 
+            }, 15000); 
+            
+            // Polling para chat (5 segundos)
+            setInterval(() => {
+                if (currentFormId) {
+                    cargarChat(currentFormId); 
+                }
+            }, 5000);
+            
+            startWarningTimer();
+        });
+
+        // Cerrar menú descarga
+        document.addEventListener('click', function(event) {
+            const menu = document.getElementById('menuDescarga');
+            const btn = event.target.closest('.btn-download');
+            if (!btn && menu && !menu.contains(event.target)) {
+                menu.classList.add('hidden');
+            }
+        });
+    </script>
+</body>
+</html>
