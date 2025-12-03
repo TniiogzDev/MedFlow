@@ -452,7 +452,10 @@ def obtener_formularios_ambulancia(request):
                 'nombre_paciente': form.nombre_paciente or "N/A",
                 'estado': form.estado, 
                 'estado_display': form.get_estado_display(),
-                'creado_en': form.creado_en.strftime("%d %b %Y, %H:%M"), 
+                # ============================================
+                # CORRECCIÓN DE FECHA AQUI:
+                # ============================================
+                'creado_en': timezone.localtime(form.creado_en).strftime("%d %b %Y, %H:%M"), 
                 'revisado_por_nombre': form.revisado_por.get_full_name() if form.revisado_por else None,
                 'chat_url': reverse('chat_formulario', args=[form.id]),
                 'edit_url': reverse('editar_formulario', args=[form.id]),
@@ -799,7 +802,10 @@ def obtener_registros_auditoria(request, user_id):
         formularios_data.append({
             'id': str(form.id),
             'nombre_paciente': form.nombre_paciente or "N/N",
-            'creado_en': form.creado_en.strftime("%d-%m-%Y"),
+            # ============================================
+            # CORRECCIÓN DE FECHA AQUI:
+            # ============================================
+            'creado_en': timezone.localtime(form.creado_en).strftime("%d-%m-%Y"),
             'estado': form.estado,
             'estado_display': form.get_estado_display(),
         })
@@ -818,7 +824,10 @@ def obtener_registros_auditoria(request, user_id):
         formularios_gestionados_data.append({
             'id': str(form.id),
             'nombre_paciente': form.nombre_paciente or "N/N",
-            'creado_en': form.creado_en.strftime("%d-%m-%Y"),
+            # ============================================
+            # CORRECCIÓN DE FECHA AQUI:
+            # ============================================
+            'creado_en': timezone.localtime(form.creado_en).strftime("%d-%m-%Y"),
             'estado': form.estado,
             'estado_display': form.get_estado_display(),
         })
@@ -844,8 +853,11 @@ def api_obtener_todos_los_formularios(request):
             lista_formularios.append({
                 'id': str(form.id),
                 'nombre_paciente': form.nombre_paciente or "N/N",
-                'creado_en': form.creado_en.strftime("%d-%m-%Y"),
-                'aprobado_en': form.aprobado_en.strftime("%Y-%m-%d") if form.aprobado_en else None,
+                # ============================================
+                # CORRECCIÓN DE FECHA AQUI:
+                # ============================================
+                'creado_en': timezone.localtime(form.creado_en).strftime("%d-%m-%Y"),
+                'aprobado_en': timezone.localtime(form.aprobado_en).strftime("%Y-%m-%d") if form.aprobado_en else None,
                 'estado': form.estado,
                 'estado_display': form.get_estado_display(),
                 'creado_por_nombre': form.creado_por.username if form.creado_por else "Desconocido",
@@ -1176,11 +1188,12 @@ def generar_pdf(response, formulario):
             p.setFont("Helvetica-Bold", 12)
             p.setFillColorRGB(0.93, 0.26, 0.26) # Rojo (EF4444)
             p.drawString(self.x, self.y + 10, text)
-            # CORRECCION AQUI:
+            
+            # --- CORRECCIÓN APLICADA AQUÍ (self.y en vez de p.y) ---
             self.y -= self.line_height * 0.5
             p.line(self.x, self.y + 8, width - margin, self.y + 8)
-            # CORRECCION AQUI:
             self.y -= self.line_height * 1.5
+            
             p.setFillColorRGB(0, 0, 0) # Reset color a negro
 
         def write_field(self, label, value):
